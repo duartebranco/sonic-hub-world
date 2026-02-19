@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!--
+    sonic_jam_world.html  (modular version)
+
+    File structure:
+        sonic_jam_world.html   ← you are here
+        main.js
+        js/
+          camera.js
+          hud.js
+          input.js
+          lighting.js
+          player.js
+          sky.js
+          textures.js
+          world.js
+        sonic.glb              ← place your model here
+
+    Controls:
+        WASD / Arrows  — move
+        Space          — jump
+        Mouse drag     — rotate camera
+        Scroll         — zoom
+
+    Serve with a local HTTP server (e.g. npx serve . or VS Code Live Server)
+    Direct file:// open will block ES module imports.
+-->
+
+<head>
+    <title>Sonic Jam — Sonic World</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #000;
+            overflow: hidden;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        #hud {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 12px;
+            text-align: center;
+            text-shadow: 0 1px 4px #000;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        #zone-label {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 22px;
+            font-weight: bold;
+            letter-spacing: 3px;
+            text-shadow: 0 2px 8px #0008;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="zone-label">SONIC WORLD</div>
+<div id="hud">WASD / Arrows · Move &nbsp;|&nbsp; SPACE · Jump &nbsp;|&nbsp; Mouse drag · Camera &nbsp;|&nbsp; Scroll · Zoom</div>
+
+<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+
+<script type="importmap">
+{
+    "imports": {
+        "three":         "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }
+}
+</script>
+
+<script type="module" src="main.js"></script>
+
+</body>
+</html>

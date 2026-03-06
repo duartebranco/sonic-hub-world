@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pose Animator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --panel: #12121a;
+    --border: #2a2a3e;
+    --accent: #00e5ff;
+    --accent2: #ff4081;
+    --accent3: #69ff47;
+    --text: #e0e0f0;
+    --muted: #666688;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* LEFT: 3D VIEWPORT */
+  #viewport {
+    flex: 1;
+    position: relative;
+    border-right: 1px solid var(--border);
+  }
+
+  #viewport canvas { display: block; }
+
+  #viewport-label {
+    position: absolute;
+    top: 16px; left: 16px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    opacity: 0.7;
+  }
+
+  #bone-info {
+    position: absolute;
+    bottom: 16px; left: 16px;
+    background: rgba(0,0,0,0.7);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 10px 14px;
+    font-size: 11px;
+    line-height: 1.7;
+    min-width: 200px;
+    backdrop-filter: blur(4px);
+  }
+
+  #bone-info .bone-name { color: var(--accent); font-weight: bold; font-size: 13px; }
+  #bone-info .hint { color: var(--muted); margin-top: 4px; }
+
+  /* RIGHT: CONTROL PANEL */
+  #panel {
+    width: 340px;
+    display: flex;
+    flex-direction: column;
+    background: var(--panel);
+    overflow: hidden;
+  }
+
+  .section {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  /* File input */
+  #file-drop {
+    border: 1.5px dashed var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  #file-drop:hover, #file-drop.drag-over {
+    border-color: var(--accent);
+    background: rgba(0,229,255,0.05);
+    color: var(--accent);
+  }
+  #file-drop input { display: none; }
+
+  /* Bone list */
+  #bone-list-wrap {
+    flex: 0 0 auto;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  #bone-list-wrap::-webkit-scrollbar { width: 4px; }
+  #bone-list-wrap::-webkit-scrollbar-track { background: transparent; }
+  #bone-list-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .bone-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 16px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: background 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .bone-item:hover { background: rgba(255,255,255,0.04); }
+  .bone-item.selected {
+    background: rgba(0,229,255,0.08);
+    border-left-color: var(--accent);
+    color: var(--accent);
+  }
+  .bone-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+    flex-shrink: 0;
+  }
+  .bone-item.selected .bone-dot { background: var(--accent); }
+
+  /* Rotation sliders */
+  .sliders-section { flex: 0 0 auto; }
+
+  .axis-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .axis-label {
+    width: 14px;
+    font-size: 11px;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+  .axis-label.x { color: #ff5252; }
+  .axis-label.y { color: #69ff47; }
+  .axis-label.z { color: #448aff; }
+
+  input[type=range] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--border);
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range].x { accent-color: #ff5252; }
+  input[type=range].y { accent-color: #69ff47; }
+  input[type=range].z { accent-color: #448aff; }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  input[type=range].x::-webkit-slider-thumb { background: #ff5252; }
+  input[type=range].y::-webkit-slider-thumb { background: #69ff47; }
+  input[type=range].z::-webkit-slider-thumb { background: #448aff; }
+
+  .val-display {
+    width: 44px;
+    text-align: right;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .btn {
+    flex: 1;
+    padding: 9px 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    text-transform: uppercase;
+  }
+  .btn:hover { background: rgba(255,255,255,0.06); border-color: var(--text); }
+  .btn.primary { border-color: var(--accent); color: var(--accent); }
+  .btn.primary:hover { background: rgba(0,229,255,0.12); }
+  .btn.danger { border-color: var(--accent2); color: var(--accent2); }
+  .btn.danger:hover { background: rgba(255,64,129,0.12); }
+  .btn.success { border-color: var(--accent3); color: var(--accent3); }
+  .btn.success:hover { background: rgba(105,255,71,0.12); }
+  .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* Timeline */
+  #timeline-section { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+
+  #frames-wrap {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 16px;
+    min-height: 0;
+  }
+
+  #frames-wrap::-webkit-scrollbar { width: 4px; }
+  #frames-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .frame-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .frame-item:hover { background: rgba(255,255,255,0.06); }
+  .frame-item.active { border-color: var(--accent3); background: rgba(105,255,71,0.05); }
+  .frame-item.playing-frame { border-color: var(--accent); background: rgba(0,229,255,0.08); }
+
+  .frame-num {
+    font-size: 10px;
+    color: var(--muted);
+    width: 20px;
+    flex-shrink: 0;
+  }
+  .frame-preview {
+    flex: 1;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    overflow: hidden;
+  }
+  .frame-bar {
+    height: 16px;
+    border-radius: 2px;
+    background: var(--accent);
+    opacity: 0.5;
+    min-width: 2px;
+  }
+
+  .frame-del {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    line-height: 1;
+  }
+  .frame-del:hover { color: var(--accent2); background: rgba(255,64,129,0.12); }
+
+  /* Playback */
+  #playback-section { padding: 12px 16px; border-top: 1px solid var(--border); }
+
+  .playback-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .play-btn {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--accent3);
+    background: transparent;
+    color: var(--accent3);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  .play-btn:hover { background: rgba(105,255,71,0.12); }
+  .play-btn.playing { border-color: var(--accent2); color: var(--accent2); }
+  .play-btn.playing:hover { background: rgba(255,64,129,0.12); }
+
+  .speed-label { font-size: 10px; color: var(--muted); white-space: nowrap; }
+  input[type=range].speed { accent-color: var(--accent3); }
+
+  .no-frames {
+    text-align: center;
+    padding: 20px;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  /* Loop indicator */
+  .loop-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+  }
+  .loop-toggle input { accent-color: var(--accent); cursor: pointer; }
+  .loop-toggle:hover { color: var(--text); }
+
+</style>
+</head>
+<body>
+
+<div id="viewport">
+  <div id="viewport-label">3D Viewport — Click bone to select</div>
+  <div id="bone-info">
+    <div class="bone-name" id="bi-name">No bone selected</div>
+    <div class="hint" id="bi-hint">Load a .glb model to start</div>
+  </div>
+</div>
+
+<div id="panel">
+
+  <!-- FILE LOAD -->
+  <div class="section">
+    <div class="section-title">Model</div>
+    <div id="file-drop">
+      <input type="file" id="file-input" accept=".glb,.gltf">
+      <div id="drop-label">Drop .glb / .gltf here<br>or click to browse</div>
+    </div>
+  </div>
+
+  <!-- BONE LIST -->
+  <div class="section" style="padding-bottom:0; padding-top:12px;">
+    <div class="section-title">Bones <span id="bone-count" style="color:var(--muted);font-size:9px;margin-left:4px;"></span></div>
+  </div>
+  <div id="bone-list-wrap">
+    <div id="bone-list"></div>
+  </div>
+
+  <!-- ROTATION SLIDERS -->
+  <div class="section sliders-section">
+    <div class="section-title">Rotate Selected Bone</div>
+    <div class="axis-row">
+      <span class="axis-label x">X</span>
+      <input type="range" class="x" id="rx" min="-180" max="180" value="0" step="0.5">
+      <span class="val-display" id="rx-val">0°</span>
+    </div>
+    <div class="axis-row">
+      <span class="axis-label y">Y</span>
+      <input type="range" class="y" id="ry" min="-180" max="180" value="0" step="0.5">
+      <span class="val-display" id="ry-val">0°</span>
+    </div>
+    <div class="axis-row">
+      <span class="axis-label z">Z</span>
+      <input type="range" class="z" id="rz" min="-180" max="180" value="0" step="0.5">
+      <span class="val-display" id="rz-val">0°</span>
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="reset-bone-btn" disabled>Reset Bone</button>
+      <button class="btn" id="reset-all-btn" disabled>Reset All</button>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="section" style="padding-bottom: 8px; flex-shrink:0;">
+    <div class="section-title">Keyframes</div>
+    <div class="btn-row">
+      <button class="btn primary" id="capture-btn" disabled>+ Capture Pose</button>
+      <button class="btn danger" id="clear-frames-btn" disabled>Clear All</button>
+    </div>
+  </div>
+
+  <div id="timeline-section">
+    <div id="frames-wrap">
+      <div id="frames-list">
+        <div class="no-frames">No keyframes yet.<br>Pose your model, then click<br>"Capture Pose".</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAYBACK -->
+  <div id="playback-section">
+    <div class="section-title" style="margin-bottom:10px;">Playback</div>
+    <div class="playback-row">
+      <button class="play-btn" id="play-btn" disabled>▶</button>
+      <div style="flex:1;">
+        <div class="speed-label">Speed <span id="speed-val">1.0</span>x</div>
+        <input type="range" class="speed" id="speed-slider" min="0.1" max="3" value="1" step="0.1" style="width:100%; height:3px;">
+      </div>
+      <label class="loop-toggle">
+        <input type="checkbox" id="loop-toggle" checked> Loop
+      </label>
+    </div>
+    <div class="btn-row" style="margin-top:10px;">
+      <button class="btn success" id="save-btn" disabled>⬇ Save JSON</button>
+      <button class="btn primary" id="load-json-btn">⬆ Load JSON</button>
+      <input type="file" id="json-input" accept=".json" style="display:none">
+    </div>
+  </div>
+
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+// ─── Scene Setup ──────────────────────────────────────────────────────────────
+const vpEl = document.getElementById('viewport');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0d0d14);
+
+const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 200);
+camera.position.set(0, 1.5, 4);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.shadowMap.enabled = true;
+vpEl.appendChild(renderer.domElement);
+
+const dirLight = new THREE.DirectionalLight(0xffffff, 2.5);
+dirLight.position.set(3, 6, 4);
+scene.add(dirLight);
+scene.add(new THREE.AmbientLight(0x8888cc, 0.6));
+const fillLight = new THREE.DirectionalLight(0x4488ff, 0.8);
+fillLight.position.set(-3, 2, -2);
+scene.add(fillLight);
+
+// Grid
+const grid = new THREE.GridHelper(10, 20, 0x222233, 0x1a1a28);
+scene.add(grid);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 1, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let currentModel = null;
+let bones = [];           // [{name, bone}]
+let selectedBoneIdx = -1;
+let keyframes = [];       // [{rotations: {boneName: {x,y,z}}, modelY: number}]
+let isPlaying = false;
+let playT = 0;
+let playSpeed = 1;
+
+// ─── Bone highlight helpers ───────────────────────────────────────────────────
+const boneHelpers = [];
+
+function buildBoneHelpers() {
+  boneHelpers.forEach(h => scene.remove(h));
+  boneHelpers.length = 0;
+  bones.forEach(({ bone }, i) => {
+    const geo = new THREE.SphereGeometry(0.018, 6, 6);
+    const mat = new THREE.MeshBasicMaterial({
+      color: 0x00e5ff,
+      transparent: true,
+      opacity: 0.5,
+      depthTest: false
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    bone.add(mesh);
+    boneHelpers.push({ mesh, boneIdx: i });
+  });
+}
+
+function updateBoneHighlights() {
+  boneHelpers.forEach(({ mesh, boneIdx }) => {
+    const mat = mesh.material;
+    if (boneIdx === selectedBoneIdx) {
+      mat.color.set(0x00e5ff);
+      mat.opacity = 1.0;
+    } else {
+      mat.color.set(0x00e5ff);
+      mat.opacity = 0.28;
+    }
+  });
+}
+
+// ─── File Loading ─────────────────────────────────────────────────────────────
+const fileInput = document.getElementById('file-input');
+const fileDrop = document.getElementById('file-drop');
+
+fileDrop.addEventListener('click', () => fileInput.click());
+fileDrop.addEventListener('dragover', e => { e.preventDefault(); fileDrop.classList.add('drag-over'); });
+fileDrop.addEventListener('dragleave', () => fileDrop.classList.remove('drag-over'));
+fileDrop.addEventListener('drop', e => {
+  e.preventDefault();
+  fileDrop.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f) loadModel(f);
+});
+fileInput.addEventListener('change', e => { if (e.target.files[0]) loadModel(e.target.files[0]); });
+
+function loadModel(file) {
+  const url = URL.createObjectURL(file);
+  if (currentModel) {
+    scene.remove(currentModel);
+    currentModel = null;
+  }
+  bones = [];
+  keyframes = [];
+  selectedBoneIdx = -1;
+  isPlaying = false;
+  renderFramesList();
+  updatePlaybackButtons();
+
+  new GLTFLoader().load(url, gltf => {
+    currentModel = gltf.scene;
+    scene.add(currentModel);
+
+    // Auto-fit camera
+    const box = new THREE.Box3().setFromObject(currentModel);
+    const size = box.getSize(new THREE.Vector3()).length();
+    const center = box.getCenter(new THREE.Vector3());
+    camera.position.set(center.x, center.y + size * 0.3, center.z + size * 1.4);
+    controls.target.copy(center);
+    controls.update();
+
+    // Collect bones
+    currentModel.traverse(n => {
+      if (n.isBone) {
+        n.userData.initRot = { x: n.rotation.x, y: n.rotation.y, z: n.rotation.z };
+        bones.push({ name: n.name, bone: n });
+      }
+    });
+
+    buildBoneHelpers();
+    renderBoneList();
+    document.getElementById('bone-count').textContent = `(${bones.length})`;
+    document.getElementById('bi-hint').textContent = 'Click a bone in the list to select it';
+    document.getElementById('reset-all-btn').disabled = false;
+    document.getElementById('capture-btn').disabled = false;
+    document.getElementById('drop-label').textContent = file.name;
+  });
+}
+
+// ─── Bone List UI ─────────────────────────────────────────────────────────────
+function renderBoneList() {
+  const list = document.getElementById('bone-list');
+  list.innerHTML = '';
+  bones.forEach(({ name }, i) => {
+    const el = document.createElement('div');
+    el.className = 'bone-item' + (i === selectedBoneIdx ? ' selected' : '');
+    el.innerHTML = `<div class="bone-dot"></div><span>${name}</span>`;
+    el.addEventListener('click', () => selectBone(i));
+    list.appendChild(el);
+  });
+}
+
+function selectBone(idx) {
+  selectedBoneIdx = idx;
+  renderBoneList();
+  updateBoneHighlights();
+
+  const { name, bone } = bones[idx];
+  document.getElementById('bi-name').textContent = name;
+  document.getElementById('bi-hint').textContent = 'Drag sliders to rotate · Shift+click+drag in viewport';
+
+  // Sync sliders to current bone rotation (in degrees)
+  const toDeg = r => Math.round(THREE.MathUtils.radToDeg(r) * 10) / 10;
+  setSlider('rx', toDeg(bone.rotation.x));
+  setSlider('ry', toDeg(bone.rotation.y));
+  setSlider('rz', toDeg(bone.rotation.z));
+
+  document.getElementById('reset-bone-btn').disabled = false;
+}
+
+function setSlider(id, val) {
+  const s = document.getElementById(id);
+  s.value = Math.max(-180, Math.min(180, val));
+  document.getElementById(id + '-val').textContent = s.value + '°';
+}
+
+// ─── Rotation Sliders ─────────────────────────────────────────────────────────
+['rx','ry','rz'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => {
+    document.getElementById(id+'-val').textContent = el.value + '°';
+    if (selectedBoneIdx < 0 || !currentModel) return;
+    const bone = bones[selectedBoneIdx].bone;
+    const toRad = THREE.MathUtils.degToRad;
+    bone.rotation.x = toRad(parseFloat(document.getElementById('rx').value));
+    bone.rotation.y = toRad(parseFloat(document.getElementById('ry').value));
+    bone.rotation.z = toRad(parseFloat(document.getElementById('rz').value));
+  });
+});
+
+document.getElementById('reset-bone-btn').addEventListener('click', () => {
+  if (selectedBoneIdx < 0) return;
+  const bone = bones[selectedBoneIdx].bone;
+  const init = bone.userData.initRot;
+  bone.rotation.set(init.x, init.y, init.z);
+  const toDeg = r => Math.round(THREE.MathUtils.radToDeg(r) * 10) / 10;
+  setSlider('rx', toDeg(init.x));
+  setSlider('ry', toDeg(init.y));
+  setSlider('rz', toDeg(init.z));
+});
+
+document.getElementById('reset-all-btn').addEventListener('click', () => {
+  if (!currentModel) return;
+  bones.forEach(({ bone }) => {
+    const i = bone.userData.initRot;
+    bone.rotation.set(i.x, i.y, i.z);
+  });
+  currentModel.position.y = 0;
+  if (selectedBoneIdx >= 0) {
+    const bone = bones[selectedBoneIdx].bone;
+    const toDeg = r => Math.round(THREE.MathUtils.radToDeg(r) * 10) / 10;
+    setSlider('rx', toDeg(bone.rotation.x));
+    setSlider('ry', toDeg(bone.rotation.y));
+    setSlider('rz', toDeg(bone.rotation.z));
+  }
+});
+
+// ─── Keyframe Capture ─────────────────────────────────────────────────────────
+document.getElementById('capture-btn').addEventListener('click', () => {
+  if (!currentModel) return;
+  const rotations = {};
+  bones.forEach(({ name, bone }) => {
+    rotations[name] = { x: bone.rotation.x, y: bone.rotation.y, z: bone.rotation.z };
+  });
+  keyframes.push({ rotations, modelY: currentModel.position.y });
+  renderFramesList();
+  updatePlaybackButtons();
+  document.getElementById('save-btn').disabled = false;
+});
+
+document.getElementById('clear-frames-btn').addEventListener('click', () => {
+  keyframes = [];
+  isPlaying = false;
+  renderFramesList();
+  updatePlaybackButtons();
+});
+
+// ─── Frames List UI ───────────────────────────────────────────────────────────
+function renderFramesList() {
+  const list = document.getElementById('frames-list');
+  list.innerHTML = '';
+
+  if (keyframes.length === 0) {
+    list.innerHTML = '<div class="no-frames">No keyframes yet.<br>Pose your model, then click<br>"Capture Pose".</div>';
+    return;
+  }
+
+  keyframes.forEach((kf, i) => {
+    const el = document.createElement('div');
+    el.className = 'frame-item';
+    el.dataset.idx = i;
+
+    // Mini preview bars representing bone rotations
+    const boneNames = Object.keys(kf.rotations);
+    const preview = boneNames.slice(0, 16).map(bn => {
+      const r = kf.rotations[bn];
+      const mag = Math.sqrt(r.x*r.x + r.y*r.y + r.z*r.z);
+      const w = Math.min(18, 2 + mag * 3);
+      return `<div class="frame-bar" style="width:${w}px;opacity:${0.3 + Math.min(0.5, mag*0.15)}"></div>`;
+    }).join('');
+
+    el.innerHTML = `
+      <div class="frame-num">${i+1}</div>
+      <div class="frame-preview">${preview}</div>
+      <button class="frame-del" title="Delete frame" data-del="${i}">×</button>
+    `;
+
+    el.addEventListener('click', (e) => {
+      if (e.target.dataset.del !== undefined) return;
+      applyFrame(i);
+      document.querySelectorAll('.frame-item').forEach(f => f.classList.remove('active'));
+      el.classList.add('active');
+    });
+
+    el.querySelector('.frame-del').addEventListener('click', (e) => {
+      e.stopPropagation();
+      keyframes.splice(i, 1);
+      renderFramesList();
+      updatePlaybackButtons();
+    });
+
+    list.appendChild(el);
+  });
+
+  document.getElementById('clear-frames-btn').disabled = false;
+}
+
+function applyFrame(idx) {
+  if (!currentModel || idx >= keyframes.length) return;
+  const kf = keyframes[idx];
+  bones.forEach(({ name, bone }) => {
+    if (kf.rotations[name]) {
+      const r = kf.rotations[name];
+      bone.rotation.set(r.x, r.y, r.z);
+    }
+  });
+  currentModel.position.y = kf.modelY || 0;
+
+  // Sync sliders if a bone is selected
+  if (selectedBoneIdx >= 0) {
+    const bone = bones[selectedBoneIdx].bone;
+    const toDeg = r => Math.round(THREE.MathUtils.radToDeg(r) * 10) / 10;
+    setSlider('rx', toDeg(bone.rotation.x));
+    setSlider('ry', toDeg(bone.rotation.y));
+    setSlider('rz', toDeg(bone.rotation.z));
+  }
+}
+
+// ─── Playback ─────────────────────────────────────────────────────────────────
+function updatePlaybackButtons() {
+  const canPlay = keyframes.length >= 2;
+  document.getElementById('play-btn').disabled = !canPlay;
+  if (!canPlay && isPlaying) { isPlaying = false; }
+  document.getElementById('play-btn').textContent = isPlaying ? '■' : '▶';
+  document.getElementById('play-btn').className = 'play-btn' + (isPlaying ? ' playing' : '');
+}
+
+document.getElementById('play-btn').addEventListener('click', () => {
+  if (keyframes.length < 2) return;
+  isPlaying = !isPlaying;
+  if (isPlaying) playT = 0;
+  updatePlaybackButtons();
+});
+
+document.getElementById('speed-slider').addEventListener('input', e => {
+  playSpeed = parseFloat(e.target.value);
+  document.getElementById('speed-val').textContent = playSpeed.toFixed(1);
+});
+
+const loopEl = document.getElementById('loop-toggle');
+
+// ─── Interpolation ────────────────────────────────────────────────────────────
+function lerpFrame(t) {
+  // t goes 0 → keyframes.length (looping)
+  const n = keyframes.length;
+  const fi = Math.floor(t) % n;
+  const ni = (fi + 1) % n;
+  const alpha = t - Math.floor(t);
+
+  const kfA = keyframes[fi];
+  const kfB = keyframes[ni];
+
+  bones.forEach(({ name, bone }) => {
+    const rA = kfA.rotations[name];
+    const rB = kfB.rotations[name];
+    if (!rA || !rB) return;
+    // Smooth step for nicer easing
+    const ea = alpha * alpha * (3 - 2 * alpha);
+    bone.rotation.x = rA.x + (rB.x - rA.x) * ea;
+    bone.rotation.y = rA.y + (rB.y - rA.y) * ea;
+    bone.rotation.z = rA.z + (rB.z - rA.z) * ea;
+  });
+
+  const yA = kfA.modelY || 0;
+  const yB = kfB.modelY || 0;
+  const ea = alpha * alpha * (3 - 2 * alpha);
+  if (currentModel) currentModel.position.y = yA + (yB - yA) * ea;
+
+  // Highlight current frame in list
+  document.querySelectorAll('.frame-item').forEach((el, i) => {
+    el.classList.toggle('playing-frame', i === fi);
+  });
+}
+
+// ─── Viewport click to select bone ───────────────────────────────────────────
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+renderer.domElement.addEventListener('click', e => {
+  if (!currentModel || bones.length === 0) return;
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+
+  // Build a list of bone helper meshes for raycasting
+  const helperMeshes = boneHelpers.map(h => h.mesh);
+  const hits = raycaster.intersectObjects(helperMeshes, false);
+  if (hits.length > 0) {
+    const hitMesh = hits[0].object;
+    const bh = boneHelpers.find(h => h.mesh === hitMesh);
+    if (bh) selectBone(bh.boneIdx);
+  }
+});
+
+// ─── Model Y position drag (height control) ──────────────────────────────────
+// Shift+drag in viewport to set model height
+let shiftDragging = false;
+let shiftDragStartY = 0;
+let shiftDragStartModelY = 0;
+
+renderer.domElement.addEventListener('mousedown', e => {
+  if (e.shiftKey && currentModel) {
+    shiftDragging = true;
+    shiftDragStartY = e.clientY;
+    shiftDragStartModelY = currentModel.position.y;
+    controls.enabled = false;
+  }
+});
+window.addEventListener('mousemove', e => {
+  if (!shiftDragging || !currentModel) return;
+  const dy = (shiftDragStartY - e.clientY) / 100;
+  currentModel.position.y = Math.max(0, shiftDragStartModelY + dy);
+});
+window.addEventListener('mouseup', () => {
+  if (shiftDragging) { shiftDragging = false; controls.enabled = true; }
+});
+
+// ─── Resize ───────────────────────────────────────────────────────────────────
+function resize() {
+  const w = vpEl.clientWidth, h = vpEl.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ─── Save / Load JSON ─────────────────────────────────────────────────────────
+document.getElementById('save-btn').addEventListener('click', () => {
+  if (keyframes.length === 0) return;
+  const data = JSON.stringify({ keyframes }, null, 2);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
+  a.download = 'animation-keyframes.json';
+  a.click();
+});
+
+document.getElementById('load-json-btn').addEventListener('click', () => {
+  document.getElementById('json-input').click();
+});
+
+document.getElementById('json-input').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.keyframes) {
+        keyframes = data.keyframes;
+        renderFramesList();
+        updatePlaybackButtons();
+        document.getElementById('save-btn').disabled = false;
+      }
+    } catch(err) { alert('Invalid JSON file'); }
+  };
+  reader.readAsText(file);
+});
+
+// ─── Render Loop ──────────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  controls.update();
+
+  if (isPlaying && keyframes.length >= 2) {
+    const loop = loopEl.checked;
+    playT += dt * playSpeed;
+    if (!loop && playT >= keyframes.length - 1) {
+      playT = keyframes.length - 1;
+      isPlaying = false;
+      updatePlaybackButtons();
+      applyFrame(keyframes.length - 1);
+    } else {
+      lerpFrame(playT % keyframes.length);
+    }
+  }
+
+  renderer.render(scene, camera);
+}
+animate();
+</script>
+</body>
+</html>

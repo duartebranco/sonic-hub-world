@@ -1,0 +1,191 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: #1a1a2e;
+  font-family: 'Nunito', sans-serif;
+}
+
+#canvas-container {
+  position: fixed;
+  inset: 0;
+}
+#canvas-container canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ── HUD ── */
+#hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Title */
+#title-card {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  white-space: nowrap;
+}
+#title-card h1 {
+  font-family: 'Fredoka One', cursive;
+  font-size: clamp(1.4rem, 3.5vw, 2.4rem);
+  color: #fff;
+  text-shadow:
+    0 0 24px #1a8cff,
+    0 4px 0 #003c9e,
+    3px 6px 0 rgba(0,0,0,.45);
+  letter-spacing: 2px;
+}
+#title-card .sub {
+  font-size: clamp(0.6rem, 1.3vw, 0.8rem);
+  color: #ffd54f;
+  font-weight: 900;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  text-shadow: 0 2px 8px rgba(0,0,0,.5);
+  margin-top: 3px;
+}
+
+/* Ring counter */
+#ring-counter {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0,0,0,.4);
+  border: 2px solid rgba(255,213,79,.55);
+  border-radius: 999px;
+  padding: 7px 16px 7px 10px;
+  backdrop-filter: blur(6px);
+}
+.ring-icon {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  border: 3px solid #ffd54f;
+  background: radial-gradient(circle at 35% 35%, #fff9c4, #ffd54f);
+  box-shadow: 0 0 10px #ffd54f, inset 0 -2px 5px rgba(0,0,0,.2);
+  flex-shrink: 0;
+}
+#ring-counter span {
+  font-family: 'Fredoka One', cursive;
+  font-size: 1.3rem;
+  color: #ffd54f;
+  text-shadow: 0 2px 6px rgba(0,0,0,.4);
+  min-width: 28px;
+}
+
+/* Speed badge */
+#speed-badge {
+  position: absolute;
+  top: 20px;
+  left: 24px;
+  background: rgba(0,0,0,.4);
+  border: 2px solid rgba(26,140,255,.5);
+  border-radius: 999px;
+  padding: 7px 16px;
+  backdrop-filter: blur(6px);
+}
+#speed-badge span {
+  font-family: 'Fredoka One', cursive;
+  font-size: 0.88rem;
+  color: #64b5f6;
+  text-shadow: 0 0 10px #1a8cff;
+  letter-spacing: 1px;
+}
+
+/* Controls hint */
+#controls-hint {
+  position: absolute;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.pill {
+  background: rgba(0,0,0,.38);
+  border: 1.5px solid rgba(255,255,255,.18);
+  backdrop-filter: blur(8px);
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: rgba(255,255,255,.88);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.pill .k {
+  background: rgba(255,255,255,.18);
+  border-radius: 5px;
+  padding: 1px 7px;
+  font-family: 'Fredoka One', cursive;
+  color: #ffd54f;
+  font-size: 0.8rem;
+}
+
+/* ── Loading screen ── */
+#loading {
+  position: fixed;
+  inset: 0;
+  background: #1a1a2e;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  transition: opacity .55s ease;
+}
+#loading.out {
+  opacity: 0;
+  pointer-events: none;
+}
+.ld-logo {
+  font-family: 'Fredoka One', cursive;
+  font-size: 2.8rem;
+  color: #fff;
+  text-shadow: 0 0 30px #1a8cff, 0 4px 0 #003c9e;
+  animation: ldpop 1.1s ease-in-out infinite;
+}
+@keyframes ldpop {
+  0%,100% { transform: scale(1); }
+  50%      { transform: scale(1.07); }
+}
+.ld-bar-bg {
+  width: 240px; height: 11px;
+  background: rgba(255,255,255,.1);
+  border-radius: 999px;
+  border: 1.5px solid rgba(255,255,255,.15);
+  overflow: hidden;
+}
+.ld-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #1a8cff, #ce93d8);
+  border-radius: 999px;
+  width: 0%;
+  transition: width .3s ease;
+  box-shadow: 0 0 12px #1a8cff;
+}
+.ld-txt {
+  font-size: .78rem;
+  color: rgba(255,255,255,.45);
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}

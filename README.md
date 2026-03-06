@@ -1,4 +1,4 @@
-## Bones
+## Bones (for reference)
 
 Bone001_23 - neck (allows to rotate head)
 

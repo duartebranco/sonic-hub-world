@@ -1,22 +1,18 @@
 import * as THREE from 'three';
 
-// ─────────────────────────────────────────────────────────
-//  THIRD-PERSON FOLLOW CAMERA
-// ─────────────────────────────────────────────────────────
-
-const PITCH_MIN =  0.05;
-const PITCH_MAX =  1.1;
-const DIST_MIN  =  3.0;
+const PITCH_MIN = 0.05;
+const PITCH_MAX = 1.1;
+const DIST_MIN  = 3.0;
 const DIST_MAX  = 18.0;
 
 export class ThirdPersonCamera {
   constructor(camera, domElement) {
-    this.camera     = camera;
-    this.yaw        = 0;
-    this.pitch      = 0.30;
-    this.dist       = 8.5;
-    this.target     = new THREE.Vector3();
-    this._camPos    = new THREE.Vector3();
+    this.camera  = camera;
+    this.yaw     = 0;
+    this.pitch   = 0.30;
+    this.dist    = 8.5;
+    this.target  = new THREE.Vector3();
+    this._camPos = new THREE.Vector3();
 
     this._mouseHeld = false;
     this._lmx       = 0;
@@ -59,13 +55,10 @@ export class ThirdPersonCamera {
     el.addEventListener('contextmenu', e => e.preventDefault());
   }
 
-  // Call every frame — playerPos is a THREE.Vector3
   update(dt, playerPos) {
-    // Smoothly chase the point just above the player
     const desired = new THREE.Vector3(playerPos.x, playerPos.y + 1.5, playerPos.z);
     this.target.lerp(desired, Math.min(1, dt * 7));
 
-    // Orbit position from target
     this._camPos.set(
       this.target.x + Math.sin(this.yaw)   * Math.cos(this.pitch) * this.dist,
       this.target.y + Math.sin(this.pitch) * this.dist,

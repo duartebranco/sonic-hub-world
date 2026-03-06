@@ -8,11 +8,6 @@ import { buildAmbientParticles }             from './particles.js';
 
 export { groundY };
 
-// ─────────────────────────────────────────────────────────
-//  BUILD ENTIRE WORLD
-//  Call once at startup. Returns all the objects the game
-//  loop needs to animate every frame.
-// ─────────────────────────────────────────────────────────
 export function buildWorld(scene) {
   buildTerrain(scene);
   buildPath(scene);

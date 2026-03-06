@@ -1,14 +1,7 @@
 import * as THREE from 'three';
 
-// ─────────────────────────────────────────────────────────
-//  SHARED MATERIAL
-// ─────────────────────────────────────────────────────────
 const CLOUD_MAT = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1 });
 
-// ─────────────────────────────────────────────────────────
-//  SINGLE CLOUD
-//  A group of overlapping spheres to get that puffy look
-// ─────────────────────────────────────────────────────────
 function makeCloud(scene, x, y, z) {
   const g = new THREE.Group();
 
@@ -35,10 +28,6 @@ function makeCloud(scene, x, y, z) {
   return g;
 }
 
-// ─────────────────────────────────────────────────────────
-//  SPAWN ALL CLOUDS
-//  Returns array of { mesh, speed } for the game loop to drift
-// ─────────────────────────────────────────────────────────
 export function buildClouds(scene) {
   const drifters = [];
   const rnd = (a, b) => Math.random() * (b - a) + a;

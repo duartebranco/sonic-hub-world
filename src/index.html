@@ -3,43 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sonic's Hub World ✨</title>
+  <title>Sonic Hub</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
-<!-- Loading screen -->
 <div id="loading">
-  <div class="ld-logo">🦔  Sonic's World</div>
+  <div class="ld-logo">Sonic's World</div>
   <div class="ld-bar-bg"><div class="ld-bar" id="ldbar"></div></div>
-  <div class="ld-txt" id="ldtxt">Loading…</div>
+  <div class="ld-txt" id="ldtxt">Loading...</div>
 </div>
 
-<!-- 3-D canvas -->
 <div id="canvas-container"></div>
 
-<!-- HUD -->
 <div id="hud">
-  <div id="title-card">
-    <h1>🌟  Sonic's Hub World  🌟</h1>
-    <div class="sub">Green Hill Zone</div>
-  </div>
-
-  <div id="ring-counter">
-    <div class="ring-icon"></div>
-    <span id="ring-count">0</span>
-  </div>
-
-  <div id="speed-badge">
-    <span id="spd-txt">SPEED: 0</span>
-  </div>
-
-  <div id="controls-hint">
-    <div class="pill"><span class="k">W A S D</span> Move</div>
-    <div class="pill"><span class="k">MOUSE</span> Camera</div>
-    <div class="pill"><span class="k">SHIFT</span> Run</div>
-    <div class="pill"><span class="k">SPACE</span> Jump</div>
-  </div>
+  <div id="ring-counter">RINGS: <span id="ring-count">0</span></div>
 </div>
 
 <script type="importmap">

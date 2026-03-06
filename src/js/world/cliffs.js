@@ -1,12 +1,6 @@
 import * as THREE from 'three';
 import { groundY } from './terrain.js';
 
-// ─────────────────────────────────────────────────────────
-//  CHECKERBOARD CLIFF WALLS  (most iconic GHZ element)
-//  Brown/tan alternating tiles arranged in a wall group,
-//  rotated and placed around the hub perimeter.
-// ─────────────────────────────────────────────────────────
-
 const MAT_A = new THREE.MeshStandardMaterial({ color: 0xb5835a, roughness: 0.85 });
 const MAT_B = new THREE.MeshStandardMaterial({ color: 0x8b5e3c, roughness: 0.85 });
 

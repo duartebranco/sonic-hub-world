@@ -1,9 +1,6 @@
 import * as THREE from 'three';
 import { groundY } from './terrain.js';
 
-// ─────────────────────────────────────────────────────────
-//  SHARED GEOMETRY + MATERIAL
-// ─────────────────────────────────────────────────────────
 const RING_GEO = new THREE.TorusGeometry(0.3, 0.065, 14, 32);
 const RING_MAT = new THREE.MeshStandardMaterial({
   color:             0xffd54f,
@@ -13,25 +10,15 @@ const RING_MAT = new THREE.MeshStandardMaterial({
   metalness:         0.75,
 });
 
-// ─────────────────────────────────────────────────────────
-//  RING SPAWN POSITIONS
-// ─────────────────────────────────────────────────────────
 const RING_SPOTS = [
-  // Line along centre path
   [0,-6],[0,-3],[0,0],[0,3],[0,6],
-  // Flanking pairs
   [1.4,-1.5],[-1.4,-1.5],[1.4,1.5],[-1.4,1.5],
-  // Side clusters
   [7,8],[8,8],[9,8], [-7,8],[-8,8],
   [5,-12],[-5,-12],[0,-14],
   [10,-4],[-10,-4],
   [4,17],[0,17],[-4,17],
 ];
 
-// ─────────────────────────────────────────────────────────
-//  BUILD ALL RINGS
-//  Returns array of { mesh, collected, phase }
-// ─────────────────────────────────────────────────────────
 export function buildRings(scene) {
   return RING_SPOTS.map(([x, z]) => {
     const mesh = new THREE.Mesh(RING_GEO, RING_MAT.clone());
@@ -42,11 +29,6 @@ export function buildRings(scene) {
   });
 }
 
-// ─────────────────────────────────────────────────────────
-//  SPARKLE FX SYSTEM
-//  spawn(pos)   — call when a ring is collected
-//  update(dt)   — call every frame
-// ─────────────────────────────────────────────────────────
 export function buildSparkleSystem(scene) {
   const sparkles = [];
 

@@ -1,9 +1,5 @@
 import * as THREE from 'three';
 
-// ─────────────────────────────────────────────────────────
-//  GROUND HEIGHT  (single source of truth — imported by
-//  everything that needs to sit on the terrain)
-// ─────────────────────────────────────────────────────────
 export function groundY(x, z) {
   return (
     Math.sin(x * 0.09) * 2.2 +
@@ -15,9 +11,6 @@ export function groundY(x, z) {
   );
 }
 
-// ─────────────────────────────────────────────────────────
-//  TERRAIN MESH  (vertex-coloured, dual-tone checker)
-// ─────────────────────────────────────────────────────────
 export function buildTerrain(scene) {
   const geo = new THREE.PlaneGeometry(280, 280, 160, 160);
   geo.rotateX(-Math.PI / 2);
@@ -30,11 +23,10 @@ export function buildTerrain(scene) {
     const y = groundY(x, z);
     pos.setY(i, y);
 
-    // Large-square checker tint — two shades of green
-    const cx      = Math.floor(x / 4);
-    const cz      = Math.floor(z / 4);
-    const even    = (cx + cz) % 2 === 0;
-    const t       = Math.max(0, Math.min(1, (y + 3) / 7));
+    const cx   = Math.floor(x / 4);
+    const cz   = Math.floor(z / 4);
+    const even = (cx + cz) % 2 === 0;
+    const t    = Math.max(0, Math.min(1, (y + 3) / 7));
 
     if (even) {
       cols[i * 3]     = 0.22 + t * 0.18;
@@ -50,19 +42,12 @@ export function buildTerrain(scene) {
   geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
   geo.computeVertexNormals();
 
-  const mat  = new THREE.MeshStandardMaterial({
-    vertexColors: true,
-    roughness:    0.88,
-    metalness:    0.0,
-  });
+  const mat  = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.88, metalness: 0.0 });
   const mesh = new THREE.Mesh(geo, mat);
   mesh.receiveShadow = true;
   scene.add(mesh);
 }
 
-// ─────────────────────────────────────────────────────────
-//  CHECKERBOARD FLOOR PATH  (teal + cream — iconic GHZ)
-// ─────────────────────────────────────────────────────────
 export function buildPath(scene) {
   const matA = new THREE.MeshStandardMaterial({ color: 0xfff9e6, roughness: 0.55 });
   const matB = new THREE.MeshStandardMaterial({ color: 0x26c6da, roughness: 0.55 });

@@ -1,9 +1,6 @@
 import * as THREE from 'three';
 import { groundY } from './terrain.js';
 
-// ─────────────────────────────────────────────────────────
-//  SHARED MATERIALS
-// ─────────────────────────────────────────────────────────
 const STEM_MAT   = new THREE.MeshStandardMaterial({ color: 0x66bb6a });
 const CENTRE_MAT = new THREE.MeshStandardMaterial({
   color: 0xfff176, roughness: 0.55,
@@ -11,10 +8,6 @@ const CENTRE_MAT = new THREE.MeshStandardMaterial({
 });
 const PETAL_COLORS = [0xff4081, 0xce93d8, 0xffd54f, 0xff5252, 0x80d8ff, 0xf48fb1];
 
-// ─────────────────────────────────────────────────────────
-//  SINGLE FLOWER
-//  Returns { head } where head is the THREE.Group that spins
-// ─────────────────────────────────────────────────────────
 function makeFlower(scene, x, z) {
   const ty  = groundY(x, z);
   const rnd = (a, b) => Math.random() * (b - a) + a;
@@ -23,15 +16,10 @@ function makeFlower(scene, x, z) {
   g.position.set(x, ty + 0.01, z);
   g.rotation.y = rnd(0, Math.PI * 2);
 
-  // Stem
-  const stem = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.03, 0.04, 0.45, 6),
-    STEM_MAT
-  );
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.45, 6), STEM_MAT);
   stem.position.y = 0.225;
   g.add(stem);
 
-  // Flower head (spins every frame)
   const head = new THREE.Group();
   head.position.y = 0.5;
 
@@ -46,17 +34,12 @@ function makeFlower(scene, x, z) {
   }
 
   head.add(new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 6), CENTRE_MAT));
-
   g.add(head);
   scene.add(g);
 
   return { head };
 }
 
-// ─────────────────────────────────────────────────────────
-//  SPAWN ALL FLOWERS
-//  Returns array of { head } for the game loop to spin
-// ─────────────────────────────────────────────────────────
 export function buildFlowers(scene) {
   const spinners = [];
   const COUNT    = 100;

@@ -1,79 +1,88 @@
-@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap");
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-html, body {
-  width: 100%; height: 100%;
-  overflow: hidden;
-  background: #1a1a2e;
-  font-family: 'Fredoka One', cursive;
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #1a1a2e;
+    font-family: "Fredoka One", cursive;
 }
 
 #canvas-container {
-  position: fixed;
-  inset: 0;
+    position: fixed;
+    inset: 0;
 }
 #canvas-container canvas {
-  display: block;
-  width: 100% !important;
-  height: 100% !important;
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
 }
 
 #hud {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 10;
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10;
 }
 
 #ring-counter {
-  position: absolute;
-  top: 18px;
-  left: 18px;
-  background: rgba(0, 0, 0, 0.55);
-  border: 2px solid rgba(255, 213, 79, 0.7);
-  padding: 6px 16px;
-  font-size: 1.1rem;
-  color: #ffd54f;
-  letter-spacing: 1px;
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 2px solid rgba(255, 213, 79, 0.7);
+    padding: 6px 16px;
+    font-size: 1.1rem;
+    color: #ffd54f;
+    letter-spacing: 1px;
 }
 
 #loading {
-  position: fixed;
-  inset: 0;
-  background: #1a1a2e;
-  z-index: 100;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 22px;
-  transition: opacity .55s ease;
+    position: fixed;
+    inset: 0;
+    background: #1a1a2e;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    transition: opacity 0.55s ease;
 }
 #loading.out {
-  opacity: 0;
-  pointer-events: none;
+    opacity: 0;
+    pointer-events: none;
 }
 .ld-logo {
-  font-size: 2.4rem;
-  color: #fff;
-  text-shadow: 0 0 30px #1a8cff, 0 4px 0 #003c9e;
+    font-size: 2.4rem;
+    color: #fff;
+    text-shadow:
+        0 0 30px #1a8cff,
+        0 4px 0 #003c9e;
 }
 .ld-bar-bg {
-  width: 240px; height: 10px;
-  background: rgba(255,255,255,.1);
-  border-radius: 2px;
-  overflow: hidden;
+    width: 240px;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
 }
 .ld-bar {
-  height: 100%;
-  background: linear-gradient(90deg, #1a8cff, #ce93d8);
-  width: 0%;
-  transition: width .3s ease;
+    height: 100%;
+    background: linear-gradient(90deg, #1a8cff, #ce93d8);
+    width: 0%;
+    transition: width 0.3s ease;
 }
 .ld-txt {
-  font-size: .75rem;
-  color: rgba(255,255,255,.45);
-  letter-spacing: 2px;
-  text-transform: uppercase;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.45);
+    letter-spacing: 2px;
+    text-transform: uppercase;
 }

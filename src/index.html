@@ -1,35 +1,33 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sonic Hub</title>
-  <link rel="stylesheet" href="css/style.css" />
-</head>
-<body>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Sonic Hub</title>
+        <link rel="stylesheet" href="css/style.css" />
+    </head>
+    <body>
+        <div id="loading">
+            <div class="ld-logo">Sonic's World</div>
+            <div class="ld-bar-bg"><div class="ld-bar" id="ldbar"></div></div>
+            <div class="ld-txt" id="ldtxt">Loading...</div>
+        </div>
 
-<div id="loading">
-  <div class="ld-logo">Sonic's World</div>
-  <div class="ld-bar-bg"><div class="ld-bar" id="ldbar"></div></div>
-  <div class="ld-txt" id="ldtxt">Loading...</div>
-</div>
+        <div id="canvas-container"></div>
 
-<div id="canvas-container"></div>
+        <div id="hud">
+            <div id="ring-counter">RINGS: <span id="ring-count">0</span></div>
+        </div>
 
-<div id="hud">
-  <div id="ring-counter">RINGS: <span id="ring-count">0</span></div>
-</div>
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+                }
+            }
+        </script>
 
-<script type="importmap">
-{
-  "imports": {
-    "three":          "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/":  "https://unpkg.com/three@0.160.0/examples/jsm/"
-  }
-}
-</script>
-
-<script type="module" src="js/main.js"></script>
-
-</body>
+        <script type="module" src="js/main.js"></script>
+    </body>
 </html>

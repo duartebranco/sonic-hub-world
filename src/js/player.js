@@ -17,6 +17,7 @@ const SLOPE_IDLE_THRESHOLD = 0.18; // slopes below this don't drift when standin
 // Animation
 const ANIM_WALK = 1.9;
 const ANIM_RUN = 5.0;
+const RUN_THRESHOLD = 0.65; // fraction of TOP_SPEED where run anim kicks in
 
 const smooth = (t) => t * t * (3 - 2 * t);
 
@@ -44,8 +45,11 @@ export class Player {
         this.model = null;
         this._bones = {};
         this._initRot = {};
+        this._idleKFs = [];
         this._walkKFs = [];
+        this._runKFs = [];
         this._walkT = 0;
+        this._runT = 0;
 
         this._keys = {};
         this._bindInput();
@@ -83,14 +87,21 @@ export class Player {
         this.scene.add(this.model);
     }
 
+    setIdleKeyframes(kfs) {
+        this._idleKFs = kfs;
+    }
+
     setWalkKeyframes(kfs) {
         this._walkKFs = kfs;
     }
 
+    setRunKeyframes(kfs) {
+        this._runKFs = kfs;
+    }
+
     // ─── animation ───────────────────────────────────────
 
-    _applyKFInterp(t) {
-        const kfs = this._walkKFs;
+    _applyKFInterp(t, kfs) {
         if (!this.model || kfs.length < 2) return;
         const n = kfs.length;
         const fi = Math.floor(t) % n;
@@ -248,24 +259,38 @@ export class Player {
 
         // ── Animation ────────────────────────────────────────
         const isMoving = this.speed > 0.5;
-        if (isMoving && this._walkKFs.length >= 2) {
-            const t = Math.min(1, this.speed / TOP_SPEED);
+        const isRunning = this.speed >= TOP_SPEED * RUN_THRESHOLD;
+
+        if (isMoving && isRunning && this._runKFs.length >= 2) {
+            this._walkT = 0;
+            this._runT += dt * ANIM_RUN;
+            this._applyKFInterp(this._runT, this._runKFs);
+        } else if (isMoving && this._walkKFs.length >= 2) {
+            this._runT = 0;
+            const t = Math.min(1, this.speed / (TOP_SPEED * RUN_THRESHOLD));
             const animSpd = ANIM_WALK + (ANIM_RUN - ANIM_WALK) * t;
             this._walkT += dt * animSpd;
-            this._applyKFInterp(this._walkT);
+            this._applyKFInterp(this._walkT, this._walkKFs);
         } else {
-            this._restPose();
             this._walkT = 0;
+            this._runT = 0;
+            // Apply idle pose from idle.json, falling back to rest pose
+            if (this._idleKFs.length >= 1) {
+                this._applyKFInterp(0, [this._idleKFs[0], this._idleKFs[0]]);
+            } else {
+                this._restPose();
+            }
+            // Layer subtle sway on top of idle pose
             const now = performance.now() / 1000;
             const root = this._bones["GLTF_created_0_rootJoint"];
             if (root) {
-                root.rotation.z = Math.sin(now * 1.3) * 0.022;
-                root.rotation.x = Math.sin(now * 0.85) * 0.016;
+                root.rotation.z += Math.sin(now * 1.3) * 0.022;
+                root.rotation.x += Math.sin(now * 0.85) * 0.016;
             }
             const head = this._bones["Bone001_23"];
             if (head) {
-                head.rotation.y = Math.sin(now * 0.55) * 0.14;
-                head.rotation.x = -0.175 + Math.sin(now * 0.38) * 0.04;
+                head.rotation.y += Math.sin(now * 0.55) * 0.14;
+                head.rotation.x += Math.sin(now * 0.38) * 0.04;
             }
         }
 

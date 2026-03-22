@@ -91,7 +91,7 @@ async function loadAssets() {
             "../models/sonic.glb",
             (gltf) => {
                 player.setModel(gltf.scene);
-                setLoad(55, "Loading animations...");
+                setLoad(60, "Loading animations...");
                 res();
             },
             undefined,
@@ -99,16 +99,17 @@ async function loadAssets() {
         );
     });
 
-    await new Promise((res, rej) => {
+    await Promise.all([
+        fetch("../animations/idle.json")
+            .then((r) => r.json())
+            .then((d) => player.setIdleKeyframes(d.keyframes)),
         fetch("../animations/walking.json")
             .then((r) => r.json())
-            .then((d) => {
-                player.setWalkKeyframes(d.keyframes);
-                setLoad(92, "Ready!");
-                res();
-            })
-            .catch(rej);
-    });
+            .then((d) => player.setWalkKeyframes(d.keyframes)),
+        fetch("../animations/running.json")
+            .then((r) => r.json())
+            .then((d) => player.setRunKeyframes(d.keyframes)),
+    ]);
 
     setLoad(100, "Ready!");
     await new Promise((r) => setTimeout(r, 350));

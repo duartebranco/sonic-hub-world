@@ -8,9 +8,7 @@ const CENTRE_MAT = new THREE.MeshStandardMaterial({
     emissive: 0xffd600,
     emissiveIntensity: 0.2,
 });
-const PETAL_COLORS = [
-    0xff4081, 0xce93d8, 0xffd54f, 0xff5252, 0x80d8ff, 0xf48fb1,
-];
+const PETAL_COLORS = [0xff4081, 0xce93d8, 0xffd54f, 0xff5252, 0x80d8ff, 0xf48fb1];
 
 function makeFlower(scene, x, z) {
     const ty = groundY(x, z);
@@ -20,10 +18,7 @@ function makeFlower(scene, x, z) {
     g.position.set(x, ty + 0.01, z);
     g.rotation.y = rnd(0, Math.PI * 2);
 
-    const stem = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.03, 0.04, 0.45, 6),
-        STEM_MAT,
-    );
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.45, 6), STEM_MAT);
     stem.position.y = 0.225;
     g.add(stem);
 
@@ -57,9 +52,7 @@ export function buildFlowers(scene) {
     for (let i = 0; i < COUNT; i++) {
         const angle = Math.random() * Math.PI * 2;
         const r = Math.random() * 22 + 2;
-        spinners.push(
-            makeFlower(scene, Math.cos(angle) * r, Math.sin(angle) * r),
-        );
+        spinners.push(makeFlower(scene, Math.cos(angle) * r, Math.sin(angle) * r));
     }
 
     return spinners;

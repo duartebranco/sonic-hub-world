@@ -74,10 +74,10 @@ export function buildSparkleSystem(scene) {
             new THREE.Vector3(
                 Math.random() * 2 - 1,
                 Math.random() * 1.1 + 0.3,
-                Math.random() * 2 - 1,
+                Math.random() * 2 - 1
             )
                 .normalize()
-                .multiplyScalar(Math.random() * 2 + 2),
+                .multiplyScalar(Math.random() * 2 + 2)
         );
 
         sparkles.push({ pts, geo, dirs, life: 1.0 });
@@ -98,7 +98,7 @@ export function buildSparkleSystem(scene) {
                     j,
                     p.getX(j) + s.dirs[j].x * dt,
                     p.getY(j) + s.dirs[j].y * dt,
-                    p.getZ(j) + s.dirs[j].z * dt,
+                    p.getZ(j) + s.dirs[j].z * dt
                 );
             }
             p.needsUpdate = true;

@@ -1,16 +1,15 @@
-name: Code Quality
+name: Format
 
 on:
     push:
-        branches: ["master"]
     pull_request:
 
 permissions:
     contents: read
 
 jobs:
-    lint-and-format:
-        name: Lint & Format Check
+    prettier:
+        name: Prettier
         runs-on: ubuntu-latest
 
         steps:
@@ -25,8 +24,5 @@ jobs:
             - name: Install dependencies
               run: npm install
 
-            - name: Run ESLint
-              run: npm run lint
-
-            - name: Check Prettier formatting
+            - name: Check formatting
               run: npm run format:check

@@ -3,20 +3,23 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Sonic Hub</title>
+        <title>Sonic Hub World</title>
         <link rel="stylesheet" href="css/style.css" />
     </head>
     <body>
-        <div id="loading">
-            <div class="ld-logo">Sonic's World</div>
-            <div class="ld-bar-bg"><div class="ld-bar" id="ldbar"></div></div>
-            <div class="ld-txt" id="ldtxt">Loading...</div>
+        <div id="title-screen">
+            <div class="ts-logo">
+                <span class="ts-logo-sonic">Sonic</span>
+                <span class="ts-logo-sub">Hub World</span>
+            </div>
+            <div class="ts-press" id="ts-press">Press Enter</div>
+            <div class="ts-copyright">© 2026 &nbsp;·&nbsp; ICG Project</div>
         </div>
 
         <div id="canvas-container"></div>
 
         <div id="hud">
-            <div id="ring-counter">RINGS: <span id="ring-count">0</span></div>
+            <div id="ring-counter">RINGS : <span id="ring-count">0</span></div>
         </div>
 
         <script type="importmap">

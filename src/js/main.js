@@ -7,17 +7,32 @@ import { ThirdPersonCamera } from "./camera.js";
 
 const $ = (id) => document.getElementById(id);
 
-function setLoad(p, msg) {
-    $("ldbar").style.width = p + "%";
-    if (msg) $("ldtxt").textContent = msg;
+// ─── Title screen / start gate ───────────────────────────
+let assetsReady = false;
+let userPressedStart = false;
+
+function startGame() {
+    const ts = $("title-screen");
+    ts.classList.add("out");
+    setTimeout(() => (ts.style.display = "none"), 750);
 }
-function hideLoader() {
-    const el = $("loading");
-    el.classList.add("out");
-    setTimeout(() => {
-        el.style.display = "none";
-    }, 600);
+
+function onStartInput() {
+    if (userPressedStart) return;
+    userPressedStart = true;
+    if (assetsReady) {
+        startGame();
+    } else {
+        $("ts-press").textContent = "Loading\u2026";
+        $("ts-press").style.animation = "none";
+        $("ts-press").style.opacity = "1";
+    }
 }
+
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") onStartInput();
+});
+document.addEventListener("click", onStartInput);
 
 // ─── Renderer ────────────────────────────────────────────
 const container = $("canvas-container");
@@ -81,22 +96,14 @@ window.addEventListener("resize", onResize);
 onResize();
 
 // ─── Asset loading ───────────────────────────────────────
-setLoad(8, "Loading Sonic...");
-
 async function loadAssets() {
     const loader = new GLTFLoader();
 
     await new Promise((res, rej) => {
-        loader.load(
-            "../models/sonic.glb",
-            (gltf) => {
-                player.setModel(gltf.scene);
-                setLoad(60, "Loading animations...");
-                res();
-            },
-            undefined,
-            rej,
-        );
+        loader.load("../models/sonic.glb", (gltf) => {
+            player.setModel(gltf.scene);
+            res();
+        }, undefined, rej);
     });
 
     await Promise.all([
@@ -111,15 +118,14 @@ async function loadAssets() {
             .then((d) => player.setRunKeyframes(d.keyframes)),
     ]);
 
-    setLoad(100, "Ready!");
-    await new Promise((r) => setTimeout(r, 350));
-    hideLoader();
+    assetsReady = true;
+    if (userPressedStart) startGame();
 }
 
 loadAssets().catch((err) => {
     console.error("Asset load error:", err);
-    setLoad(100, "Some assets missing");
-    setTimeout(hideLoader, 800);
+    assetsReady = true;
+    if (userPressedStart) startGame();
 });
 
 // ─── Ring state ──────────────────────────────────────────

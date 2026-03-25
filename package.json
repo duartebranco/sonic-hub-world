@@ -1,0 +1,19 @@
+{
+    "name": "sonic-hub-world",
+    "version": "0.1.0",
+    "description": "3D Sonic the Hedgehog hub world made with Three.js",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "lint": "eslint src/",
+        "lint:fix": "eslint src/ --fix",
+        "format": "prettier --write \"src/**/*.{js,html,css}\" \"*.html\"",
+        "format:check": "prettier --check \"src/**/*.{js,html,css}\" \"*.html\""
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.22.0",
+        "eslint": "^9.22.0",
+        "globals": "^15.15.0",
+        "prettier": "^3.5.3"
+    }
+}

@@ -474,9 +474,7 @@
                 <div class="section-title">Model</div>
                 <div id="file-drop">
                     <input type="file" id="file-input" accept=".glb,.gltf" />
-                    <div id="drop-label">
-                        Drop .glb / .gltf here<br />or click to browse
-                    </div>
+                    <div id="drop-label">Drop .glb / .gltf here<br />or click to browse</div>
                 </div>
             </div>
 
@@ -486,11 +484,7 @@
                     Bones
                     <span
                         id="bone-count"
-                        style="
-                            color: var(--muted);
-                            font-size: 9px;
-                            margin-left: 4px;
-                        "
+                        style="color: var(--muted); font-size: 9px; margin-left: 4px"
                     ></span>
                 </div>
             </div>
@@ -541,12 +535,8 @@
                     <span class="val-display" id="rz-val">0°</span>
                 </div>
                 <div class="btn-row">
-                    <button class="btn" id="reset-bone-btn" disabled>
-                        Reset Bone
-                    </button>
-                    <button class="btn" id="reset-all-btn" disabled>
-                        Reset All
-                    </button>
+                    <button class="btn" id="reset-bone-btn" disabled>Reset Bone</button>
+                    <button class="btn" id="reset-all-btn" disabled>Reset All</button>
                 </div>
             </div>
 
@@ -554,12 +544,8 @@
             <div class="section" style="padding-bottom: 8px; flex-shrink: 0">
                 <div class="section-title">Keyframes</div>
                 <div class="btn-row">
-                    <button class="btn primary" id="capture-btn" disabled>
-                        + Capture Pose
-                    </button>
-                    <button class="btn danger" id="clear-frames-btn" disabled>
-                        Clear All
-                    </button>
+                    <button class="btn primary" id="capture-btn" disabled>+ Capture Pose</button>
+                    <button class="btn danger" id="clear-frames-btn" disabled>Clear All</button>
                 </div>
             </div>
 
@@ -567,8 +553,7 @@
                 <div id="frames-wrap">
                     <div id="frames-list">
                         <div class="no-frames">
-                            No keyframes yet.<br />Pose your model, then
-                            click<br />"Capture Pose".
+                            No keyframes yet.<br />Pose your model, then click<br />"Capture Pose".
                         </div>
                     </div>
                 </div>
@@ -576,15 +561,11 @@
 
             <!-- PLAYBACK -->
             <div id="playback-section">
-                <div class="section-title" style="margin-bottom: 10px">
-                    Playback
-                </div>
+                <div class="section-title" style="margin-bottom: 10px">Playback</div>
                 <div class="playback-row">
                     <button class="play-btn" id="play-btn" disabled>▶</button>
                     <div style="flex: 1">
-                        <div class="speed-label">
-                            Speed <span id="speed-val">1.0</span>x
-                        </div>
+                        <div class="speed-label">Speed <span id="speed-val">1.0</span>x</div>
                         <input
                             type="range"
                             class="speed"
@@ -601,18 +582,9 @@
                     </label>
                 </div>
                 <div class="btn-row" style="margin-top: 10px">
-                    <button class="btn success" id="save-btn" disabled>
-                        ⬇ Save JSON
-                    </button>
-                    <button class="btn primary" id="load-json-btn">
-                        ⬆ Load JSON
-                    </button>
-                    <input
-                        type="file"
-                        id="json-input"
-                        accept=".json"
-                        style="display: none"
-                    />
+                    <button class="btn success" id="save-btn" disabled>⬇ Save JSON</button>
+                    <button class="btn primary" id="load-json-btn">⬆ Load JSON</button>
+                    <input type="file" id="json-input" accept=".json" style="display: none" />
                 </div>
             </div>
         </div>
@@ -711,9 +683,7 @@
                 e.preventDefault();
                 fileDrop.classList.add("drag-over");
             });
-            fileDrop.addEventListener("dragleave", () =>
-                fileDrop.classList.remove("drag-over"),
-            );
+            fileDrop.addEventListener("dragleave", () => fileDrop.classList.remove("drag-over"));
             fileDrop.addEventListener("drop", (e) => {
                 e.preventDefault();
                 fileDrop.classList.remove("drag-over");
@@ -745,11 +715,7 @@
                     const box = new THREE.Box3().setFromObject(currentModel);
                     const size = box.getSize(new THREE.Vector3()).length();
                     const center = box.getCenter(new THREE.Vector3());
-                    camera.position.set(
-                        center.x,
-                        center.y + size * 0.3,
-                        center.z + size * 1.4,
-                    );
+                    camera.position.set(center.x, center.y + size * 0.3, center.z + size * 1.4);
                     controls.target.copy(center);
                     controls.update();
 
@@ -767,14 +733,12 @@
 
                     buildBoneHelpers();
                     renderBoneList();
-                    document.getElementById("bone-count").textContent =
-                        `(${bones.length})`;
+                    document.getElementById("bone-count").textContent = `(${bones.length})`;
                     document.getElementById("bi-hint").textContent =
                         "Click a bone in the list to select it";
                     document.getElementById("reset-all-btn").disabled = false;
                     document.getElementById("capture-btn").disabled = false;
-                    document.getElementById("drop-label").textContent =
-                        file.name;
+                    document.getElementById("drop-label").textContent = file.name;
                 });
             }
 
@@ -784,9 +748,7 @@
                 list.innerHTML = "";
                 bones.forEach(({ name }, i) => {
                     const el = document.createElement("div");
-                    el.className =
-                        "bone-item" +
-                        (i === selectedBoneIdx ? " selected" : "");
+                    el.className = "bone-item" + (i === selectedBoneIdx ? " selected" : "");
                     el.innerHTML = `<div class="bone-dot"></div><span>${name}</span>`;
                     el.addEventListener("click", () => selectBone(i));
                     list.appendChild(el);
@@ -804,8 +766,7 @@
                     "Drag sliders to rotate · Shift+click+drag in viewport";
 
                 // Sync sliders to current bone rotation (in degrees)
-                const toDeg = (r) =>
-                    Math.round(THREE.MathUtils.radToDeg(r) * 10) / 10;
+                const toDeg = (r) => Math.round(THREE.MathUtils.radToDeg(r) * 10) / 10;
                 setSlider("rx", toDeg(bone.rotation.x));
                 setSlider("ry", toDeg(bone.rotation.y));
                 setSlider("rz", toDeg(bone.rotation.z));
@@ -816,94 +777,76 @@
             function setSlider(id, val) {
                 const s = document.getElementById(id);
                 s.value = Math.max(-180, Math.min(180, val));
-                document.getElementById(id + "-val").textContent =
-                    s.value + "°";
+                document.getElementById(id + "-val").textContent = s.value + "°";
             }
 
             // ─── Rotation Sliders ─────────────────────────────────────────────────────────
             ["rx", "ry", "rz"].forEach((id) => {
                 const el = document.getElementById(id);
                 el.addEventListener("input", () => {
-                    document.getElementById(id + "-val").textContent =
-                        el.value + "°";
+                    document.getElementById(id + "-val").textContent = el.value + "°";
                     if (selectedBoneIdx < 0 || !currentModel) return;
                     const bone = bones[selectedBoneIdx].bone;
                     const toRad = THREE.MathUtils.degToRad;
-                    bone.rotation.x = toRad(
-                        parseFloat(document.getElementById("rx").value),
-                    );
-                    bone.rotation.y = toRad(
-                        parseFloat(document.getElementById("ry").value),
-                    );
-                    bone.rotation.z = toRad(
-                        parseFloat(document.getElementById("rz").value),
-                    );
+                    bone.rotation.x = toRad(parseFloat(document.getElementById("rx").value));
+                    bone.rotation.y = toRad(parseFloat(document.getElementById("ry").value));
+                    bone.rotation.z = toRad(parseFloat(document.getElementById("rz").value));
                 });
             });
 
-            document
-                .getElementById("reset-bone-btn")
-                .addEventListener("click", () => {
-                    if (selectedBoneIdx < 0) return;
-                    const bone = bones[selectedBoneIdx].bone;
-                    const init = bone.userData.initRot;
-                    bone.rotation.set(init.x, init.y, init.z);
-                    const toDeg = (r) =>
-                        Math.round(THREE.MathUtils.radToDeg(r) * 10) / 10;
-                    setSlider("rx", toDeg(init.x));
-                    setSlider("ry", toDeg(init.y));
-                    setSlider("rz", toDeg(init.z));
-                });
+            document.getElementById("reset-bone-btn").addEventListener("click", () => {
+                if (selectedBoneIdx < 0) return;
+                const bone = bones[selectedBoneIdx].bone;
+                const init = bone.userData.initRot;
+                bone.rotation.set(init.x, init.y, init.z);
+                const toDeg = (r) => Math.round(THREE.MathUtils.radToDeg(r) * 10) / 10;
+                setSlider("rx", toDeg(init.x));
+                setSlider("ry", toDeg(init.y));
+                setSlider("rz", toDeg(init.z));
+            });
 
-            document
-                .getElementById("reset-all-btn")
-                .addEventListener("click", () => {
-                    if (!currentModel) return;
-                    bones.forEach(({ bone }) => {
-                        const i = bone.userData.initRot;
-                        bone.rotation.set(i.x, i.y, i.z);
-                    });
-                    currentModel.position.y = 0;
-                    if (selectedBoneIdx >= 0) {
-                        const bone = bones[selectedBoneIdx].bone;
-                        const toDeg = (r) =>
-                            Math.round(THREE.MathUtils.radToDeg(r) * 10) / 10;
-                        setSlider("rx", toDeg(bone.rotation.x));
-                        setSlider("ry", toDeg(bone.rotation.y));
-                        setSlider("rz", toDeg(bone.rotation.z));
-                    }
+            document.getElementById("reset-all-btn").addEventListener("click", () => {
+                if (!currentModel) return;
+                bones.forEach(({ bone }) => {
+                    const i = bone.userData.initRot;
+                    bone.rotation.set(i.x, i.y, i.z);
                 });
+                currentModel.position.y = 0;
+                if (selectedBoneIdx >= 0) {
+                    const bone = bones[selectedBoneIdx].bone;
+                    const toDeg = (r) => Math.round(THREE.MathUtils.radToDeg(r) * 10) / 10;
+                    setSlider("rx", toDeg(bone.rotation.x));
+                    setSlider("ry", toDeg(bone.rotation.y));
+                    setSlider("rz", toDeg(bone.rotation.z));
+                }
+            });
 
             // ─── Keyframe Capture ─────────────────────────────────────────────────────────
-            document
-                .getElementById("capture-btn")
-                .addEventListener("click", () => {
-                    if (!currentModel) return;
-                    const rotations = {};
-                    bones.forEach(({ name, bone }) => {
-                        rotations[name] = {
-                            x: bone.rotation.x,
-                            y: bone.rotation.y,
-                            z: bone.rotation.z,
-                        };
-                    });
-                    keyframes.push({
-                        rotations,
-                        modelY: currentModel.position.y,
-                    });
-                    renderFramesList();
-                    updatePlaybackButtons();
-                    document.getElementById("save-btn").disabled = false;
+            document.getElementById("capture-btn").addEventListener("click", () => {
+                if (!currentModel) return;
+                const rotations = {};
+                bones.forEach(({ name, bone }) => {
+                    rotations[name] = {
+                        x: bone.rotation.x,
+                        y: bone.rotation.y,
+                        z: bone.rotation.z,
+                    };
                 });
+                keyframes.push({
+                    rotations,
+                    modelY: currentModel.position.y,
+                });
+                renderFramesList();
+                updatePlaybackButtons();
+                document.getElementById("save-btn").disabled = false;
+            });
 
-            document
-                .getElementById("clear-frames-btn")
-                .addEventListener("click", () => {
-                    keyframes = [];
-                    isPlaying = false;
-                    renderFramesList();
-                    updatePlaybackButtons();
-                });
+            document.getElementById("clear-frames-btn").addEventListener("click", () => {
+                keyframes = [];
+                isPlaying = false;
+                renderFramesList();
+                updatePlaybackButtons();
+            });
 
             // ─── Frames List UI ───────────────────────────────────────────────────────────
             function renderFramesList() {
@@ -927,9 +870,7 @@
                         .slice(0, 16)
                         .map((bn) => {
                             const r = kf.rotations[bn];
-                            const mag = Math.sqrt(
-                                r.x * r.x + r.y * r.y + r.z * r.z,
-                            );
+                            const mag = Math.sqrt(r.x * r.x + r.y * r.y + r.z * r.z);
                             const w = Math.min(18, 2 + mag * 3);
                             return `<div class="frame-bar" style="width:${w}px;opacity:${0.3 + Math.min(0.5, mag * 0.15)}"></div>`;
                         })
@@ -950,15 +891,12 @@
                         el.classList.add("active");
                     });
 
-                    el.querySelector(".frame-del").addEventListener(
-                        "click",
-                        (e) => {
-                            e.stopPropagation();
-                            keyframes.splice(i, 1);
-                            renderFramesList();
-                            updatePlaybackButtons();
-                        },
-                    );
+                    el.querySelector(".frame-del").addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        keyframes.splice(i, 1);
+                        renderFramesList();
+                        updatePlaybackButtons();
+                    });
 
                     list.appendChild(el);
                 });
@@ -980,8 +918,7 @@
                 // Sync sliders if a bone is selected
                 if (selectedBoneIdx >= 0) {
                     const bone = bones[selectedBoneIdx].bone;
-                    const toDeg = (r) =>
-                        Math.round(THREE.MathUtils.radToDeg(r) * 10) / 10;
+                    const toDeg = (r) => Math.round(THREE.MathUtils.radToDeg(r) * 10) / 10;
                     setSlider("rx", toDeg(bone.rotation.x));
                     setSlider("ry", toDeg(bone.rotation.y));
                     setSlider("rz", toDeg(bone.rotation.z));
@@ -995,29 +932,22 @@
                 if (!canPlay && isPlaying) {
                     isPlaying = false;
                 }
-                document.getElementById("play-btn").textContent = isPlaying
-                    ? "■"
-                    : "▶";
+                document.getElementById("play-btn").textContent = isPlaying ? "■" : "▶";
                 document.getElementById("play-btn").className =
                     "play-btn" + (isPlaying ? " playing" : "");
             }
 
-            document
-                .getElementById("play-btn")
-                .addEventListener("click", () => {
-                    if (keyframes.length < 2) return;
-                    isPlaying = !isPlaying;
-                    if (isPlaying) playT = 0;
-                    updatePlaybackButtons();
-                });
+            document.getElementById("play-btn").addEventListener("click", () => {
+                if (keyframes.length < 2) return;
+                isPlaying = !isPlaying;
+                if (isPlaying) playT = 0;
+                updatePlaybackButtons();
+            });
 
-            document
-                .getElementById("speed-slider")
-                .addEventListener("input", (e) => {
-                    playSpeed = parseFloat(e.target.value);
-                    document.getElementById("speed-val").textContent =
-                        playSpeed.toFixed(1);
-                });
+            document.getElementById("speed-slider").addEventListener("input", (e) => {
+                playSpeed = parseFloat(e.target.value);
+                document.getElementById("speed-val").textContent = playSpeed.toFixed(1);
+            });
 
             const loopEl = document.getElementById("loop-toggle");
 
@@ -1092,10 +1022,7 @@
             window.addEventListener("mousemove", (e) => {
                 if (!shiftDragging || !currentModel) return;
                 const dy = (shiftDragStartY - e.clientY) / 100;
-                currentModel.position.y = Math.max(
-                    0,
-                    shiftDragStartModelY + dy,
-                );
+                currentModel.position.y = Math.max(0, shiftDragStartModelY + dy);
             });
             window.addEventListener("mouseup", () => {
                 if (shiftDragging) {
@@ -1116,47 +1043,38 @@
             resize();
 
             // ─── Save / Load JSON ─────────────────────────────────────────────────────────
-            document
-                .getElementById("save-btn")
-                .addEventListener("click", () => {
-                    if (keyframes.length === 0) return;
-                    const data = JSON.stringify({ keyframes }, null, 2);
-                    const a = document.createElement("a");
-                    a.href = URL.createObjectURL(
-                        new Blob([data], { type: "application/json" }),
-                    );
-                    a.download = "animation-keyframes.json";
-                    a.click();
-                });
+            document.getElementById("save-btn").addEventListener("click", () => {
+                if (keyframes.length === 0) return;
+                const data = JSON.stringify({ keyframes }, null, 2);
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(new Blob([data], { type: "application/json" }));
+                a.download = "animation-keyframes.json";
+                a.click();
+            });
 
-            document
-                .getElementById("load-json-btn")
-                .addEventListener("click", () => {
-                    document.getElementById("json-input").click();
-                });
+            document.getElementById("load-json-btn").addEventListener("click", () => {
+                document.getElementById("json-input").click();
+            });
 
-            document
-                .getElementById("json-input")
-                .addEventListener("change", (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        try {
-                            const data = JSON.parse(ev.target.result);
-                            if (data.keyframes) {
-                                keyframes = data.keyframes;
-                                renderFramesList();
-                                updatePlaybackButtons();
-                                document.getElementById("save-btn").disabled =
-                                    false;
-                            }
-                        } catch (err) {
-                            alert("Invalid JSON file");
+            document.getElementById("json-input").addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    try {
+                        const data = JSON.parse(ev.target.result);
+                        if (data.keyframes) {
+                            keyframes = data.keyframes;
+                            renderFramesList();
+                            updatePlaybackButtons();
+                            document.getElementById("save-btn").disabled = false;
                         }
-                    };
-                    reader.readAsText(file);
-                });
+                    } catch (err) {
+                        alert("Invalid JSON file");
+                    }
+                };
+                reader.readAsText(file);
+            });
 
             // ─── Render Loop ──────────────────────────────────────────────────────────────
             const clock = new THREE.Clock();

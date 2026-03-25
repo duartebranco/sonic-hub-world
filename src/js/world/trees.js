@@ -28,10 +28,7 @@ function makePalmTree(scene, x, z, sc = 1) {
     for (let i = 0; i < SEGS; i++) {
         const r0 = Math.max(0.01, (0.14 - i * 0.012) * sc);
         const r1 = Math.max(0.01, (0.12 - i * 0.012) * sc);
-        const seg = new THREE.Mesh(
-            new THREE.CylinderGeometry(r1, r0, segH, 7),
-            TRUNK_MAT,
-        );
+        const seg = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, segH, 7), TRUNK_MAT);
         const lean = Math.sin(i * 0.5) * 0.055 * sc;
         seg.position.set(lean, i * segH + segH / 2, 0);
         seg.rotation.z = -lean * 0.18;
@@ -56,14 +53,11 @@ function makePalmTree(scene, x, z, sc = 1) {
 
     for (let i = 0; i < 3; i++) {
         const a = (i / 3) * Math.PI * 2;
-        const c = new THREE.Mesh(
-            new THREE.SphereGeometry(0.09 * sc, 6, 5),
-            COCO_MAT,
-        );
+        const c = new THREE.Mesh(new THREE.SphereGeometry(0.09 * sc, 6, 5), COCO_MAT);
         c.position.set(
             Math.sin(a) * 0.28 * sc + leanOffset,
             trunkTopY - 0.06 * sc,
-            Math.cos(a) * 0.28 * sc,
+            Math.cos(a) * 0.28 * sc
         );
         g.add(c);
     }

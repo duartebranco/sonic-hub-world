@@ -20,11 +20,7 @@ function makeCliffWall(scene, cx, cz, width, height, rotY, tileSize = 1.0) {
         for (let c = 0; c < cols; c++) {
             const mat = (r + c) % 2 === 0 ? MAT_A : MAT_B;
             const m = new THREE.Mesh(geo, mat);
-            m.position.set(
-                (c - cols / 2 + 0.5) * tileSize,
-                r * tileSize + tileSize / 2,
-                0,
-            );
+            m.position.set((c - cols / 2 + 0.5) * tileSize, r * tileSize + tileSize / 2, 0);
             m.castShadow = true;
             m.receiveShadow = true;
             group.add(m);

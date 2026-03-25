@@ -64,8 +64,7 @@ body {
     gap: 0;
     /* Dark red checkerboard — just like Sonic Jam's title */
     background-color: #1a0000;
-    background-image:
-        repeating-conic-gradient(#2d0000 0% 25%, #1a0000 0% 50%);
+    background-image: repeating-conic-gradient(#2d0000 0% 25%, #1a0000 0% 50%);
     background-size: 56px 56px;
     transition: opacity 0.7s ease;
 }
@@ -92,10 +91,10 @@ body {
     /* Blue outline — just like the real Sonic logo */
     text-shadow:
         -5px -5px 0 #0033aa,
-         5px -5px 0 #0033aa,
-        -5px  5px 0 #0033aa,
-         5px  5px 0 #0033aa,
-         0    8px 0 #001166;
+        5px -5px 0 #0033aa,
+        -5px 5px 0 #0033aa,
+        5px 5px 0 #0033aa,
+        0 8px 0 #001166;
 }
 
 .ts-logo-sub {
@@ -107,10 +106,10 @@ body {
     letter-spacing: 8px;
     text-shadow:
         -3px -3px 0 #0033aa,
-         3px -3px 0 #0033aa,
-        -3px  3px 0 #0033aa,
-         3px  3px 0 #0033aa,
-         0    5px 0 #001166;
+        3px -3px 0 #0033aa,
+        -3px 3px 0 #0033aa,
+        3px 3px 0 #0033aa,
+        0 5px 0 #001166;
     margin-top: -0.15em;
 }
 
@@ -126,8 +125,13 @@ body {
 }
 
 @keyframes ts-blink {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0; }
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
 }
 
 .ts-copyright {

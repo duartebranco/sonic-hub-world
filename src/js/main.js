@@ -72,13 +72,7 @@ skyFill.position.set(-10, 12, -8);
 scene.add(skyFill);
 
 // ─── World ───────────────────────────────────────────────
-const {
-    flowerSpinners,
-    cloudDrifters,
-    rings,
-    sparkleSystem,
-    ambientParticles,
-} = buildWorld(scene);
+const { flowerSpinners, cloudDrifters, rings, sparkleSystem, ambientParticles } = buildWorld(scene);
 
 // ─── Player + camera controller ──────────────────────────
 const player = new Player(scene);
@@ -100,10 +94,15 @@ async function loadAssets() {
     const loader = new GLTFLoader();
 
     await new Promise((res, rej) => {
-        loader.load("../models/sonic.glb", (gltf) => {
-            player.setModel(gltf.scene);
-            res();
-        }, undefined, rej);
+        loader.load(
+            "../models/sonic.glb",
+            (gltf) => {
+                player.setModel(gltf.scene);
+                res();
+            },
+            undefined,
+            rej
+        );
     });
 
     await Promise.all([

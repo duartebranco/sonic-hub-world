@@ -36,12 +36,7 @@ export function buildClouds(scene) {
     const rnd = (a, b) => Math.random() * (b - a) + a;
 
     for (let i = 0; i < 20; i++) {
-        const mesh = makeCloud(
-            scene,
-            rnd(-100, 100),
-            rnd(16, 30),
-            rnd(-100, 100),
-        );
+        const mesh = makeCloud(scene, rnd(-100, 100), rnd(16, 30), rnd(-100, 100));
         drifters.push({ mesh, speed: rnd(0.8, 2.5) });
     }
 

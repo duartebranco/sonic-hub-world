@@ -162,7 +162,7 @@ function animate() {
             sparkleSystem.spawn(r.mesh.position.clone());
             scene.remove(r.mesh);
             ringCount++;
-            $("ring-count").textContent = ringCount;
+            $("ring-count").textContent = String(ringCount);
         }
     });
 

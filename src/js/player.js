@@ -177,8 +177,7 @@ export class Player {
             this._vel.z *= decay;
         }
 
-        // Slope gravity — only push when slope is steep enough, or player is already moving
-        const flatSpeed = Math.sqrt(this._vel.x * this._vel.x + this._vel.z * this._vel.z);
+        // Slope gravity — only push when slope is steep enough
         const applySlope = !this._inAir && slopeMag > SLOPE_IDLE_THRESHOLD;
         if (applySlope) {
             this._vel.x += rawSlopeX * SLOPE_ACCEL * dt;

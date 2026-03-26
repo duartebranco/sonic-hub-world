@@ -4,6 +4,7 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Sonic Hub World</title>
+        <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="css/style.css" />
     </head>
     <body>
@@ -19,7 +20,14 @@
         <div id="canvas-container"></div>
 
         <div id="hud">
-            <div id="ring-counter">RINGS : <span id="ring-count">0</span></div>
+            <div id="ring-counter-container">
+                <div class="ring-counter-cap left"></div>
+                <div id="ring-counter">
+                    <div class="ring-counter-label">RINGS :</div>
+                    <div id="ring-count">0</div>
+                </div>
+                <div class="ring-counter-cap right"></div>
+            </div>
         </div>
 
         <script type="importmap">

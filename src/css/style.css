@@ -35,20 +35,60 @@ body {
     z-index: 10;
 }
 
-#ring-counter {
+#ring-counter-container {
+    align-items: center;
+    display: flex;
     position: absolute;
     top: 14px;
     left: 14px;
-    background: #4400aa;
-    border: 4px solid #ffd700;
-    padding: 5px 20px 5px 14px;
-    font-family: "Nunito", sans-serif;
-    font-weight: 900;
-    font-size: 1.5rem;
-    color: #ffffff;
-    letter-spacing: 3px;
+}
+
+.ring-counter-cap.left {
+    background-color: #FCB400;
+    border-bottom-right-radius: 14px;
+    border-top-right-radius: 14px;
+    flex-shrink: 0;
+    height: 39px;
+    margin-left: -4px;
+    width: 19px;
+    rotate: 180deg;
+    transform-origin: 50% 50%;
+}
+
+.ring-counter-cap.right {
+    background-color: #FCB400;
+    border-bottom-right-radius: 14px;
+    border-top-right-radius: 14px;
+    flex-shrink: 0;
+    height: 39px;
+    margin-left: -4px;
+    width: 19px;
+    rotate: 0deg;
+    transform-origin: 50% 50%;
+}
+
+#ring-counter {
+    align-items: center;
+    background-color: #3200F8;
+    border: 2px solid #501000;
+    display: flex;
+    gap: 24px;
+    outline: 2px solid #FCB400;
+    padding: 6px 16px 6px 8px;
+    position: relative;
+    margin: 0;
+}
+
+.ring-counter-label, #ring-count {
+    color: #FFFFFF;
+    display: inline-block;
+    flex-shrink: 0;
+    font-family: 'Press Start 2P', system-ui, sans-serif;
+    font-size: 19px;
+    letter-spacing: 2px;
+    line-height: 19px;
+    text-shadow: rgba(0, 0, 0, 0.5) 2px 2px 0px;
     text-transform: uppercase;
-    line-height: 1;
 }
 
 /* ── Title Screen ──────────────────────────────────────── */

@@ -149,10 +149,7 @@ export class Player {
 
         const inputDir = new THREE.Vector3();
         if (hasInput) {
-            inputDir
-                .addScaledVector(cf, mz)
-                .addScaledVector(cr, mx)
-                .normalize();
+            inputDir.addScaledVector(cf, mz).addScaledVector(cr, mx).normalize();
         }
 
         // ── Slope gradient (finite difference) ───────────────
@@ -162,20 +159,13 @@ export class Player {
         // gradient points uphill; negate to get downhill direction
         const rawSlopeX = (gC - gX) / SLOPE_SAMPLE;
         const rawSlopeZ = (gC - gZ) / SLOPE_SAMPLE;
-        const slopeMag = Math.sqrt(
-            rawSlopeX * rawSlopeX + rawSlopeZ * rawSlopeZ,
-        );
+        const slopeMag = Math.sqrt(rawSlopeX * rawSlopeX + rawSlopeZ * rawSlopeZ);
 
         // ── Horizontal velocity ───────────────────────────────
         if (hasInput) {
-            const velLen = Math.sqrt(
-                this._vel.x * this._vel.x + this._vel.z * this._vel.z,
-            );
+            const velLen = Math.sqrt(this._vel.x * this._vel.x + this._vel.z * this._vel.z);
             const dot =
-                velLen > 0.01
-                    ? (this._vel.x * inputDir.x + this._vel.z * inputDir.z) /
-                      velLen
-                    : 1;
+                velLen > 0.01 ? (this._vel.x * inputDir.x + this._vel.z * inputDir.z) / velLen : 1;
 
             const accel = dot < -0.15 ? BRAKE : ACCEL;
             this._vel.x += inputDir.x * accel * dt;
@@ -187,10 +177,7 @@ export class Player {
             this._vel.z *= decay;
         }
 
-        // Slope gravity — only push when slope is steep enough, or player is already moving
-        const flatSpeed = Math.sqrt(
-            this._vel.x * this._vel.x + this._vel.z * this._vel.z,
-        );
+        // Slope gravity — only push when slope is steep enough
         const applySlope = !this._inAir && slopeMag > SLOPE_IDLE_THRESHOLD;
         if (applySlope) {
             this._vel.x += rawSlopeX * SLOPE_ACCEL * dt;
@@ -198,28 +185,20 @@ export class Player {
         }
 
         // Speed cap
-        const newFlatSpeed = Math.sqrt(
-            this._vel.x * this._vel.x + this._vel.z * this._vel.z,
-        );
+        const newFlatSpeed = Math.sqrt(this._vel.x * this._vel.x + this._vel.z * this._vel.z);
         if (newFlatSpeed > TOP_SPEED) {
             const s = TOP_SPEED / newFlatSpeed;
             this._vel.x *= s;
             this._vel.z *= s;
         }
 
-        this.speed = Math.sqrt(
-            this._vel.x * this._vel.x + this._vel.z * this._vel.z,
-        );
+        this.speed = Math.sqrt(this._vel.x * this._vel.x + this._vel.z * this._vel.z);
 
         // Facing yaw — follows velocity direction
         if (this.speed > 0.5) {
             // Model's local +X is forward. atan2(-vz, vx) maps velocity to that convention.
             const travelYaw = Math.atan2(-this._vel.z, this._vel.x) + Math.PI;
-            this.yaw = lerpAngle(
-                this.yaw,
-                travelYaw,
-                Math.min(1, dt * TURN_SPEED),
-            );
+            this.yaw = lerpAngle(this.yaw, travelYaw, Math.min(1, dt * TURN_SPEED));
         }
 
         this.pos.x += this._vel.x * dt;
@@ -297,9 +276,7 @@ export class Player {
         if (this._inAir) {
             const root = this._bones["GLTF_created_0_rootJoint"];
             if (root)
-                root.rotation.x +=
-                    Math.max(0, this._jumpVel / (JUMP_BASE + JUMP_BOOST)) *
-                    -0.28;
+                root.rotation.x += Math.max(0, this._jumpVel / (JUMP_BASE + JUMP_BOOST)) * -0.28;
         }
     }
 

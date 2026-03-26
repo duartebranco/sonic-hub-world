@@ -51,31 +51,22 @@ export class ThirdPersonCamera {
         el.addEventListener(
             "wheel",
             (e) => {
-                this.dist = Math.max(
-                    DIST_MIN,
-                    Math.min(DIST_MAX, this.dist + e.deltaY * 0.018),
-                );
+                this.dist = Math.max(DIST_MIN, Math.min(DIST_MAX, this.dist + e.deltaY * 0.018));
             },
-            { passive: true },
+            { passive: true }
         );
 
         el.addEventListener("contextmenu", (e) => e.preventDefault());
     }
 
     update(dt, playerPos) {
-        const desired = new THREE.Vector3(
-            playerPos.x,
-            playerPos.y + 1.5,
-            playerPos.z,
-        );
+        const desired = new THREE.Vector3(playerPos.x, playerPos.y + 1.5, playerPos.z);
         this.target.lerp(desired, Math.min(1, dt * 7));
 
         this._camPos.set(
-            this.target.x +
-                Math.sin(this.yaw) * Math.cos(this.pitch) * this.dist,
+            this.target.x + Math.sin(this.yaw) * Math.cos(this.pitch) * this.dist,
             this.target.y + Math.sin(this.pitch) * this.dist,
-            this.target.z +
-                Math.cos(this.yaw) * Math.cos(this.pitch) * this.dist,
+            this.target.z + Math.cos(this.yaw) * Math.cos(this.pitch) * this.dist
         );
 
         this.camera.position.lerp(this._camPos, Math.min(1, dt * 10));

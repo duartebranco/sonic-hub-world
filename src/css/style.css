@@ -121,6 +121,46 @@ body {
     background: #ff4400;
 }
 
+/* ── Speed Lines ───────────────────────────────────────── */
+
+#speed-lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 10;
+    background: repeating-conic-gradient(
+        from 0deg at 50% 50%,
+        transparent 0deg,
+        transparent 3deg,
+        rgba(255, 255, 255, 0.6) 3.5deg,
+        transparent 4deg
+    );
+    -webkit-mask-image: radial-gradient(circle, transparent 50%, black 100%);
+    mask-image: radial-gradient(circle, transparent 50%, black 100%);
+}
+
+#speed-lines.active {
+    opacity: 1;
+    animation: speed-jitter 0.1s infinite;
+}
+
+@keyframes speed-jitter {
+    0% {
+        transform: scale(1.05) rotate(0deg);
+    }
+    50% {
+        transform: scale(1.05) rotate(1.5deg);
+    }
+    100% {
+        transform: scale(1.05) rotate(-1deg);
+    }
+}
+
 /* ── Title Screen ──────────────────────────────────────── */
 
 #title-screen {

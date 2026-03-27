@@ -3,6 +3,7 @@ import { groundY } from "../world/index.js";
 import { updatePhysics } from "./physics.js";
 import { updateAnimation } from "./animation.js";
 import { bindInput, getPlayerInput } from "./input.js";
+import { DustSystem } from "./dust.js";
 
 export class Player {
     constructor(scene, spin) {
@@ -12,6 +13,8 @@ export class Player {
         this.pos = new THREE.Vector3();
         this.yaw = 0;
         this.speed = 0;
+
+        this._dust = new DustSystem(scene);
 
         this._vel = new THREE.Vector3();
         this._jumpVel = 0;
@@ -90,6 +93,9 @@ export class Player {
 
         // ── Animation ────────────────────────────────────────
         updateAnimation(this, dt, inSpin);
+
+        // ── Dust Particles ───────────────────────────────────
+        this._dust.update(dt, this.pos, this.speed, this.speed >= 20 && !this._inAir, this.yaw);
     }
 
     get inAir() {

@@ -79,6 +79,7 @@ const { flowerSpinners, cloudDrifters, rings, sparkleSystem, ambientParticles } 
 const spin = new SpinDash(scene, $("spin-charge-bar"), $("spin-charge-fill"));
 const player = new Player(scene, spin);
 const tpCam = new ThirdPersonCamera(camera, renderer.domElement);
+const speedLinesEl = $("speed-lines");
 
 // ─── Resize ──────────────────────────────────────────────
 function onResize() {
@@ -143,6 +144,12 @@ function animate() {
 
     player.update(dt, tpCam.yaw);
     tpCam.update(dt, player.pos);
+
+    if (player.speed >= 25 && !player.inAir) {
+        speedLinesEl.classList.add("active");
+    } else {
+        speedLinesEl.classList.remove("active");
+    }
 
     sun.position.set(player.pos.x + 20, 35, player.pos.z + 15);
     sun.target.position.set(player.pos.x, player.pos.y, player.pos.z);

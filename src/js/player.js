@@ -91,30 +91,34 @@ export class Player {
         const group = new THREE.Group();
 
         // solid sonic-blue core
-        group.add(new THREE.Mesh(
-            new THREE.SphereGeometry(0.42, 14, 10),
-            new THREE.MeshStandardMaterial({
-                color: 0x1565c0,
-                emissive: 0x002299,
-                emissiveIntensity: 0.35,
-                metalness: 0.15,
-                roughness: 0.35,
-            })
-        ));
+        group.add(
+            new THREE.Mesh(
+                new THREE.SphereGeometry(1, 14, 10),
+                new THREE.MeshStandardMaterial({
+                    color: 0x1565c0,
+                    emissive: 0x002299,
+                    emissiveIntensity: 0.35,
+                    metalness: 0.15,
+                    roughness: 0.35,
+                })
+            )
+        );
 
         // wireframe overlay — the "white lines on the ball" effect
-        group.add(new THREE.Mesh(
-            new THREE.SphereGeometry(0.435, 10, 7),
-            new THREE.MeshBasicMaterial({
-                color: 0x99ddff,
-                wireframe: true,
-                transparent: true,
-                opacity: 0.55,
-            })
-        ));
+        group.add(
+            new THREE.Mesh(
+                new THREE.SphereGeometry(1.015, 10, 7),
+                new THREE.MeshBasicMaterial({
+                    color: 0x99ddff,
+                    wireframe: true,
+                    transparent: true,
+                    opacity: 0.55,
+                })
+            )
+        );
 
         // 3 energy rings orbiting the ball
-        const ringGeo = new THREE.TorusGeometry(0.58, 0.022, 6, 32);
+        const ringGeo = new THREE.TorusGeometry(0.98, 0.025, 6, 32);
         const ringAngles = [0, Math.PI / 2, Math.PI / 3];
         ringAngles.forEach((a) => {
             const ring = new THREE.Mesh(
@@ -227,7 +231,8 @@ export class Player {
                 this._spinCharging = true;
                 this._spinCharge = Math.min(1, this._spinCharge + dt * SPIN_CHARGE_RATE);
                 // spin roll ramps from slow to fast as charge builds
-                this._spinRoll += dt * (SPIN_ROLL_CHARGE_MIN + this._spinCharge * SPIN_ROLL_CHARGE_MAX);
+                this._spinRoll +=
+                    dt * (SPIN_ROLL_CHARGE_MIN + this._spinCharge * SPIN_ROLL_CHARGE_MAX);
                 // decelerate to a stop while charging
                 const decay = Math.exp(-20 * dt);
                 this._vel.x *= decay;
@@ -273,7 +278,9 @@ export class Player {
             if (hasInput) {
                 const velLen = Math.sqrt(this._vel.x * this._vel.x + this._vel.z * this._vel.z);
                 const dot =
-                    velLen > 0.01 ? (this._vel.x * inputDir.x + this._vel.z * inputDir.z) / velLen : 1;
+                    velLen > 0.01
+                        ? (this._vel.x * inputDir.x + this._vel.z * inputDir.z) / velLen
+                        : 1;
 
                 const accel = dot < -0.15 ? BRAKE : ACCEL;
                 this._vel.x += inputDir.x * accel * dt;
@@ -351,13 +358,16 @@ export class Player {
         // spin ball: show in place of model while charging / active
         this._spinBall.visible = inSpin;
         this._spinBall.position.copy(this.pos);
+        this._spinBall.position.y += 0.8; // lift by sphere radius so ball sits on ground
         this._spinBall.rotation.y = this.yaw;
         this._spinBall.rotation.x = this._spinRoll;
         if (inSpin) {
             // treat active (post-launch) as full charge for ring visuals
             const charge = this._spinActive ? 1 : this._spinCharge;
             const ringSpeed = 2.5 + charge * 5;
-            this._spinRings.forEach((r) => { r.material.opacity = 0.4 + charge * 0.5; });
+            this._spinRings.forEach((r) => {
+                r.material.opacity = 0.4 + charge * 0.5;
+            });
             this._spinRings[0].rotation.z += dt * ringSpeed * 1.8;
             this._spinRings[1].rotation.y += dt * ringSpeed * 1.4;
             this._spinRings[2].rotation.x += dt * ringSpeed;
@@ -408,7 +418,8 @@ export class Player {
             if (this._inAir) {
                 const root = this._bones["GLTF_created_0_rootJoint"];
                 if (root)
-                    root.rotation.x += Math.max(0, this._jumpVel / (JUMP_BASE + JUMP_BOOST)) * -0.28;
+                    root.rotation.x +=
+                        Math.max(0, this._jumpVel / (JUMP_BASE + JUMP_BOOST)) * -0.28;
             }
         }
     }

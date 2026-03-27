@@ -60,6 +60,10 @@ export class Player {
         this._spinActiveTimer = 0;
         this._spinRoll = 0;
 
+        this._spinBall = null;
+        this._spinRings = [];
+        this._buildSpinBall();
+
         this.model = null;
         this._bones = {};
         this._initRot = {};
@@ -81,6 +85,51 @@ export class Player {
         window.addEventListener("keyup", (e) => {
             this._keys[e.code] = false;
         });
+    }
+
+    _buildSpinBall() {
+        const group = new THREE.Group();
+
+        // solid sonic-blue core
+        group.add(new THREE.Mesh(
+            new THREE.SphereGeometry(0.42, 14, 10),
+            new THREE.MeshStandardMaterial({
+                color: 0x1565c0,
+                emissive: 0x002299,
+                emissiveIntensity: 0.35,
+                metalness: 0.15,
+                roughness: 0.35,
+            })
+        ));
+
+        // wireframe overlay — the "white lines on the ball" effect
+        group.add(new THREE.Mesh(
+            new THREE.SphereGeometry(0.435, 10, 7),
+            new THREE.MeshBasicMaterial({
+                color: 0x99ddff,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.55,
+            })
+        ));
+
+        // 3 energy rings orbiting the ball
+        const ringGeo = new THREE.TorusGeometry(0.58, 0.022, 6, 32);
+        const ringAngles = [0, Math.PI / 2, Math.PI / 3];
+        ringAngles.forEach((a) => {
+            const ring = new THREE.Mesh(
+                ringGeo,
+                new THREE.MeshBasicMaterial({ color: 0xbbecff, transparent: true, opacity: 0.88 })
+            );
+            ring.rotation.x = a;
+            ring.rotation.z = a * 0.7;
+            group.add(ring);
+            this._spinRings.push(ring);
+        });
+
+        group.visible = false;
+        this.scene.add(group);
+        this._spinBall = group;
     }
 
     setModel(gltfScene) {
@@ -292,10 +341,27 @@ export class Player {
         }
 
         // ── Apply to model ────────────────────────────────────
+        const inSpin = this._spinCharging || this._spinActive;
+
+        this.model.visible = !inSpin;
         this.model.position.copy(this.pos);
         this.model.rotation.y = this.yaw;
-        // spin roll: pitch the model forward around its local X axis
-        this.model.rotation.x = (this._spinCharging || this._spinActive) ? this._spinRoll : 0;
+        this.model.rotation.x = 0;
+
+        // spin ball: show in place of model while charging / active
+        this._spinBall.visible = inSpin;
+        this._spinBall.position.copy(this.pos);
+        this._spinBall.rotation.y = this.yaw;
+        this._spinBall.rotation.x = this._spinRoll;
+        if (inSpin) {
+            // treat active (post-launch) as full charge for ring visuals
+            const charge = this._spinActive ? 1 : this._spinCharge;
+            const ringSpeed = 2.5 + charge * 5;
+            this._spinRings.forEach((r) => { r.material.opacity = 0.4 + charge * 0.5; });
+            this._spinRings[0].rotation.z += dt * ringSpeed * 1.8;
+            this._spinRings[1].rotation.y += dt * ringSpeed * 1.4;
+            this._spinRings[2].rotation.x += dt * ringSpeed;
+        }
 
         // ── Animation ────────────────────────────────────────
         if (this._spinCharging || this._spinActive) {

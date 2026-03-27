@@ -176,8 +176,8 @@ function animate() {
         // orbit particles: radius and orbit speed grow with charge
         const radius = 0.5 + charge * 1.4;
         const orbitSpeed = 4 + charge * 10;
-        // color shifts from blue (h=0.6) to orange-red (h=0.08)
-        spinPMat.color.setHSL(0.6 - charge * 0.52, 1.0, 0.55);
+        // light blue, brightening toward white at full charge
+        spinPMat.color.setHSL(0.58, 0.85, 0.72 + charge * 0.18);
         spinPMat.opacity = 0.35 + charge * 0.65;
         spinPMat.size = 0.1 + charge * 0.22;
         const attr = spinPGeo.attributes.position;

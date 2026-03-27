@@ -1,14 +1,14 @@
 import * as THREE from "three";
 
-const HOLD_THRESHOLD = 0.18;      // seconds before charging begins
-const CHARGE_RATE = 1 / 1.2;      // full charge in 1.2 s
-const BOOST_MIN = 22.0;           // launch speed at zero charge
-const BOOST_MAX = 52.0;           // launch speed at full charge
-export const TOP_SPEED = 54.0;    // speed cap while spin is active
-const DURATION = 1.0;             // seconds before spin state expires
-const ROLL_CHARGE_MIN = 2.0;      // roll speed (rad/s) at start of charge
-const ROLL_CHARGE_MAX = 16.0;     // extra roll speed added at full charge
-const ROLL_LAUNCH = 24.0;         // roll speed after launch
+const HOLD_THRESHOLD = 0.18; // seconds before charging begins
+const CHARGE_RATE = 1 / 1.2; // full charge in 1.2 s
+const BOOST_MIN = 22.0; // launch speed at zero charge
+const BOOST_MAX = 52.0; // launch speed at full charge
+export const TOP_SPEED = 54.0; // speed cap while spin is active
+const DURATION = 1.0; // seconds before spin state expires
+const ROLL_CHARGE_MIN = 2.0; // roll speed (rad/s) at start of charge
+const ROLL_CHARGE_MAX = 16.0; // extra roll speed added at full charge
+const ROLL_LAUNCH = 24.0; // roll speed after launch
 
 const PARTICLE_COUNT = 48;
 
@@ -32,19 +32,31 @@ export class SpinDash {
     _buildBall(scene) {
         const g = new THREE.Group();
 
-        g.add(new THREE.Mesh(
-            new THREE.SphereGeometry(1, 14, 10),
-            new THREE.MeshStandardMaterial({
-                color: 0x1565c0, emissive: 0x002299,
-                emissiveIntensity: 0.35, metalness: 0.15, roughness: 0.35,
-            })
-        ));
+        g.add(
+            new THREE.Mesh(
+                new THREE.SphereGeometry(1, 14, 10),
+                new THREE.MeshStandardMaterial({
+                    color: 0x1565c0,
+                    emissive: 0x002299,
+                    emissiveIntensity: 0.35,
+                    metalness: 0.15,
+                    roughness: 0.35,
+                })
+            )
+        );
 
         // wireframe overlay for the "lines on ball" effect
-        g.add(new THREE.Mesh(
-            new THREE.SphereGeometry(1.015, 10, 7),
-            new THREE.MeshBasicMaterial({ color: 0x99ddff, wireframe: true, transparent: true, opacity: 0.55 })
-        ));
+        g.add(
+            new THREE.Mesh(
+                new THREE.SphereGeometry(1.015, 10, 7),
+                new THREE.MeshBasicMaterial({
+                    color: 0x99ddff,
+                    wireframe: true,
+                    transparent: true,
+                    opacity: 0.55,
+                })
+            )
+        );
 
         const ringGeo = new THREE.TorusGeometry(0.98, 0.025, 6, 32);
         [0, Math.PI / 2, Math.PI / 3].forEach((a) => {
@@ -67,12 +79,20 @@ export class SpinDash {
         const pPos = new Float32Array(PARTICLE_COUNT * 3);
         const geo = new THREE.BufferGeometry();
         geo.setAttribute("position", new THREE.BufferAttribute(pPos, 3));
-        const mat = new THREE.PointsMaterial({ size: 0.15, transparent: true, opacity: 0, depthWrite: false });
+        const mat = new THREE.PointsMaterial({
+            size: 0.15,
+            transparent: true,
+            opacity: 0,
+            depthWrite: false,
+        });
         scene.add(new THREE.Points(geo, mat));
 
         this._pGeo = geo;
         this._pMat = mat;
-        this._pAngles = Float32Array.from({ length: PARTICLE_COUNT }, (_, i) => (i / PARTICLE_COUNT) * Math.PI * 2);
+        this._pAngles = Float32Array.from(
+            { length: PARTICLE_COUNT },
+            (_, i) => (i / PARTICLE_COUNT) * Math.PI * 2
+        );
         this._pYOff = Float32Array.from({ length: PARTICLE_COUNT }, () => Math.random() * 0.9);
         this._pSpeeds = Float32Array.from({ length: PARTICLE_COUNT }, () => 3 + Math.random() * 3);
     }

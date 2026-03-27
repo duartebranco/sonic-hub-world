@@ -3,6 +3,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 import { buildWorld, groundY } from "./world/index.js";
 import { Player } from "./player.js";
+import { SpinDash } from "./spin.js";
 import { ThirdPersonCamera } from "./camera.js";
 
 const $ = (id) => document.getElementById(id);
@@ -75,7 +76,8 @@ scene.add(skyFill);
 const { flowerSpinners, cloudDrifters, rings, sparkleSystem, ambientParticles } = buildWorld(scene);
 
 // ─── Player + camera controller ──────────────────────────
-const player = new Player(scene);
+const spin = new SpinDash(scene, $("spin-charge-bar"), $("spin-charge-fill"));
+const player = new Player(scene, spin);
 const tpCam = new ThirdPersonCamera(camera, renderer.domElement);
 
 // ─── Resize ──────────────────────────────────────────────
@@ -130,29 +132,6 @@ loadAssets().catch((err) => {
 // ─── Ring state ──────────────────────────────────────────
 let ringCount = 0;
 
-// ─── Spin charge HUD ─────────────────────────────────────
-const spinBar = $("spin-charge-bar");
-const spinFill = $("spin-charge-fill");
-
-// ─── Spin charge particles ────────────────────────────────
-const SPIN_P = 48;
-const spinPPos = new Float32Array(SPIN_P * 3);
-const spinPGeo = new THREE.BufferGeometry();
-spinPGeo.setAttribute("position", new THREE.BufferAttribute(spinPPos, 3));
-const spinPMat = new THREE.PointsMaterial({
-    size: 0.15,
-    transparent: true,
-    opacity: 0,
-    depthWrite: false,
-    vertexColors: false,
-});
-const spinPts = new THREE.Points(spinPGeo, spinPMat);
-scene.add(spinPts);
-// per-particle data
-const spinPAngles = new Float32Array(SPIN_P).map((_, i) => (i / SPIN_P) * Math.PI * 2);
-const spinPYOff = new Float32Array(SPIN_P).map(() => Math.random() * 0.9);
-const spinPSpeeds = new Float32Array(SPIN_P).map(() => 3 + Math.random() * 3);
-
 // ─── Game loop ───────────────────────────────────────────
 const clock = new THREE.Clock();
 
@@ -164,37 +143,6 @@ function animate() {
 
     player.update(dt, tpCam.yaw);
     tpCam.update(dt, player.pos);
-
-    if (player.spinCharging) {
-        const charge = player.spinCharge;
-
-        // hud charge bar
-        spinBar.classList.remove("hidden");
-        spinFill.style.width = `${charge * 100}%`;
-        spinFill.classList.toggle("full", charge >= 1);
-
-        // orbit particles: radius and orbit speed grow with charge
-        const radius = 0.5 + charge * 1.4;
-        const orbitSpeed = 4 + charge * 10;
-        // light blue, brightening toward white at full charge
-        spinPMat.color.setHSL(0.58, 0.85, 0.72 + charge * 0.18);
-        spinPMat.opacity = 0.35 + charge * 0.65;
-        spinPMat.size = 0.1 + charge * 0.22;
-        const attr = spinPGeo.attributes.position;
-        for (let i = 0; i < SPIN_P; i++) {
-            spinPAngles[i] += dt * (spinPSpeeds[i] + orbitSpeed);
-            attr.setXYZ(
-                i,
-                player.pos.x + Math.cos(spinPAngles[i]) * radius,
-                player.pos.y + spinPYOff[i] * (0.2 + charge * 0.8),
-                player.pos.z + Math.sin(spinPAngles[i]) * radius
-            );
-        }
-        attr.needsUpdate = true;
-    } else {
-        spinBar.classList.add("hidden");
-        spinPMat.opacity = 0;
-    }
 
     sun.position.set(player.pos.x + 20, 35, player.pos.z + 15);
     sun.target.position.set(player.pos.x, player.pos.y, player.pos.z);

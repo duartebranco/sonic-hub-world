@@ -21,7 +21,6 @@ export class SpinDash {
         this._activeTimer = 0;
         this._roll = 0;
 
-        this._rings = [];
         this._ball = this._buildBall(scene);
         this._setupParticles(scene);
 
@@ -32,23 +31,18 @@ export class SpinDash {
     _buildBall(scene) {
         const g = new THREE.Group();
 
-        g.add(
-            new THREE.Mesh(
-                new THREE.SphereGeometry(1, 14, 10),
-                new THREE.MeshStandardMaterial({
-                    color: 0x1565c0,
-                    emissive: 0x002299,
-                    emissiveIntensity: 0.35,
-                    metalness: 0.15,
-                    roughness: 0.35,
-                })
-            )
+        this._innerBall = new THREE.Mesh(
+            new THREE.SphereGeometry(1, 16, 16),
+            new THREE.MeshStandardMaterial({
+                color: 0x1565c0,
+                emissive: 0x002299,
+                emissiveIntensity: 0.4,
+                roughness: 0.3,
+            })
         );
-
-        // wireframe overlay for the "lines on ball" effect
-        g.add(
+        this._innerBall.add(
             new THREE.Mesh(
-                new THREE.SphereGeometry(1.015, 10, 7),
+                new THREE.SphereGeometry(1.02, 16, 16),
                 new THREE.MeshBasicMaterial({
                     color: 0x99ddff,
                     wireframe: true,
@@ -57,18 +51,8 @@ export class SpinDash {
                 })
             )
         );
-
-        const ringGeo = new THREE.TorusGeometry(0.98, 0.025, 6, 32);
-        [0, Math.PI / 2, Math.PI / 3].forEach((a) => {
-            const ring = new THREE.Mesh(
-                ringGeo,
-                new THREE.MeshBasicMaterial({ color: 0xbbecff, transparent: true, opacity: 0.88 })
-            );
-            ring.rotation.x = a;
-            ring.rotation.z = a * 0.7;
-            g.add(ring);
-            this._rings.push(ring);
-        });
+        this._innerBall.scale.set(1, 1, 0.7);
+        g.add(this._innerBall);
 
         g.visible = false;
         scene.add(g);
@@ -141,16 +125,10 @@ export class SpinDash {
         this._ball.visible = inSpin;
         this._ball.position.set(pos.x, pos.y + 0.8, pos.z);
         this._ball.rotation.y = yaw;
-        this._ball.rotation.x = this._roll;
 
-        if (!inSpin) return;
-
-        const charge = this.active ? 1 : this.charge;
-        const ringSpeed = 2.5 + charge * 5;
-        this._rings.forEach((r) => (r.material.opacity = 0.4 + charge * 0.5));
-        this._rings[0].rotation.z += dt * ringSpeed * 1.8;
-        this._rings[1].rotation.y += dt * ringSpeed * 1.4;
-        this._rings[2].rotation.x += dt * ringSpeed;
+        if (this._innerBall) {
+            this._innerBall.rotation.z = this._roll;
+        }
     }
 
     _updateParticles(dt, pos) {

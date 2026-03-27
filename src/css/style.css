@@ -91,6 +91,35 @@ body {
     text-transform: uppercase;
 }
 
+/* ── Spin Charge Bar ───────────────────────────────────── */
+
+#spin-charge-bar {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 180px;
+    height: 14px;
+    background: #3200F8;
+    border: 2px solid #501000;
+    outline: 2px solid #FCB400;
+}
+
+#spin-charge-bar.hidden {
+    display: none;
+}
+
+#spin-charge-fill {
+    height: 100%;
+    width: 0%;
+    background: #ffe000;
+    transition: background 0.1s;
+}
+
+#spin-charge-fill.full {
+    background: #ff4400;
+}
+
 /* ── Title Screen ──────────────────────────────────────── */
 
 #title-screen {

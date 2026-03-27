@@ -14,6 +14,17 @@ const SLOPE_ACCEL = 9.0; // how hard slope gravity pushes downhill
 const SLOPE_SAMPLE = 0.5; // finite-difference step for gradient
 const SLOPE_IDLE_THRESHOLD = 0.18; // slopes below this don't drift when standing still
 
+// Spin dash
+const SPIN_HOLD_THRESHOLD = 0.18; // seconds of hold before charging begins
+const SPIN_CHARGE_RATE = 1 / 1.2; // full charge in 1.2 s
+const SPIN_BOOST_MIN = 22.0; // launch speed at zero charge
+const SPIN_BOOST_MAX = 52.0; // launch speed at full charge
+const SPIN_TOP_SPEED = 54.0; // speed cap while spin is active
+const SPIN_DURATION = 1.0; // seconds before spin state expires
+const SPIN_ROLL_CHARGE_MIN = 2.0; // roll speed (rad/s) at start of charge
+const SPIN_ROLL_CHARGE_MAX = 16.0; // extra roll speed added at full charge
+const SPIN_ROLL_LAUNCH = 24.0; // roll speed after launch
+
 // Animation
 const ANIM_WALK = 1.9;
 const ANIM_RUN = 5.0;
@@ -41,6 +52,13 @@ export class Player {
         this._groundY = 0;
         this._inAir = false;
         this._jumpQueued = false;
+
+        this._spinHoldTime = 0;
+        this._spinCharging = false;
+        this._spinCharge = 0; // 0–1
+        this._spinActive = false;
+        this._spinActiveTimer = 0;
+        this._spinRoll = 0;
 
         this.model = null;
         this._bones = {};
@@ -138,6 +156,7 @@ export class Player {
         const back = k["KeyS"] || k["ArrowDown"];
         const left = k["KeyA"] || k["ArrowLeft"];
         const right = k["KeyD"] || k["ArrowRight"];
+        const spinKey = k["ShiftLeft"] || k["KeyX"];
 
         const mx = (right ? 1 : 0) - (left ? 1 : 0);
         const mz = (fwd ? 1 : 0) - (back ? 1 : 0);
@@ -152,6 +171,45 @@ export class Player {
             inputDir.addScaledVector(cf, mz).addScaledVector(cr, mx).normalize();
         }
 
+        // ── Spin dash ────────────────────────────────────────
+        if (spinKey && !this._inAir) {
+            this._spinHoldTime += dt;
+            if (this._spinHoldTime >= SPIN_HOLD_THRESHOLD) {
+                this._spinCharging = true;
+                this._spinCharge = Math.min(1, this._spinCharge + dt * SPIN_CHARGE_RATE);
+                // spin roll ramps from slow to fast as charge builds
+                this._spinRoll += dt * (SPIN_ROLL_CHARGE_MIN + this._spinCharge * SPIN_ROLL_CHARGE_MAX);
+                // decelerate to a stop while charging
+                const decay = Math.exp(-20 * dt);
+                this._vel.x *= decay;
+                this._vel.z *= decay;
+                this._jumpQueued = false;
+            }
+        } else {
+            if (this._spinCharging) {
+                // key released after charging — launch in facing direction
+                // recover facing direction from yaw: travelYaw = atan2(-vz, vx) + PI
+                // so facing = (cos(yaw - PI), -sin(yaw - PI))
+                const boost = SPIN_BOOST_MIN + (SPIN_BOOST_MAX - SPIN_BOOST_MIN) * this._spinCharge;
+                this._vel.x = Math.cos(this.yaw - Math.PI) * boost;
+                this._vel.z = -Math.sin(this.yaw - Math.PI) * boost;
+                this._spinActive = true;
+                this._spinActiveTimer = SPIN_DURATION;
+            }
+            this._spinCharging = false;
+            this._spinCharge = 0;
+            this._spinHoldTime = 0;
+        }
+
+        if (this._spinActive) {
+            this._spinActiveTimer -= dt;
+            this._spinRoll += dt * SPIN_ROLL_LAUNCH;
+            if (this._spinActiveTimer <= 0) {
+                this._spinActive = false;
+                this._spinRoll = 0;
+            }
+        }
+
         // ── Slope gradient (finite difference) ───────────────
         const gC = groundY(this.pos.x, this.pos.z);
         const gX = groundY(this.pos.x + SLOPE_SAMPLE, this.pos.z);
@@ -162,19 +220,21 @@ export class Player {
         const slopeMag = Math.sqrt(rawSlopeX * rawSlopeX + rawSlopeZ * rawSlopeZ);
 
         // ── Horizontal velocity ───────────────────────────────
-        if (hasInput) {
-            const velLen = Math.sqrt(this._vel.x * this._vel.x + this._vel.z * this._vel.z);
-            const dot =
-                velLen > 0.01 ? (this._vel.x * inputDir.x + this._vel.z * inputDir.z) / velLen : 1;
+        if (!this._spinCharging) {
+            if (hasInput) {
+                const velLen = Math.sqrt(this._vel.x * this._vel.x + this._vel.z * this._vel.z);
+                const dot =
+                    velLen > 0.01 ? (this._vel.x * inputDir.x + this._vel.z * inputDir.z) / velLen : 1;
 
-            const accel = dot < -0.15 ? BRAKE : ACCEL;
-            this._vel.x += inputDir.x * accel * dt;
-            this._vel.z += inputDir.z * accel * dt;
-        } else {
-            // Exponential friction — fast at high speed, gentle near zero
-            const decay = Math.exp(-DECEL * dt);
-            this._vel.x *= decay;
-            this._vel.z *= decay;
+                const accel = dot < -0.15 ? BRAKE : ACCEL;
+                this._vel.x += inputDir.x * accel * dt;
+                this._vel.z += inputDir.z * accel * dt;
+            } else if (!this._spinActive) {
+                // exponential friction — fast at high speed, gentle near zero
+                const decay = Math.exp(-DECEL * dt);
+                this._vel.x *= decay;
+                this._vel.z *= decay;
+            }
         }
 
         // Slope gravity — only push when slope is steep enough
@@ -184,10 +244,11 @@ export class Player {
             this._vel.z += rawSlopeZ * SLOPE_ACCEL * dt;
         }
 
-        // Speed cap
+        // Speed cap — relaxed during active spin
+        const speedCap = this._spinActive ? SPIN_TOP_SPEED : TOP_SPEED;
         const newFlatSpeed = Math.sqrt(this._vel.x * this._vel.x + this._vel.z * this._vel.z);
-        if (newFlatSpeed > TOP_SPEED) {
-            const s = TOP_SPEED / newFlatSpeed;
+        if (newFlatSpeed > speedCap) {
+            const s = speedCap / newFlatSpeed;
             this._vel.x *= s;
             this._vel.z *= s;
         }
@@ -214,11 +275,9 @@ export class Player {
             this._groundY = curGround;
             if (doJump) {
                 this._inAir = true;
-                // Jump height scales with current speed — faster run = bigger jump
+                // jump height scales with current speed — faster run = bigger jump
                 const speedRatio = Math.min(1, this.speed / TOP_SPEED);
                 this._jumpVel = JUMP_BASE + JUMP_BOOST * speedRatio;
-                // Carry horizontal momentum: at full speed slightly boost it
-                // (no change to _vel.x/z — they already carry forward naturally)
             }
         } else {
             this._jumpVel += GRAVITY * dt;
@@ -235,48 +294,56 @@ export class Player {
         // ── Apply to model ────────────────────────────────────
         this.model.position.copy(this.pos);
         this.model.rotation.y = this.yaw;
+        // spin roll: pitch the model forward around its local X axis
+        this.model.rotation.x = (this._spinCharging || this._spinActive) ? this._spinRoll : 0;
 
         // ── Animation ────────────────────────────────────────
-        const isMoving = this.speed > 0.5;
-        const isRunning = this.speed >= TOP_SPEED * RUN_THRESHOLD;
-
-        if (isMoving && isRunning && this._runKFs.length >= 2) {
+        if (this._spinCharging || this._spinActive) {
             this._walkT = 0;
-            this._runT += dt * ANIM_RUN;
-            this._applyKFInterp(this._runT, this._runKFs);
-        } else if (isMoving && this._walkKFs.length >= 2) {
             this._runT = 0;
-            const t = Math.min(1, this.speed / (TOP_SPEED * RUN_THRESHOLD));
-            const animSpd = ANIM_WALK + (ANIM_RUN - ANIM_WALK) * t;
-            this._walkT += dt * animSpd;
-            this._applyKFInterp(this._walkT, this._walkKFs);
+            this._restPose();
         } else {
-            this._walkT = 0;
-            this._runT = 0;
-            // Apply idle pose from idle.json, falling back to rest pose
-            if (this._idleKFs.length >= 1) {
-                this._applyKFInterp(0, [this._idleKFs[0], this._idleKFs[0]]);
-            } else {
-                this._restPose();
-            }
-            // Layer subtle sway on top of idle pose
-            const now = performance.now() / 1000;
-            const root = this._bones["GLTF_created_0_rootJoint"];
-            if (root) {
-                root.rotation.z += Math.sin(now * 1.3) * 0.022;
-                root.rotation.x += Math.sin(now * 0.85) * 0.016;
-            }
-            const head = this._bones["Bone001_23"];
-            if (head) {
-                head.rotation.y += Math.sin(now * 0.55) * 0.14;
-                head.rotation.x += Math.sin(now * 0.38) * 0.04;
-            }
-        }
+            const isMoving = this.speed > 0.5;
+            const isRunning = this.speed >= TOP_SPEED * RUN_THRESHOLD;
 
-        if (this._inAir) {
-            const root = this._bones["GLTF_created_0_rootJoint"];
-            if (root)
-                root.rotation.x += Math.max(0, this._jumpVel / (JUMP_BASE + JUMP_BOOST)) * -0.28;
+            if (isMoving && isRunning && this._runKFs.length >= 2) {
+                this._walkT = 0;
+                this._runT += dt * ANIM_RUN;
+                this._applyKFInterp(this._runT, this._runKFs);
+            } else if (isMoving && this._walkKFs.length >= 2) {
+                this._runT = 0;
+                const t = Math.min(1, this.speed / (TOP_SPEED * RUN_THRESHOLD));
+                const animSpd = ANIM_WALK + (ANIM_RUN - ANIM_WALK) * t;
+                this._walkT += dt * animSpd;
+                this._applyKFInterp(this._walkT, this._walkKFs);
+            } else {
+                this._walkT = 0;
+                this._runT = 0;
+                // apply idle pose from idle.json, falling back to rest pose
+                if (this._idleKFs.length >= 1) {
+                    this._applyKFInterp(0, [this._idleKFs[0], this._idleKFs[0]]);
+                } else {
+                    this._restPose();
+                }
+                // layer subtle sway on top of idle pose
+                const now = performance.now() / 1000;
+                const root = this._bones["GLTF_created_0_rootJoint"];
+                if (root) {
+                    root.rotation.z += Math.sin(now * 1.3) * 0.022;
+                    root.rotation.x += Math.sin(now * 0.85) * 0.016;
+                }
+                const head = this._bones["Bone001_23"];
+                if (head) {
+                    head.rotation.y += Math.sin(now * 0.55) * 0.14;
+                    head.rotation.x += Math.sin(now * 0.38) * 0.04;
+                }
+            }
+
+            if (this._inAir) {
+                const root = this._bones["GLTF_created_0_rootJoint"];
+                if (root)
+                    root.rotation.x += Math.max(0, this._jumpVel / (JUMP_BASE + JUMP_BOOST)) * -0.28;
+            }
         }
     }
 
@@ -285,5 +352,11 @@ export class Player {
     }
     get jumpVel() {
         return this._jumpVel;
+    }
+    get spinCharging() {
+        return this._spinCharging;
+    }
+    get spinCharge() {
+        return this._spinCharge;
     }
 }

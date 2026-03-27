@@ -78,8 +78,7 @@ export function updateAnimation(player, dt, inSpin) {
         if (player._inAir) {
             const root = player._bones["GLTF_created_0_rootJoint"];
             if (root) {
-                root.rotation.x +=
-                    Math.max(0, player._jumpVel / (JUMP_BASE + JUMP_BOOST)) * -0.28;
+                root.rotation.x += Math.max(0, player._jumpVel / (JUMP_BASE + JUMP_BOOST)) * -0.28;
             }
         }
     }

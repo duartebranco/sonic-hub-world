@@ -2,8 +2,8 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 import { buildWorld, groundY } from "./world/index.js";
-import { Player } from "./player.js";
-import { SpinDash } from "./spin.js";
+import { Player } from "./player/index.js";
+import { SpinDash } from "./player/spin.js";
 import { ThirdPersonCamera } from "./camera.js";
 
 const $ = (id) => document.getElementById(id);

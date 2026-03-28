@@ -35,12 +35,20 @@ body {
     z-index: 10;
 }
 
-#ring-counter-container {
+#ring-counter-container,
+#time-counter-container {
     align-items: center;
     display: flex;
     position: absolute;
-    top: 14px;
     left: 14px;
+}
+
+#ring-counter-container {
+    top: 14px;
+}
+
+#time-counter-container {
+    top: 60px;
 }
 
 .ring-counter-cap.left {
@@ -67,7 +75,8 @@ body {
     transform-origin: 50% 50%;
 }
 
-#ring-counter {
+#ring-counter,
+#time-counter {
     align-items: center;
     background-color: #3200f8;
     border: 2px solid #501000;
@@ -80,7 +89,8 @@ body {
 }
 
 .ring-counter-label,
-#ring-count {
+#ring-count,
+#time-count {
     color: #ffffff;
     display: inline-block;
     flex-shrink: 0;

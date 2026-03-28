@@ -45,6 +45,15 @@ export function buildRings(scene) {
     });
 }
 
+export function buildGoalRing(scene) {
+    const geo = new THREE.TorusGeometry(4.0, 0.8, 16, 64);
+    const mesh = new THREE.Mesh(geo, RING_MAT.clone());
+    mesh.position.set(0, groundY(0, -180) + 4.0, -180);
+    mesh.castShadow = true;
+    scene.add(mesh);
+    return mesh;
+}
+
 export function buildSparkleSystem(scene) {
     const sparkles = [];
 

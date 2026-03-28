@@ -73,7 +73,8 @@ skyFill.position.set(-10, 12, -8);
 scene.add(skyFill);
 
 // ─── World ───────────────────────────────────────────────
-const { flowerSpinners, cloudDrifters, rings, sparkleSystem, ambientParticles } = buildWorld(scene);
+const { flowerSpinners, cloudDrifters, rings, goalRing, sparkleSystem, ambientParticles } =
+    buildWorld(scene);
 
 // ─── Player + camera controller ──────────────────────────
 const spin = new SpinDash(scene, $("spin-charge-bar"), $("spin-charge-fill"));
@@ -130,8 +131,11 @@ loadAssets().catch((err) => {
     if (userPressedStart) startGame();
 });
 
-// ─── Ring state ──────────────────────────────────────────
+// ─── Game state ──────────────────────────────────────────
 let ringCount = 0;
+let raceTime = 0;
+let timerRunning = false;
+let raceFinished = false;
 
 // ─── Game loop ───────────────────────────────────────────
 const clock = new THREE.Clock();
@@ -141,6 +145,19 @@ function animate() {
 
     const dt = Math.min(clock.getDelta(), 0.05);
     const now = performance.now() / 1000;
+
+    if (userPressedStart && assetsReady) {
+        if ((player.speed > 0 || player.inAir) && !raceFinished) timerRunning = true;
+
+        if (timerRunning && !raceFinished) {
+            raceTime += dt;
+            const mins = Math.floor(raceTime / 60);
+            const secs = Math.floor(raceTime % 60);
+            const ms = Math.floor((raceTime * 100) % 100);
+            $("time-count").textContent =
+                `${mins}:${secs.toString().padStart(2, "0")}.${ms.toString().padStart(2, "0")}`;
+        }
+    }
 
     player.update(dt, tpCam.yaw);
     tpCam.update(dt, player.pos);
@@ -174,6 +191,20 @@ function animate() {
             $("ring-count").textContent = String(ringCount);
         }
     });
+
+    if (!raceFinished) {
+        goalRing.rotation.y += dt * 1.5;
+        const dx = player.pos.x - goalRing.position.x;
+        const dy = player.pos.y + 0.5 - goalRing.position.y;
+        const dz = player.pos.z - goalRing.position.z;
+        if (dx * dx + dy * dy + dz * dz < 25.0) {
+            // Goal ring radius is 4.0
+            raceFinished = true;
+            timerRunning = false;
+            $("time-count").style.color = "#ffe000";
+            $("time-count").style.animation = "ts-blink 0.5s step-end infinite";
+        }
+    }
 
     sparkleSystem.update(dt);
 

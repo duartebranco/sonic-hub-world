@@ -2,7 +2,7 @@ import { buildTerrain, buildPath, groundY } from "./terrain.js";
 import { buildCliffs } from "./cliffs.js";
 import { buildTrees } from "./trees.js";
 import { buildFlowers } from "./flowers.js";
-import { buildRings, buildSparkleSystem } from "./rings.js";
+import { buildRings, buildSparkleSystem, buildGoalRing } from "./rings.js";
 import { buildClouds } from "./clouds.js";
 import { buildAmbientParticles } from "./particles.js";
 
@@ -17,6 +17,7 @@ export function buildWorld(scene) {
     const flowerSpinners = buildFlowers(scene);
     const cloudDrifters = buildClouds(scene);
     const rings = buildRings(scene);
+    const goalRing = buildGoalRing(scene);
     const sparkleSystem = buildSparkleSystem(scene);
     const ambientParticles = buildAmbientParticles(scene);
 
@@ -24,6 +25,7 @@ export function buildWorld(scene) {
         flowerSpinners,
         cloudDrifters,
         rings,
+        goalRing,
         sparkleSystem,
         ambientParticles,
     };

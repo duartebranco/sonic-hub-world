@@ -76,15 +76,28 @@ export function updatePhysics(player, dt, hasInput, inputDir, doJump) {
         player.yaw = lerpAngle(player.yaw, travelYaw, Math.min(1, dt * TURN_SPEED));
     }
 
-    pos.x += vel.x * dt;
-    pos.z += vel.z * dt;
+    const nextX = pos.x + vel.x * dt;
+    const nextZ = pos.z + vel.z * dt;
+    const nextGround = groundY(nextX, nextZ);
+
+    const moveDist = Math.sqrt(vel.x * vel.x + vel.z * vel.z) * dt;
+    const heightDiff = nextGround - pos.y;
+
+    // Block forward movement if the terrain step is too steep to run up (acts as a wall)
+    if ((moveDist > 0.001 && heightDiff / moveDist > 1.2) || heightDiff > 0.5) {
+        vel.x = 0;
+        vel.z = 0;
+    } else {
+        pos.x = nextX;
+        pos.z = nextZ;
+    }
 
     // ── Vertical / jump ──────────────────────────────────
-    const curGround = groundY(pos.x, pos.z);
+    const actualGround = groundY(pos.x, pos.z);
 
     if (!player._inAir) {
-        pos.y = curGround;
-        player._groundY = curGround;
+        pos.y = actualGround;
+        player._groundY = actualGround;
         if (doJump) {
             player._inAir = true;
             // jump height scales with current speed — faster run = bigger jump
@@ -95,9 +108,9 @@ export function updatePhysics(player, dt, hasInput, inputDir, doJump) {
         player._jumpVel += GRAVITY * dt;
         player._groundY += player._jumpVel * dt;
         pos.y = player._groundY;
-        if (player._groundY <= curGround) {
-            pos.y = curGround;
-            player._groundY = curGround;
+        if (player._groundY <= actualGround) {
+            pos.y = actualGround;
+            player._groundY = actualGround;
             player._jumpVel = 0;
             player._inAir = false;
         }

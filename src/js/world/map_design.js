@@ -46,41 +46,25 @@ export const MAP_CONFIG = {
 // This mathematically builds the ground using your simple config above!
 export function groundY(x, z) {
     let y = 0;
-
-    // A. Dig Lakes
-    for (const lake of MAP_CONFIG.lakes) {
-        const dist = Math.sqrt((x - lake.x) ** 2 + (z - lake.z) ** 2);
-        if (dist < lake.radius) {
-            const dip = Math.cos(((dist / lake.radius) * Math.PI) / 2) * lake.depth;
-            y -= dip;
-        }
-    }
-
-    // B. Dig Trenches
-    for (const t of MAP_CONFIG.trenches) {
-        const hw = t.width / 2.0;
-        const hl = t.length / 2.0;
-        if (x > t.x - hw && x < t.x + hw && z > t.z - hl && z < t.z + hl) {
-            y = Math.min(y, -t.depth);
-        }
-    }
-
-    // C. Enforce Flat Hub Area
     const distOrigin = Math.sqrt(x * x + z * z);
+
+    // A. Enforce Flat Hub Area
     if (distOrigin < MAP_CONFIG.hubRadius) {
         y = Math.max(y, 0);
     }
 
-    // D. Raise Plateaus
+    // B. Raise Plateaus
     for (const p of MAP_CONFIG.plateaus) {
         const dist = Math.sqrt((x - p.x) ** 2 + (z - p.z) ** 2);
         // 2-unit thick smooth transition wall
         const transition = Math.max(0, Math.min(1, (p.radius - dist) / 2.0 + 0.5));
-        const smooth = transition * transition * (3 - 2 * transition);
-        y = Math.max(y, smooth * p.height);
+        if (transition > 0) {
+            const smooth = transition * transition * (3 - 2 * transition);
+            y = Math.max(y, smooth * p.height);
+        }
     }
 
-    // E. Raise Ramps
+    // C. Raise Ramps
     for (const r of MAP_CONFIG.ramps) {
         const hw = r.width / 2.0;
         const hl = r.length / 2.0;
@@ -92,14 +76,36 @@ export function groundY(x, z) {
             else if (r.facing === "east") t = (x - (r.x - hw)) / r.width;
             else if (r.facing === "west") t = (r.x + hw - x) / r.width;
 
-            y = Math.max(y, t * t * r.height);
+            if (t > 0) {
+                y = Math.max(y, t * t * r.height);
+            }
         }
     }
 
-    // F. World Boundary Walls
+    // D. World Boundary Walls
     if (distOrigin > MAP_CONFIG.worldRadius) {
         const t = Math.max(0, Math.min(1, (distOrigin - MAP_CONFIG.worldRadius) / 10.0));
-        y += t * t * (3 - 2 * t) * 40.0;
+        if (t > 0) {
+            y = Math.max(y, t * t * (3 - 2 * t) * 40.0);
+        }
+    }
+
+    // E. Dig Lakes (Must be subtracted AFTER raises/Math.max calls)
+    for (const lake of MAP_CONFIG.lakes) {
+        const dist = Math.sqrt((x - lake.x) ** 2 + (z - lake.z) ** 2);
+        if (dist < lake.radius) {
+            const dip = Math.cos(((dist / lake.radius) * Math.PI) / 2) * lake.depth;
+            y -= dip;
+        }
+    }
+
+    // F. Dig Trenches
+    for (const t of MAP_CONFIG.trenches) {
+        const hw = t.width / 2.0;
+        const hl = t.length / 2.0;
+        if (x > t.x - hw && x < t.x + hw && z > t.z - hl && z < t.z + hl) {
+            y = Math.min(y, -t.depth);
+        }
     }
 
     return y;

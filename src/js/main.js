@@ -73,7 +73,7 @@ skyFill.position.set(-10, 12, -8);
 scene.add(skyFill);
 
 // ─── World ───────────────────────────────────────────────
-const { flowerSpinners, cloudDrifters, rings, goalRing, sparkleSystem, ambientParticles } =
+const { flowerSpinners, cloudDrifters, rings, goalRing, sparkleSystem, ambientParticles, mobs } =
     buildWorld(scene);
 
 // ─── Player + camera controller ──────────────────────────
@@ -216,6 +216,8 @@ function animate() {
     flowerSpinners.forEach((f) => {
         f.head.rotation.y += dt * 1.2;
     });
+
+    mobs.forEach((m) => m.update(dt));
 
     const ap = ambientParticles.geo.attributes.position;
     for (let i = 0; i < ap.count; i++) {

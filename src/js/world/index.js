@@ -5,6 +5,7 @@ import { buildFlowers } from "./flowers.js";
 import { buildRings, buildSparkleSystem, buildGoalRing } from "./rings.js";
 import { buildClouds } from "./clouds.js";
 import { buildAmbientParticles } from "./particles.js";
+import { buildMobs } from "./mobs.js";
 
 export { groundY };
 
@@ -20,6 +21,7 @@ export function buildWorld(scene) {
     const goalRing = buildGoalRing(scene);
     const sparkleSystem = buildSparkleSystem(scene);
     const ambientParticles = buildAmbientParticles(scene);
+    const mobs = buildMobs(scene);
 
     return {
         flowerSpinners,
@@ -28,5 +30,6 @@ export function buildWorld(scene) {
         goalRing,
         sparkleSystem,
         ambientParticles,
+        mobs,
     };
 }

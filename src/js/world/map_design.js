@@ -38,6 +38,9 @@ export const MAP_CONFIG = {
         // spanAxis: "x" (bridge goes left-to-right) or "z" (bridge goes up-to-down)
         { x: 45, y: -0.5, z: 5, length: 24, width: 6, spanAxis: "x" },
     ],
+
+    // Enemies / Mobs
+    mobs: [{ type: "motobug", x: 0, z: -15, patrolRadius: 5.0 }],
 };
 
 // ============================================================================

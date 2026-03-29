@@ -97,7 +97,13 @@ export class Player {
         updateAnimation(this, dt, inSpin);
 
         // ── Dust Particles ───────────────────────────────────
-        this._dust.update(dt, this.pos, this.speed, this.speed >= WALK_SPEED && !this._inAir, this.yaw);
+        this._dust.update(
+            dt,
+            this.pos,
+            this.speed,
+            this.speed >= WALK_SPEED && !this._inAir,
+            this.yaw
+        );
     }
 
     get inAir() {

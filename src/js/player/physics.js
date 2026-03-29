@@ -5,47 +5,47 @@
 import { groundY } from "../world/index.js";
 import { TOP_SPEED as SPIN_TOP_SPEED } from "./spin.js";
 
-export const WALK_SPEED    = 10.0;
-export const RUN_SPEED     = 24.0;
-export const MAX_SPEED     = 42.0;
+export const WALK_SPEED = 10.0;
+export const RUN_SPEED = 24.0;
+export const MAX_SPEED = 42.0;
 export const MAX_JUMP_SPEED = 18.0; // JUMP_BASE + JUMP_BOOST at full run speed
 
-const ACCEL_LOW        = 30.0;
-const ACCEL_MID        = 18.0;
-const TANGENT_DRAG     = 30.0; // bleeds perpendicular-to-input vel (HedgePhysics turning)
-const AIR_STEER        = 5.0;
-const BRAKE            = 44.0;
-const FRICTION         = 5.0;
+const ACCEL_LOW = 30.0;
+const ACCEL_MID = 18.0;
+const TANGENT_DRAG = 30.0; // bleeds perpendicular-to-input vel (HedgePhysics turning)
+const AIR_STEER = 5.0;
+const BRAKE = 44.0;
+const FRICTION = 5.0;
 const OVER_SPEED_DECAY = 5.0;
-const GRAVITY          = -26.0;
-const JUMP_BASE        = 13.0;
-const JUMP_BOOST       = 5.0;
-const JUMP_CUT         = 0.38;
-const SLOPE_ACCEL      = 14.0;
-const SLOPE_SAMPLE     = 0.5;
-const SLOPE_THRESHOLD  = 0.15;
+const GRAVITY = -26.0;
+const JUMP_BASE = 13.0;
+const JUMP_BOOST = 5.0;
+const JUMP_CUT = 0.38;
+const SLOPE_ACCEL = 14.0;
+const SLOPE_SAMPLE = 0.5;
+const SLOPE_THRESHOLD = 0.15;
 
 function lerpAngle(a, b, t) {
     let d = b - a;
-    while (d >  Math.PI) d -= Math.PI * 2;
+    while (d > Math.PI) d -= Math.PI * 2;
     while (d < -Math.PI) d += Math.PI * 2;
     return a + d * t;
 }
 
 function surfaceNormal(x, z) {
-    const gC   = groundY(x, z);
+    const gC = groundY(x, z);
     const dhdx = (groundY(x + SLOPE_SAMPLE, z) - gC) / SLOPE_SAMPLE;
     const dhdz = (groundY(x, z + SLOPE_SAMPLE) - gC) / SLOPE_SAMPLE;
-    const len  = Math.sqrt(dhdx * dhdx + 1 + dhdz * dhdz);
+    const len = Math.sqrt(dhdx * dhdx + 1 + dhdz * dhdz);
     return { x: -dhdx / len, y: 1 / len, z: -dhdz / len };
 }
 
 export function updatePhysics(player, dt, hasInput, inputDir, doJump, jumpHeld) {
-    const pos  = player.pos;
-    const vel  = player._vel;
+    const pos = player.pos;
+    const vel = player._vel;
     const spin = player._spin;
 
-    const gC     = groundY(pos.x, pos.z);
+    const gC = groundY(pos.x, pos.z);
     const slopeX = (gC - groundY(pos.x + SLOPE_SAMPLE, pos.z)) / SLOPE_SAMPLE;
     const slopeZ = (gC - groundY(pos.x, pos.z + SLOPE_SAMPLE)) / SLOPE_SAMPLE;
     const slopeMag = Math.sqrt(slopeX * slopeX + slopeZ * slopeZ);
@@ -59,9 +59,8 @@ export function updatePhysics(player, dt, hasInput, inputDir, doJump, jumpHeld) 
                 vel.z += inputDir.z * AIR_STEER * dt;
             }
         } else if (hasInput) {
-            const dot = flatSpeed > 0.01
-                ? (vel.x * inputDir.x + vel.z * inputDir.z) / flatSpeed
-                : 1;
+            const dot =
+                flatSpeed > 0.01 ? (vel.x * inputDir.x + vel.z * inputDir.z) / flatSpeed : 1;
 
             if (dot < -0.15) {
                 vel.x += inputDir.x * BRAKE * dt;
@@ -80,9 +79,10 @@ export function updatePhysics(player, dt, hasInput, inputDir, doJump, jumpHeld) 
 
                 // bleed tangent — produces smooth turning instead of hard snap
                 const tangentLen = Math.sqrt(tangentVelX * tangentVelX + tangentVelZ * tangentVelZ);
-                const tScale     = tangentLen > 0.001
-                    ? Math.max(0, tangentLen - TANGENT_DRAG * dt) / tangentLen
-                    : 0;
+                const tScale =
+                    tangentLen > 0.001
+                        ? Math.max(0, tangentLen - TANGENT_DRAG * dt) / tangentLen
+                        : 0;
 
                 vel.x = inputDir.x * newNormal + tangentVelX * tScale;
                 vel.z = inputDir.z * newNormal + tangentVelZ * tScale;
@@ -108,7 +108,7 @@ export function updatePhysics(player, dt, hasInput, inputDir, doJump, jumpHeld) 
         vel.z += slopeZ * SLOPE_ACCEL * dt;
     }
 
-    const speedCap    = spin.active ? SPIN_TOP_SPEED : MAX_SPEED;
+    const speedCap = spin.active ? SPIN_TOP_SPEED : MAX_SPEED;
     const cappedSpeed = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
     if (cappedSpeed > speedCap) {
         const s = speedCap / cappedSpeed;
@@ -121,15 +121,15 @@ export function updatePhysics(player, dt, hasInput, inputDir, doJump, jumpHeld) 
 
     if (player.speed > 0.5) {
         const travelYaw = Math.atan2(-vel.z, vel.x) + Math.PI;
-        const bonus     = Math.max(0, 1 - player.speed / WALK_SPEED) * 12;
+        const bonus = Math.max(0, 1 - player.speed / WALK_SPEED) * 12;
         player.yaw = lerpAngle(player.yaw, travelYaw, Math.min(1, dt * (8 + bonus)));
     } else if (hasInput) {
         const inputYaw = Math.atan2(-inputDir.z, inputDir.x) + Math.PI;
         player.yaw = lerpAngle(player.yaw, inputYaw, Math.min(1, dt * 20));
     }
 
-    const nextX      = pos.x + vel.x * dt;
-    const nextZ      = pos.z + vel.z * dt;
+    const nextX = pos.x + vel.x * dt;
+    const nextZ = pos.z + vel.z * dt;
     const nextGround = groundY(nextX, nextZ);
     const heightDiff = nextGround - pos.y;
 
@@ -145,21 +145,21 @@ export function updatePhysics(player, dt, hasInput, inputDir, doJump, jumpHeld) 
 
     if (!player._inAir) {
         if (actualGround < pos.y - 0.15) {
-            player._inAir    = true;
-            player._jumpVel  = 0;
-            player._groundY  = pos.y;
+            player._inAir = true;
+            player._jumpVel = 0;
+            player._groundY = pos.y;
             player._jumpHeld = false;
         } else {
-            pos.y           = actualGround;
+            pos.y = actualGround;
             player._groundY = actualGround;
 
             if (doJump) {
                 const jumpSpeed = JUMP_BASE + JUMP_BOOST * Math.min(1, player.speed / RUN_SPEED);
-                const n         = surfaceNormal(pos.x, pos.z);
+                const n = surfaceNormal(pos.x, pos.z);
                 player._jumpVel = jumpSpeed * n.y;
-                vel.x          += jumpSpeed * n.x;
-                vel.z          += jumpSpeed * n.z;
-                player._inAir    = true;
+                vel.x += jumpSpeed * n.x;
+                vel.z += jumpSpeed * n.z;
+                player._inAir = true;
                 player._jumpHeld = true;
             }
         }
@@ -171,13 +171,13 @@ export function updatePhysics(player, dt, hasInput, inputDir, doJump, jumpHeld) 
 
         player._jumpVel += GRAVITY * dt;
         player._groundY += player._jumpVel * dt;
-        pos.y            = player._groundY;
+        pos.y = player._groundY;
 
         if (player._groundY <= actualGround) {
-            pos.y            = actualGround;
-            player._groundY  = actualGround;
-            player._jumpVel  = 0;
-            player._inAir    = false;
+            pos.y = actualGround;
+            player._groundY = actualGround;
+            player._jumpVel = 0;
+            player._inAir = false;
             player._jumpHeld = false;
         }
     }

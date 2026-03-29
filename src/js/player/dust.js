@@ -11,7 +11,7 @@ export class DustSystem {
 
         const geo = new THREE.DodecahedronGeometry(0.4, 0);
         const mat = new THREE.MeshBasicMaterial({
-            color: 0x88cc66,  // grassy green smoke
+            color: 0x88cc66, // grassy green smoke
             transparent: true,
             opacity: 0,
             depthWrite: false,

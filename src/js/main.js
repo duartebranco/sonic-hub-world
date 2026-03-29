@@ -5,6 +5,7 @@ import { buildWorld, groundY } from "./world/index.js";
 import { Player } from "./player/index.js";
 import { SpinDash } from "./player/spin.js";
 import { ThirdPersonCamera } from "./camera.js";
+import { MAX_SPEED } from "./player/physics.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -162,7 +163,8 @@ function animate() {
     player.update(dt, tpCam.yaw);
     tpCam.update(dt, player.pos);
 
-    if (player.speed >= 25 && !player.inAir) {
+    // speed lines only at max speed (not just running)
+    if (player.speed >= MAX_SPEED * 0.88 && !player.inAir) {
         speedLinesEl.classList.add("active");
     } else {
         speedLinesEl.classList.remove("active");

@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { groundY } from "../world/index.js";
-import { updatePhysics } from "./physics.js";
+import { updatePhysics, WALK_SPEED } from "./physics.js";
 import { updateAnimation } from "./animation.js";
 import { bindInput, getPlayerInput } from "./input.js";
 import { DustSystem } from "./dust.js";
@@ -21,6 +21,7 @@ export class Player {
         this._groundY = 0;
         this._inAir = false;
         this._jumpQueued = false;
+        this._jumpHeld = false;
 
         this.model = null;
         this._bones = {};
@@ -79,9 +80,10 @@ export class Player {
 
         const doJump = this._jumpQueued && !this._spin.charging;
         this._jumpQueued = false;
+        const jumpHeld = !!this._keys["Space"];
 
         // ── Physics ──────────────────────────────────────────
-        updatePhysics(this, dt, hasInput, inputDir, doJump);
+        updatePhysics(this, dt, hasInput, inputDir, doJump, jumpHeld);
 
         // ── Apply to model ────────────────────────────────────
         const inSpin = this._spin.charging || this._spin.active;
@@ -95,7 +97,7 @@ export class Player {
         updateAnimation(this, dt, inSpin);
 
         // ── Dust Particles ───────────────────────────────────
-        this._dust.update(dt, this.pos, this.speed, this.speed >= 20 && !this._inAir, this.yaw);
+        this._dust.update(dt, this.pos, this.speed, this.speed >= WALK_SPEED && !this._inAir, this.yaw);
     }
 
     get inAir() {

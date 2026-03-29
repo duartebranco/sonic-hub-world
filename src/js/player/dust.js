@@ -11,7 +11,7 @@ export class DustSystem {
 
         const geo = new THREE.DodecahedronGeometry(0.4, 0);
         const mat = new THREE.MeshBasicMaterial({
-            color: 0xdddddd,
+            color: 0x88cc66,  // grassy green smoke
             transparent: true,
             opacity: 0,
             depthWrite: false,
@@ -32,7 +32,7 @@ export class DustSystem {
     }
 
     update(dt, pos, speed, isRunning, yaw) {
-        if (isRunning && speed > 20) {
+        if (isRunning) {
             this.emitTimer -= dt;
             if (this.emitTimer <= 0) {
                 this.emitTimer = EMIT_RATE;

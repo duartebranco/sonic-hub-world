@@ -3,9 +3,9 @@ import * as THREE from "three";
 const HOLD_THRESHOLD = 0.18; // seconds before charging begins
 const CHARGE_RATE = 1 / 1.2; // full charge in 1.2 s
 const BOOST_MIN = 22.0; // launch speed at zero charge
-const BOOST_MAX = 52.0; // launch speed at full charge
-export const TOP_SPEED = 54.0; // speed cap while spin is active
-const DURATION = 1.0; // seconds before spin state expires
+const BOOST_MAX = 42.0; // launch speed at full charge (= MAX_SPEED)
+export const TOP_SPEED = 44.0; // speed cap while spin is active (slight buffer above MAX_SPEED)
+const DURATION = 1.8; // seconds before spin state expires
 const ROLL_CHARGE_MIN = 2.0; // roll speed (rad/s) at start of charge
 const ROLL_CHARGE_MAX = 16.0; // extra roll speed added at full charge
 const ROLL_LAUNCH = 24.0; // roll speed after launch

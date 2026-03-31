@@ -235,8 +235,8 @@ body {
 
 .ts-press {
     margin-top: 3.5rem;
-    font-family: "Nunito", sans-serif;
-    font-weight: 900;
+    font-family: "Press Start 2P", system-ui, sans-serif;
+    font-weight: normal;
     font-size: clamp(1rem, 2.5vw, 1.6rem);
     color: #ffffff;
     text-transform: uppercase;
@@ -257,8 +257,8 @@ body {
 .ts-copyright {
     position: absolute;
     bottom: 18px;
-    font-family: "Nunito", sans-serif;
-    font-weight: 900;
+    font-family: "Press Start 2P", system-ui, sans-serif;
+    font-weight: normal;
     font-size: 0.7rem;
     color: rgba(255, 255, 255, 0.4);
     letter-spacing: 2px;

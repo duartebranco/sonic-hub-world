@@ -9,6 +9,17 @@
             rel="stylesheet"
         />
         <link rel="stylesheet" href="css/style.css" />
+        <style>
+            .ts-controls {
+                margin-top: 2rem;
+                color: #ffffff;
+                font-size: 0.7rem;
+                text-align: center;
+                line-height: 2;
+                letter-spacing: 1px;
+                text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
+            }
+        </style>
     </head>
     <body>
         <div id="title-screen">
@@ -16,7 +27,15 @@
                 <span class="ts-logo-sonic">Sonic</span>
                 <span class="ts-logo-sub">Hub World</span>
             </div>
-            <div class="ts-press" id="ts-press">Press Enter</div>
+            <div class="ts-press" id="ts-press" style="font-size: clamp(0.8rem, 2vw, 1.2rem)">
+                Press Enter
+            </div>
+            <div class="ts-controls">
+                WASD / Arrows : Move<br />
+                Space : Jump<br />
+                Shift / X : Spin Dash<br />
+                Mouse : Look Around
+            </div>
             <div class="ts-copyright">© 2026 &nbsp;·&nbsp; ICG Project</div>
         </div>
 

@@ -94,8 +94,12 @@ export class SpinDash {
                 vel.z *= decay;
             }
         } else {
-            if (this.charging) {
-                const boost = BOOST_MIN + (BOOST_MAX - BOOST_MIN) * this.charge;
+            if (this.charging || (this._holdTime > 0 && this._holdTime < HOLD_THRESHOLD)) {
+                let boost = BOOST_MIN + (BOOST_MAX - BOOST_MIN) * this.charge;
+                const currentSpeed = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
+                if (currentSpeed > boost) {
+                    boost = currentSpeed;
+                }
                 vel.x = Math.cos(yaw - Math.PI) * boost;
                 vel.z = -Math.sin(yaw - Math.PI) * boost;
                 this.active = true;

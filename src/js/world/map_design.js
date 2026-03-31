@@ -21,9 +21,7 @@ export const MAP_CONFIG = {
 
     waterPlanes: [{ x: 45, y: -2.5, z: -20, width: 120, length: 120 }],
 
-    bridges: [
-        { x: 45, y: -0.5, z: 5, length: 24, width: 6, spanAxis: "x" },
-    ],
+    bridges: [{ x: 45, y: -0.5, z: 5, length: 24, width: 6, spanAxis: "x" }],
 
     mobs: [{ type: "motobug", x: 0, z: -15, patrolRadius: 5.0 }],
 };

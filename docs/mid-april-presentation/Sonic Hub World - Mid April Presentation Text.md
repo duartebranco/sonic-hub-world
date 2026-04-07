@@ -20,6 +20,9 @@ O **Sonic** é o único modelo externo \- um ficheiro .glTF feito por terceiros.
 
 Para as expressões faciais (normal, sem boca, espantado), editei os modelos diretamente no Blender, exportando variantes em ficheiros .glTF separados.
 
-Todos os restantes objetos foram construídos em Three.js de raiz, sem qualquer software de modelação externo (Terreno, Paredes, Árvores, Flores, Nuvens, Anéis, Ponte, Água, Motobug (mob)
+Todos os restantes objetos foram construídos em Three.js de raiz, sem qualquer software de modelação externo (Terreno, Paredes, Árvores, Flores, Nuvens, Anéis, Ponte, Motobug (mob))
 
 Agora, passando à Demo…
+
+Falar: **Loading screen**; Instruções; **Anéis**; Ring Counter; **Timer**; Flores; **Camera**; Nuvens; **Motobug**; Andar; **Correr**; Partículas; **Saltar**; Spin Dash; **Rampas**; Árvores; **Água** e Pontes
+

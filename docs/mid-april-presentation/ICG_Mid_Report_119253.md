@@ -9,7 +9,7 @@ This document is the mid april report required for the **ICG** class for the ***
 
 **Objectives**
 
-Recreate the **Sonic Jam’s** (1997, Sega Saturn) **hub world** as a modern, browser-based 3D game built with three.js. Sonic Jam was one of the first Sonic compilations and its standout feature was a free-roaming open world where the player could explore, collect rings, and race around the map. This project reimplements that concept, with some of my own preference design choices.
+Recreate the **Sonic Jam’s** (1997, Sega Saturn) **hub world** as a modern, browser-based 3D game built with three.js. Sonic Jam was one of the first Sonic compilations and its standout feature was a free-roaming open world where the player could explore, collect rings and race around the map. This project reimplements that concept, with some of my own design preferences.
 
 **What Is Already Done**
 
@@ -27,7 +27,7 @@ Recreate the **Sonic Jam’s** (1997, Sega Saturn) **hub world** as a modern, br
 \- Map features: plateaus, ramps, lakes, trenches, a bridge, cliffs, trees, flowers, clouds and a water surface.  
 \- Checkerboard path tiles along the intended route.  
 \- 22 collectible rings with proximity detection (0.9 units), sparkle particles and HUD counter (ring counter).  
-\- Badnik mob meshes placed in the world (patrol AI not yet implemented).
+\- *Badnik* mob (Motobug) meshes placed in the world (patrol AI not yet implemented).
 
 **Camera and HUD (heads up display):**
 
@@ -48,7 +48,7 @@ Recreate the **Sonic Jam’s** (1997, Sega Saturn) **hub world** as a modern, br
 \- Enemy interaction: player should take damage on contact with MotoBugs (ring loss, brief invincibility frames) and be able to kill them with a spin attack.  
 \- Player hit/death and respawn: hit detection, check if player has rings, and respawn at the last checkpoint.  
 \- Checkpoint system to save progress along the route.  
-\- Different checkpoints that refer the start and finish line of the track (for the 
+\- Different checkpoints that refer to the start and finish line of the track (for the racing mini game).
 
 **Sound:**  
 \- Have a complete soundtrack and use it.  

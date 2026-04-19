@@ -40,39 +40,46 @@ export function updateAnimation(player, dt, inSpin) {
         return;
     }
 
-    const isMoving = player.speed > 0.5;
-    // run animation kicks in at WALK_SPEED, scales speed up to RUN_SPEED
-    const isRunning = player.speed >= WALK_SPEED;
-
-    if (isMoving && isRunning && player._runKFs.length >= 2) {
+    if (player._inAir && player._jumpKFs && player._jumpKFs.length >= 2) {
         player._walkT = 0;
-        const speedRatio = Math.min(1, player.speed / RUN_SPEED);
-        player._runT += dt * ANIM_RUN * (0.5 + speedRatio * 0.5);
-        applyKFInterp(player, player._runT, player._runKFs);
-    } else if (isMoving && player._walkKFs.length >= 2) {
         player._runT = 0;
-        const t = Math.min(1, player.speed / WALK_SPEED);
-        player._walkT += dt * (ANIM_WALK + (ANIM_RUN - ANIM_WALK) * t);
-        applyKFInterp(player, player._walkT, player._walkKFs);
+        const t = Math.min(1, (player._airTime || 0) * 15.0);
+        applyKFInterp(player, t, [player._jumpKFs[0], player._jumpKFs[1]]);
     } else {
-        player._walkT = 0;
-        player._runT = 0;
-        if (player._idleKFs.length >= 1) {
-            applyKFInterp(player, 0, [player._idleKFs[0], player._idleKFs[0]]);
+        const isMoving = player.speed > 0.5;
+        // run animation kicks in at WALK_SPEED, scales speed up to RUN_SPEED
+        const isRunning = player.speed >= WALK_SPEED;
+
+        if (isMoving && isRunning && player._runKFs.length >= 2) {
+            player._walkT = 0;
+            const speedRatio = Math.min(1, player.speed / RUN_SPEED);
+            player._runT += dt * ANIM_RUN * (0.5 + speedRatio * 0.5);
+            applyKFInterp(player, player._runT, player._runKFs);
+        } else if (isMoving && player._walkKFs.length >= 2) {
+            player._runT = 0;
+            const t = Math.min(1, player.speed / WALK_SPEED);
+            player._walkT += dt * (ANIM_WALK + (ANIM_RUN - ANIM_WALK) * t);
+            applyKFInterp(player, player._walkT, player._walkKFs);
         } else {
-            restPose(player);
-        }
-        // subtle idle sway
-        const now = performance.now() / 1000;
-        const root = player._bones["GLTF_created_0_rootJoint"];
-        if (root) {
-            root.rotation.z += Math.sin(now * 1.3) * 0.022;
-            root.rotation.x += Math.sin(now * 0.85) * 0.016;
-        }
-        const head = player._bones["Bone001_23"];
-        if (head) {
-            head.rotation.y += Math.sin(now * 0.55) * 0.14;
-            head.rotation.x += Math.sin(now * 0.38) * 0.04;
+            player._walkT = 0;
+            player._runT = 0;
+            if (player._idleKFs.length >= 1) {
+                applyKFInterp(player, 0, [player._idleKFs[0], player._idleKFs[0]]);
+            } else {
+                restPose(player);
+            }
+            // subtle idle sway
+            const now = performance.now() / 1000;
+            const root = player._bones["GLTF_created_0_rootJoint"];
+            if (root) {
+                root.rotation.z += Math.sin(now * 1.3) * 0.022;
+                root.rotation.x += Math.sin(now * 0.85) * 0.016;
+            }
+            const head = player._bones["Bone001_23"];
+            if (head) {
+                head.rotation.y += Math.sin(now * 0.55) * 0.14;
+                head.rotation.x += Math.sin(now * 0.38) * 0.04;
+            }
         }
     }
 

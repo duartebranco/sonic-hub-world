@@ -82,7 +82,7 @@ export class SpinDash {
     }
 
     // modifies vel in-place: decelerates while charging, boosts on release
-    update(dt, spinKey, inAir, vel, pos, yaw) {
+    update(dt, spinKey, inAir, vel, pos, yaw, jumpSpin) {
         if (spinKey && !inAir) {
             this._holdTime += dt;
             if (this._holdTime >= HOLD_THRESHOLD) {
@@ -119,13 +119,17 @@ export class SpinDash {
             }
         }
 
-        this._updateBall(dt, pos, yaw);
+        if (jumpSpin) {
+            this._roll += dt * ROLL_LAUNCH;
+        }
+
+        this._updateBall(dt, pos, yaw, jumpSpin);
         this._updateParticles(dt, pos);
         this._updateHUD();
     }
 
-    _updateBall(dt, pos, yaw) {
-        const inSpin = this.charging || this.active;
+    _updateBall(dt, pos, yaw, jumpSpin) {
+        const inSpin = this.charging || this.active || jumpSpin;
         this._ball.visible = inSpin;
         this._ball.position.set(pos.x, pos.y + 0.8, pos.z);
         this._ball.rotation.y = yaw;

@@ -120,6 +120,9 @@ async function loadAssets() {
         fetch("../animations/running.json")
             .then((r) => r.json())
             .then((d) => player.setRunKeyframes(d.keyframes)),
+        fetch("../animations/jump.json")
+            .then((r) => r.json())
+            .then((d) => player.setJumpKeyframes(d.keyframes)),
     ]);
 
     assetsReady = true;

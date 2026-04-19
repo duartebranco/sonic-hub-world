@@ -20,6 +20,7 @@ export class Player {
         this._jumpVel = 0;
         this._groundY = 0;
         this._inAir = false;
+        this._airTime = 0;
         this._jumpQueued = false;
         this._jumpHeld = false;
 
@@ -29,6 +30,7 @@ export class Player {
         this._idleKFs = [];
         this._walkKFs = [];
         this._runKFs = [];
+        this._jumpKFs = [];
         this._walkT = 0;
         this._runT = 0;
 
@@ -70,13 +72,24 @@ export class Player {
         this._runKFs = kfs;
     }
 
+    setJumpKeyframes(kfs) {
+        this._jumpKFs = kfs;
+    }
+
     update(dt, camYaw) {
         if (!this.model) return;
 
         const { hasInput, inputDir, spinKey } = getPlayerInput(this, camYaw);
 
+        if (this._inAir) {
+            this._airTime += dt;
+        } else {
+            this._airTime = 0;
+        }
+        const jumpSpin = this._inAir && this._airTime > 0.3;
+
         // ── Spin dash ────────────────────────────────────────
-        this._spin.update(dt, spinKey, this._inAir, this._vel, this.pos, this.yaw);
+        this._spin.update(dt, spinKey, this._inAir, this._vel, this.pos, this.yaw, jumpSpin);
 
         const doJump = this._jumpQueued && !this._spin.charging;
         this._jumpQueued = false;
@@ -86,7 +99,7 @@ export class Player {
         updatePhysics(this, dt, hasInput, inputDir, doJump, jumpHeld);
 
         // ── Apply to model ────────────────────────────────────
-        const inSpin = this._spin.charging || this._spin.active;
+        const inSpin = this._spin.charging || this._spin.active || jumpSpin;
 
         this.model.visible = !inSpin;
         this.model.position.copy(this.pos);

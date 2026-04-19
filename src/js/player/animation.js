@@ -82,12 +82,4 @@ export function updateAnimation(player, dt, inSpin) {
             }
         }
     }
-
-    // lean forward during airtime
-    if (player._inAir) {
-        const root = player._bones["GLTF_created_0_rootJoint"];
-        if (root) {
-            root.rotation.x += Math.max(0, player._jumpVel / MAX_JUMP_SPEED) * -0.28;
-        }
-    }
 }

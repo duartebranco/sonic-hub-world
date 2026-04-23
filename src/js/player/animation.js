@@ -1,4 +1,4 @@
-import { WALK_SPEED, RUN_SPEED, MAX_JUMP_SPEED } from "./physics.js";
+import { WALK_SPEED, RUN_SPEED } from "./physics.js";
 
 const ANIM_WALK = 1.8;
 const ANIM_RUN = 5.5;

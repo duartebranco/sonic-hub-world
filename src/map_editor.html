@@ -501,7 +501,9 @@
     </head>
     <body>
         <div id="viewport">
-            <div id="viewport-label">Map Editor — Left-drag: select/move · Right-drag: orbit · Scroll: zoom</div>
+            <div id="viewport-label">
+                Map Editor — Left-drag: select/move · Right-drag: orbit · Scroll: zoom
+            </div>
             <div id="info">
                 <div class="title" id="info-title">Nothing selected</div>
                 <div class="hint" id="info-hint">Click an object in the scene or list</div>
@@ -545,12 +547,26 @@
                     <div class="section-title">World</div>
                     <div class="field">
                         <label>World R</label>
-                        <input type="range" class="val-range" id="g-worldR" min="40" max="200" step="1" />
+                        <input
+                            type="range"
+                            class="val-range"
+                            id="g-worldR"
+                            min="40"
+                            max="200"
+                            step="1"
+                        />
                         <input type="number" class="val-num" id="g-worldR-num" step="1" />
                     </div>
                     <div class="field">
                         <label>Hub R</label>
-                        <input type="range" class="val-range" id="g-hubR" min="5" max="80" step="1" />
+                        <input
+                            type="range"
+                            class="val-range"
+                            id="g-hubR"
+                            min="5"
+                            max="80"
+                            step="1"
+                        />
                         <input type="number" class="val-num" id="g-hubR-num" step="1" />
                     </div>
                 </div>
@@ -725,7 +741,10 @@
                 }
 
                 if (distOrigin > MAP_CONFIG.worldRadius) {
-                    const t = Math.max(0, Math.min(1, (distOrigin - MAP_CONFIG.worldRadius) / 10.0));
+                    const t = Math.max(
+                        0,
+                        Math.min(1, (distOrigin - MAP_CONFIG.worldRadius) / 10.0)
+                    );
                     if (t > 0) y = Math.max(y, t * t * (3 - 2 * t) * 40.0);
                 }
 
@@ -791,7 +810,7 @@
                 TERRAIN_SIZE,
                 TERRAIN_SIZE,
                 TERRAIN_SEG,
-                TERRAIN_SEG,
+                TERRAIN_SEG
             );
             terrainGeo.rotateX(-Math.PI / 2);
             const terrainCols = new Float32Array(terrainGeo.attributes.position.count * 3);
@@ -878,11 +897,7 @@
             }
 
             function makeRingOverlay(color, radius, y, thickness = 0.4) {
-                const geo = new THREE.RingGeometry(
-                    Math.max(0.01, radius - thickness),
-                    radius,
-                    64,
-                );
+                const geo = new THREE.RingGeometry(Math.max(0.01, radius - thickness), radius, 64);
                 geo.rotateX(-Math.PI / 2);
                 const mat = new THREE.MeshBasicMaterial({
                     color,
@@ -928,12 +943,12 @@
                 // Points toward -Z by default (north) so we can rotate it per facing
                 const shaft = new THREE.Mesh(
                     new THREE.BoxGeometry(0.4, 0.1, len),
-                    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9 }),
+                    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9 })
                 );
                 shaft.position.z = -len / 2;
                 const head = new THREE.Mesh(
                     new THREE.ConeGeometry(0.9, 1.6, 8),
-                    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9 }),
+                    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9 })
                 );
                 head.rotation.x = -Math.PI / 2;
                 head.position.z = -len - 0.4;
@@ -1010,7 +1025,7 @@
                             color: spec.color,
                             transparent: true,
                             opacity: 0.85,
-                        }),
+                        })
                     );
                     sph.position.y = y;
                     sph.userData.pickable = true;
@@ -1034,15 +1049,27 @@
                 clearOverlays();
                 // World & hub radius rings
                 const worldRing = new THREE.Mesh(
-                    new THREE.RingGeometry(MAP_CONFIG.worldRadius - 0.3, MAP_CONFIG.worldRadius, 96),
-                    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 }),
+                    new THREE.RingGeometry(
+                        MAP_CONFIG.worldRadius - 0.3,
+                        MAP_CONFIG.worldRadius,
+                        96
+                    ),
+                    new THREE.MeshBasicMaterial({
+                        color: 0xffffff,
+                        transparent: true,
+                        opacity: 0.3,
+                    })
                 );
                 worldRing.rotation.x = -Math.PI / 2;
                 worldRing.position.y = 0.2;
                 overlayRoot.add(worldRing);
                 const hubRing = new THREE.Mesh(
                     new THREE.RingGeometry(MAP_CONFIG.hubRadius - 0.25, MAP_CONFIG.hubRadius, 64),
-                    new THREE.MeshBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.5 }),
+                    new THREE.MeshBasicMaterial({
+                        color: 0x00e5ff,
+                        transparent: true,
+                        opacity: 0.5,
+                    })
                 );
                 hubRing.rotation.x = -Math.PI / 2;
                 hubRing.position.y = 0.2;
@@ -1075,7 +1102,7 @@
                 raycaster.setFromCamera(pointer, camera);
                 const hits = raycaster.intersectObjects(
                     pickables.map((p) => p.mesh),
-                    false,
+                    false
                 );
                 if (!hits.length) return null;
                 const mesh = hits[0].object;
@@ -1577,7 +1604,7 @@
                     // Replace MAP_CONFIG block in the original source
                     const replaced = sourceText.replace(
                         /export\s+const\s+MAP_CONFIG\s*=\s*\{[\s\S]*?\n\};/,
-                        `export const MAP_CONFIG = ${cfgStr};`,
+                        `export const MAP_CONFIG = ${cfgStr};`
                     );
                     if (replaced !== sourceText) return replaced;
                 }
@@ -1606,7 +1633,7 @@
             document.getElementById("copy-btn").addEventListener("click", async () => {
                 try {
                     await navigator.clipboard.writeText(
-                        `export const MAP_CONFIG = ${stringifyConfig(MAP_CONFIG)};`,
+                        `export const MAP_CONFIG = ${stringifyConfig(MAP_CONFIG)};`
                     );
                     toast("Copied to clipboard");
                 } catch {

@@ -73,12 +73,12 @@ export const MAP_CONFIG = {
     ],
 
     mobs: [
-        { type: "motobug", x: 30, z: -60, patrolRadius: 6.0 },  // NE highland approach
-        { type: "motobug", x: 72, z: -38, patrolRadius: 5.0 },  // east straight north
-        { type: "motobug", x: 75, z: 8, patrolRadius: 5.0 },    // east straight south
-        { type: "motobug", x: -38, z: 55, patrolRadius: 6.0 },  // SW section
+        { type: "motobug", x: 30, z: -60, patrolRadius: 6.0 }, // NE highland approach
+        { type: "motobug", x: 72, z: -38, patrolRadius: 5.0 }, // east straight north
+        { type: "motobug", x: 75, z: 8, patrolRadius: 5.0 }, // east straight south
+        { type: "motobug", x: -38, z: 55, patrolRadius: 6.0 }, // SW section
         { type: "motobug", x: -72, z: -15, patrolRadius: 5.0 }, // NW section
-        { type: "motobug", x: 5, z: -78, patrolRadius: 5.0 },   // far-north shortcut lane
+        { type: "motobug", x: 5, z: -78, patrolRadius: 5.0 }, // far-north shortcut lane
     ],
 };
 

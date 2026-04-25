@@ -119,7 +119,9 @@ body {
     font-family: "Press Start 2P", system-ui, sans-serif;
     font-size: clamp(1.4rem, 4vw, 2.4rem);
     color: #ffe000;
-    text-shadow: 4px 4px 0 #0033aa, -2px -2px 0 #001177;
+    text-shadow:
+        4px 4px 0 #0033aa,
+        -2px -2px 0 #001177;
     pointer-events: none;
     white-space: nowrap;
     z-index: 20;
@@ -131,10 +133,22 @@ body {
 }
 
 @keyframes race-flash-anim {
-    0%   { opacity: 0; transform: translateX(-50%) scale(0.6); }
-    20%  { opacity: 1; transform: translateX(-50%) scale(1.12); }
-    50%  { opacity: 1; transform: translateX(-50%) scale(1.0); }
-    100% { opacity: 0; transform: translateX(-50%) scale(1.0); }
+    0% {
+        opacity: 0;
+        transform: translateX(-50%) scale(0.6);
+    }
+    20% {
+        opacity: 1;
+        transform: translateX(-50%) scale(1.12);
+    }
+    50% {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(-50%) scale(1);
+    }
 }
 
 /* ── Spin Charge Bar ───────────────────────────────────── */

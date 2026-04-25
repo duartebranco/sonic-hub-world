@@ -9,7 +9,7 @@ import { MAX_SPEED } from "./player/physics.js";
 
 const $ = (id) => document.getElementById(id);
 
-// ─── Title screen / start gate ───────────────────────────
+// ─── Title screen ────────────────────────────────────────
 let assetsReady = false;
 let userPressedStart = false;
 
@@ -25,7 +25,7 @@ function onStartInput() {
     if (assetsReady) {
         startGame();
     } else {
-        $("ts-press").textContent = "Loading\u2026";
+        $("ts-press").textContent = "Loading…";
         $("ts-press").style.animation = "none";
         $("ts-press").style.opacity = "1";
     }
@@ -74,7 +74,7 @@ skyFill.position.set(-10, 12, -8);
 scene.add(skyFill);
 
 // ─── World ───────────────────────────────────────────────
-const { flowerSpinners, cloudDrifters, rings, goalRing, sparkleSystem, ambientParticles, mobs } =
+const { flowerSpinners, cloudDrifters, rings, goalRing, sparkleSystem, ambientParticles, mobs, checkpoints } =
     buildWorld(scene);
 
 // ─── Player + camera controller ──────────────────────────
@@ -97,76 +97,101 @@ onResize();
 // ─── Asset loading ───────────────────────────────────────
 async function loadAssets() {
     const loader = new GLTFLoader();
-
     await new Promise((res, rej) => {
-        loader.load(
-            "../models/sonic.glb",
-            (gltf) => {
-                player.setModel(gltf.scene);
-                res();
-            },
-            undefined,
-            rej
-        );
+        loader.load("../models/sonic.glb", (gltf) => { player.setModel(gltf.scene); res(); }, undefined, rej);
     });
-
     await Promise.all([
-        fetch("../animations/idle.json")
-            .then((r) => r.json())
-            .then((d) => player.setIdleKeyframes(d.keyframes)),
-        fetch("../animations/walking.json")
-            .then((r) => r.json())
-            .then((d) => player.setWalkKeyframes(d.keyframes)),
-        fetch("../animations/running.json")
-            .then((r) => r.json())
-            .then((d) => player.setRunKeyframes(d.keyframes)),
-        fetch("../animations/jump.json")
-            .then((r) => r.json())
-            .then((d) => player.setJumpKeyframes(d.keyframes)),
+        fetch("../animations/idle.json").then((r) => r.json()).then((d) => player.setIdleKeyframes(d.keyframes)),
+        fetch("../animations/walking.json").then((r) => r.json()).then((d) => player.setWalkKeyframes(d.keyframes)),
+        fetch("../animations/running.json").then((r) => r.json()).then((d) => player.setRunKeyframes(d.keyframes)),
+        fetch("../animations/jump.json").then((r) => r.json()).then((d) => player.setJumpKeyframes(d.keyframes)),
     ]);
-
     assetsReady = true;
     if (userPressedStart) startGame();
 }
-
 loadAssets().catch((err) => {
     console.error("Asset load error:", err);
     assetsReady = true;
     if (userPressedStart) startGame();
 });
 
-// ─── Game state ──────────────────────────────────────────
-let ringCount = 0;
+// ─── Race state ──────────────────────────────────────────
+// idle: player explores freely; racing: timer + checkpoints; finished: time locked
+let raceState = "idle"; // 'idle' | 'racing' | 'finished'
 let raceTime = 0;
-let timerRunning = false;
-let raceFinished = false;
+let raceStartCooldown = 0;
+let ringCount = 0;
+
+let flashTimeout = null;
+function showFlash(text) {
+    const el = $("race-flash");
+    el.textContent = text;
+    el.classList.remove("hidden");
+    el.style.animation = "none";
+    void el.offsetWidth; // trigger reflow to restart animation
+    el.style.animation = "";
+    if (flashTimeout) clearTimeout(flashTimeout);
+    flashTimeout = setTimeout(() => el.classList.add("hidden"), 1800);
+}
+
+function formatTime(t) {
+    const mins = Math.floor(t / 60);
+    const secs = Math.floor(t % 60);
+    const ms = Math.floor((t * 100) % 100);
+    return `${mins}:${secs.toString().padStart(2, "0")}.${ms.toString().padStart(2, "0")}`;
+}
+
+function updateCpHud() {
+    $("cp-count").textContent = `${checkpoints.getNext()}/${checkpoints.total}`;
+}
 
 // ─── Game loop ───────────────────────────────────────────
 const clock = new THREE.Clock();
 
 function animate() {
     requestAnimationFrame(animate);
-
     const dt = Math.min(clock.getDelta(), 0.05);
     const now = performance.now() / 1000;
 
     if (userPressedStart && assetsReady) {
-        if ((player.speed > 0 || player.inAir) && !raceFinished) timerRunning = true;
+        // goal ring proximity (XZ plane only)
+        const gdx = player.pos.x - goalRing.position.x;
+        const gdz = player.pos.z - goalRing.position.z;
+        const goalDist2 = gdx * gdx + gdz * gdz;
 
-        if (timerRunning && !raceFinished) {
+        goalRing.rotation.y += dt * 1.5;
+
+        if (raceState === "idle") {
+            if (goalDist2 < 64) {
+                raceState = "racing";
+                raceTime = 0;
+                raceStartCooldown = 3.0;
+                checkpoints.startRace();
+                updateCpHud();
+                $("time-count").style.color = "#ffffff";
+                $("time-count").style.animation = "none";
+                showFlash("RACE START!");
+            }
+        } else if (raceState === "racing") {
             raceTime += dt;
-            const mins = Math.floor(raceTime / 60);
-            const secs = Math.floor(raceTime % 60);
-            const ms = Math.floor((raceTime * 100) % 100);
-            $("time-count").textContent =
-                `${mins}:${secs.toString().padStart(2, "0")}.${ms.toString().padStart(2, "0")}`;
+            $("time-count").textContent = formatTime(raceTime);
+
+            if (raceStartCooldown > 0) raceStartCooldown -= dt;
+
+            if (checkpoints.update(player.pos)) updateCpHud();
+
+            if (goalDist2 < 64 && raceStartCooldown <= 0 && checkpoints.allPassed()) {
+                raceState = "finished";
+                $("time-count").style.color = "#ffe000";
+                $("time-count").style.animation = "ts-blink 0.5s step-end infinite";
+                showFlash("FINISH!");
+            }
         }
     }
 
     player.update(dt, tpCam.yaw);
     tpCam.update(dt, player.pos);
 
-    // speed lines only at max speed (not just running)
     if (player.speed >= MAX_SPEED * 0.88 && !player.inAir) {
         speedLinesEl.classList.add("active");
     } else {
@@ -178,13 +203,8 @@ function animate() {
 
     rings.forEach((r) => {
         if (r.collected) return;
-
         r.mesh.rotation.z += dt * 2.8;
-        r.mesh.position.y =
-            groundY(r.mesh.position.x, r.mesh.position.z) +
-            1.0 +
-            Math.sin(now * 2.5 + r.phase) * 0.13;
-
+        r.mesh.position.y = groundY(r.mesh.position.x, r.mesh.position.z) + 1.0 + Math.sin(now * 2.5 + r.phase) * 0.13;
         const dx = player.pos.x - r.mesh.position.x;
         const dy = player.pos.y + 0.5 - r.mesh.position.y;
         const dz = player.pos.z - r.mesh.position.z;
@@ -197,20 +217,6 @@ function animate() {
         }
     });
 
-    if (!raceFinished) {
-        goalRing.rotation.y += dt * 1.5;
-        const dx = player.pos.x - goalRing.position.x;
-        const dy = player.pos.y + 0.5 - goalRing.position.y;
-        const dz = player.pos.z - goalRing.position.z;
-        if (dx * dx + dy * dy + dz * dz < 25.0) {
-            // Goal ring radius is 4.0
-            raceFinished = true;
-            timerRunning = false;
-            $("time-count").style.color = "#ffe000";
-            $("time-count").style.animation = "ts-blink 0.5s step-end infinite";
-        }
-    }
-
     sparkleSystem.update(dt);
 
     cloudDrifters.forEach((c) => {
@@ -218,10 +224,7 @@ function animate() {
         if (c.mesh.position.x > 110) c.mesh.position.x = -110;
     });
 
-    flowerSpinners.forEach((f) => {
-        f.head.rotation.y += dt * 1.2;
-    });
-
+    flowerSpinners.forEach((f) => { f.head.rotation.y += dt * 1.2; });
     mobs.forEach((m) => m.update(dt));
 
     const ap = ambientParticles.geo.attributes.position;

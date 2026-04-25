@@ -6,6 +6,7 @@ import { buildRings, buildSparkleSystem, buildGoalRing } from "./rings.js";
 import { buildClouds } from "./clouds.js";
 import { buildAmbientParticles } from "./particles.js";
 import { buildMobs } from "./mobs.js";
+import { buildCheckpoints } from "./checkpoints.js";
 
 export { groundY };
 
@@ -22,6 +23,7 @@ export function buildWorld(scene) {
     const sparkleSystem = buildSparkleSystem(scene);
     const ambientParticles = buildAmbientParticles(scene);
     const mobs = buildMobs(scene);
+    const checkpoints = buildCheckpoints(scene);
 
     return {
         flowerSpinners,
@@ -31,5 +33,6 @@ export function buildWorld(scene) {
         sparkleSystem,
         ambientParticles,
         mobs,
+        checkpoints,
     };
 }

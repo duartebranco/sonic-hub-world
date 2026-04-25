@@ -36,7 +36,8 @@ body {
 }
 
 #ring-counter-container,
-#time-counter-container {
+#time-counter-container,
+#cp-counter-container {
     align-items: center;
     display: flex;
     position: absolute;
@@ -49,6 +50,10 @@ body {
 
 #time-counter-container {
     top: 60px;
+}
+
+#cp-counter-container {
+    top: 106px;
 }
 
 .ring-counter-cap.left {
@@ -76,7 +81,8 @@ body {
 }
 
 #ring-counter,
-#time-counter {
+#time-counter,
+#cp-counter {
     align-items: center;
     background-color: #3200f8;
     border: 2px solid #501000;
@@ -90,7 +96,8 @@ body {
 
 .ring-counter-label,
 #ring-count,
-#time-count {
+#time-count,
+#cp-count {
     color: #ffffff;
     display: inline-block;
     flex-shrink: 0;
@@ -100,6 +107,34 @@ body {
     line-height: 19px;
     text-shadow: rgba(0, 0, 0, 0.5) 2px 2px 0px;
     text-transform: uppercase;
+}
+
+/* ── Race Flash ────────────────────────────────────────── */
+
+#race-flash {
+    position: fixed;
+    top: 42%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: "Press Start 2P", system-ui, sans-serif;
+    font-size: clamp(1.4rem, 4vw, 2.4rem);
+    color: #ffe000;
+    text-shadow: 4px 4px 0 #0033aa, -2px -2px 0 #001177;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 20;
+    animation: race-flash-anim 1.8s forwards;
+}
+
+#race-flash.hidden {
+    display: none;
+}
+
+@keyframes race-flash-anim {
+    0%   { opacity: 0; transform: translateX(-50%) scale(0.6); }
+    20%  { opacity: 1; transform: translateX(-50%) scale(1.12); }
+    50%  { opacity: 1; transform: translateX(-50%) scale(1.0); }
+    100% { opacity: 0; transform: translateX(-50%) scale(1.0); }
 }
 
 /* ── Spin Charge Bar ───────────────────────────────────── */

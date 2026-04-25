@@ -6,6 +6,7 @@ import { Player } from "./player/index.js";
 import { SpinDash } from "./player/spin.js";
 import { ThirdPersonCamera } from "./camera.js";
 import { MAX_SPEED } from "./player/physics.js";
+import { AudioManager } from "./audio.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -19,9 +20,13 @@ function startGame() {
     setTimeout(() => (ts.style.display = "none"), 750);
 }
 
+const audio = new AudioManager();
+
 function onStartInput() {
     if (userPressedStart) return;
     userPressedStart = true;
+    audio.init();
+    audio.startExploreMusic();
     if (assetsReady) {
         startGame();
     } else {
@@ -121,6 +126,7 @@ let raceState = "idle"; // 'idle' | 'racing' | 'finished'
 let raceTime = 0;
 let raceStartCooldown = 0;
 let ringCount = 0;
+let wasInAir = false;
 
 let flashTimeout = null;
 function showFlash(text) {
@@ -171,6 +177,7 @@ function animate() {
                 $("time-count").style.color = "#ffffff";
                 $("time-count").style.animation = "none";
                 showFlash("RACE START!");
+                audio.startRaceMusic();
             }
         } else if (raceState === "racing") {
             raceTime += dt;
@@ -178,18 +185,25 @@ function animate() {
 
             if (raceStartCooldown > 0) raceStartCooldown -= dt;
 
-            if (checkpoints.update(player.pos)) updateCpHud();
+            if (checkpoints.update(player.pos)) {
+                updateCpHud();
+                audio.playCheckpoint();
+            }
 
             if (goalDist2 < 64 && raceStartCooldown <= 0 && checkpoints.allPassed()) {
                 raceState = "finished";
                 $("time-count").style.color = "#ffe000";
                 $("time-count").style.animation = "ts-blink 0.5s step-end infinite";
                 showFlash("FINISH!");
+                audio.playFinish();
+                audio.startExploreMusic();
             }
         }
     }
 
     player.update(dt, tpCam.yaw);
+    if (player.inAir && !wasInAir) audio.playJump();
+    wasInAir = player.inAir;
     tpCam.update(dt, player.pos);
 
     if (player.speed >= MAX_SPEED * 0.88 && !player.inAir) {
@@ -214,6 +228,7 @@ function animate() {
             scene.remove(r.mesh);
             ringCount++;
             $("ring-count").textContent = String(ringCount);
+            audio.playRing();
         }
     });
 

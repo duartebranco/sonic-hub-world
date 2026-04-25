@@ -10,29 +10,42 @@ const RING_MAT = new THREE.MeshStandardMaterial({
     metalness: 0.75,
 });
 
+// rings guide the player around the Blue Ridge Speedway circuit:
+// hub → north ramp → NE highland → east straight → east lake → SE mound → south → west → hub
 const RING_SPOTS = [
-    [0, -6],
-    [0, -3],
-    [0, 0],
-    [0, 3],
-    [0, 6],
-    [1.4, -1.5],
-    [-1.4, -1.5],
-    [1.4, 1.5],
-    [-1.4, 1.5],
-    [7, 8],
-    [8, 8],
-    [9, 8],
-    [-7, 8],
-    [-8, 8],
-    [5, -12],
-    [-5, -12],
-    [0, -14],
-    [10, -4],
-    [-10, -4],
-    [4, 17],
-    [0, 17],
-    [-4, 17],
+    // hub north exit — encourages the player to go north toward the ramp
+    [5, -15],
+    [5, -26],
+    // north launch area — floating above the ramp to reward clean launches
+    [5, -50],
+    // NE highland approach and top
+    [30, -65],
+    [50, -65],
+    // east straight (north to south)
+    [70, -50],
+    [72, -30],
+    [72, -10],
+    [72, 10],
+    // east lake approach — draw attention to the jump ramp
+    [50, 22],
+    // shortcut reward ring past the east lake
+    [95, 15],
+    // SE bend and mound
+    [70, 50],
+    [55, 65],
+    // south section heading west
+    [30, 75],
+    [10, 80],
+    [-15, 78],
+    // SW curve
+    [-40, 72],
+    [-58, 50],
+    // west section heading north
+    [-72, 15],
+    [-72, -10],
+    // NW return
+    [-68, -35],
+    [-48, -52],
 ];
 
 export function buildRings(scene) {
@@ -48,7 +61,8 @@ export function buildRings(scene) {
 export function buildGoalRing(scene) {
     const geo = new THREE.TorusGeometry(4.0, 0.8, 16, 64);
     const mesh = new THREE.Mesh(geo, RING_MAT.clone());
-    mesh.position.set(0, groundY(0, -180) + 4.0, -180);
+    // start/finish arch at the north edge of the hub plaza
+    mesh.position.set(0, groundY(0, -28) + 4.0, -28);
     mesh.castShadow = true;
     scene.add(mesh);
     return mesh;

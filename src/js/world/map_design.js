@@ -1,29 +1,85 @@
 import * as THREE from "three";
 
+// Blue Ridge Speedway — a loopable counter-clockwise circuit:
+//   Hub (0,0) → north sprint + launch ramp → NE highland → east straight →
+//   east lake (jump shortcut) → SE mound → south return → west section →
+//   NW pond → back to hub.
+//
+// Two "breakable" shortcuts:
+//   1. North launch ramp (8, -30): at spin-dash speed the player clears the NE
+//      highland (height 12) and lands past it — skipping the highland climb.
+//      At run speed the arc barely touches the slope; must go around.
+//   2. East lake ramp (40, 22): at max speed the player jumps over the east lake
+//      entirely. At run speed the arc falls short and the player lands in the lake.
+
 export const MAP_CONFIG = {
     worldRadius: 110,
     hubRadius: 25,
 
     plateaus: [
-        { x: 35, z: 30, radius: 15, height: 6.0 },
-        { x: -20, z: 45, radius: 18, height: 5.0 },
-        { x: -45, z: -45, radius: 15, height: 8.0 },
+        // NE highland — main shortcut obstacle; clears at ~42 u/s from launch ramp
+        { x: 45, z: -65, radius: 22, height: 12 },
+        // NW hill — natural chicane on the return leg
+        { x: -55, z: -50, radius: 18, height: 9 },
+        // SE mound — elevation variety at the south-east bend
+        { x: 55, z: 58, radius: 20, height: 10 },
+        // SW mound — mirrors SE, guides the south-west return
+        { x: -45, z: 55, radius: 16, height: 7 },
     ],
 
-    // facing: "north" (-Z), "south" (+Z), "east" (+X), "west" (-X)
+    // facing: the HIGH end of the slope faces this direction.
+    // A north-facing ramp rises northward; player approaches from the south.
     ramps: [
-        { x: 0, z: -40, width: 30, length: 60, height: 4.0, facing: "north" },
-        { x: -40, z: 0, width: 30, length: 60, height: 4.0, facing: "east" },
+        // PRIMARY LAUNCH RAMP — the Emerald-Coast moment.
+        // Tip at z ≈ -46.  At ~42 u/s: clears NE highland (h=12), lands at z ≈ -103.
+        // At run speed (~24 u/s): arc peaks at h ≈ 8.7, hits highland slope → must detour.
+        { x: 5, z: -30, width: 18, length: 32, height: 8, facing: "north" },
+
+        // East lake speed-jump — faces east over the east lake.
+        // At max speed: clears the lake and lands on far side (shortcut reward).
+        // At run speed: falls into the lake near the far edge.
+        { x: 40, z: 22, width: 40, length: 14, height: 7, facing: "east" },
+
+        // SE descent — helps the player curve back west off the SE mound.
+        { x: 65, z: 62, width: 14, length: 36, height: 8, facing: "south" },
+
+        // West return launch — faces west, sends the player back toward the hub
+        // from the south-west corner at speed.
+        { x: -35, z: 72, width: 14, length: 36, height: 7, facing: "west" },
     ],
 
-    lakes: [{ x: 45, z: -45, radius: 40, depth: 8.0 }],
-    trenches: [{ x: 45, z: 2.5, width: 20, length: 35, depth: 4.0 }],
+    lakes: [
+        // East lake — the water obstacle for the east speed-jump shortcut.
+        { x: 78, z: 25, radius: 16, depth: 8 },
+        // NW pond — obstacle on the north-west return leg.
+        { x: -68, z: -38, radius: 13, depth: 7 },
+    ],
 
-    waterPlanes: [{ x: 45, y: -2.5, z: -20, width: 120, length: 120 }],
+    trenches: [
+        // West-side gap — adds a small skill-check on the return leg.
+        { x: -55, z: 20, width: 12, length: 10, depth: 5 },
+    ],
 
-    bridges: [{ x: 45, y: -0.5, z: 5, length: 24, width: 6, spanAxis: "x" }],
+    waterPlanes: [
+        { x: 78, y: -1.5, z: 25, width: 46, length: 46 },
+        { x: -68, y: -1.5, z: -38, width: 40, length: 40 },
+    ],
 
-    mobs: [{ type: "motobug", x: 0, z: -15, patrolRadius: 5.0 }],
+    bridges: [
+        // Decorative bridge over east lake (normal path)
+        { x: 78, y: -0.5, z: 25, length: 28, width: 8, spanAxis: "z" },
+        // Decorative bridge over NW pond
+        { x: -68, y: -0.5, z: -38, length: 22, width: 8, spanAxis: "z" },
+    ],
+
+    mobs: [
+        { type: "motobug", x: 30, z: -60, patrolRadius: 6.0 },  // NE highland approach
+        { type: "motobug", x: 72, z: -38, patrolRadius: 5.0 },  // east straight north
+        { type: "motobug", x: 75, z: 8, patrolRadius: 5.0 },    // east straight south
+        { type: "motobug", x: -38, z: 55, patrolRadius: 6.0 },  // SW section
+        { type: "motobug", x: -72, z: -15, patrolRadius: 5.0 }, // NW section
+        { type: "motobug", x: 5, z: -78, patrolRadius: 5.0 },   // far-north shortcut lane
+    ],
 };
 
 export function groundY(x, z) {

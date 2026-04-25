@@ -79,8 +79,16 @@ skyFill.position.set(-10, 12, -8);
 scene.add(skyFill);
 
 // ─── World ───────────────────────────────────────────────
-const { flowerSpinners, cloudDrifters, rings, goalRing, sparkleSystem, ambientParticles, mobs, checkpoints } =
-    buildWorld(scene);
+const {
+    flowerSpinners,
+    cloudDrifters,
+    rings,
+    goalRing,
+    sparkleSystem,
+    ambientParticles,
+    mobs,
+    checkpoints,
+} = buildWorld(scene);
 
 // ─── Player + camera controller ──────────────────────────
 const spin = new SpinDash(scene, $("spin-charge-bar"), $("spin-charge-fill"));
@@ -103,13 +111,29 @@ onResize();
 async function loadAssets() {
     const loader = new GLTFLoader();
     await new Promise((res, rej) => {
-        loader.load("../models/sonic.glb", (gltf) => { player.setModel(gltf.scene); res(); }, undefined, rej);
+        loader.load(
+            "../models/sonic.glb",
+            (gltf) => {
+                player.setModel(gltf.scene);
+                res();
+            },
+            undefined,
+            rej
+        );
     });
     await Promise.all([
-        fetch("../animations/idle.json").then((r) => r.json()).then((d) => player.setIdleKeyframes(d.keyframes)),
-        fetch("../animations/walking.json").then((r) => r.json()).then((d) => player.setWalkKeyframes(d.keyframes)),
-        fetch("../animations/running.json").then((r) => r.json()).then((d) => player.setRunKeyframes(d.keyframes)),
-        fetch("../animations/jump.json").then((r) => r.json()).then((d) => player.setJumpKeyframes(d.keyframes)),
+        fetch("../animations/idle.json")
+            .then((r) => r.json())
+            .then((d) => player.setIdleKeyframes(d.keyframes)),
+        fetch("../animations/walking.json")
+            .then((r) => r.json())
+            .then((d) => player.setWalkKeyframes(d.keyframes)),
+        fetch("../animations/running.json")
+            .then((r) => r.json())
+            .then((d) => player.setRunKeyframes(d.keyframes)),
+        fetch("../animations/jump.json")
+            .then((r) => r.json())
+            .then((d) => player.setJumpKeyframes(d.keyframes)),
     ]);
     assetsReady = true;
     if (userPressedStart) startGame();
@@ -218,7 +242,10 @@ function animate() {
     rings.forEach((r) => {
         if (r.collected) return;
         r.mesh.rotation.z += dt * 2.8;
-        r.mesh.position.y = groundY(r.mesh.position.x, r.mesh.position.z) + 1.0 + Math.sin(now * 2.5 + r.phase) * 0.13;
+        r.mesh.position.y =
+            groundY(r.mesh.position.x, r.mesh.position.z) +
+            1.0 +
+            Math.sin(now * 2.5 + r.phase) * 0.13;
         const dx = player.pos.x - r.mesh.position.x;
         const dy = player.pos.y + 0.5 - r.mesh.position.y;
         const dz = player.pos.z - r.mesh.position.z;
@@ -239,7 +266,9 @@ function animate() {
         if (c.mesh.position.x > 110) c.mesh.position.x = -110;
     });
 
-    flowerSpinners.forEach((f) => { f.head.rotation.y += dt * 1.2; });
+    flowerSpinners.forEach((f) => {
+        f.head.rotation.y += dt * 1.2;
+    });
     mobs.forEach((m) => m.update(dt));
 
     const ap = ambientParticles.geo.attributes.position;

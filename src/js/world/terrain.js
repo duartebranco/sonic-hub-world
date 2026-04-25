@@ -54,26 +54,58 @@ export function buildTerrain(scene) {
 
 // circuit waypoints [x, z] — traced counter-clockwise around the full loop
 const TRACK_PATH = [
-    [5, -13], [5, -26], [5, -38], [5, -47],
-    [10, -57], [22, -66], [38, -70], [50, -70],
-    [60, -65], [68, -54], [72, -42],
-    [72, -28], [72, -12], [72, 4], [72, 18],
-    [65, 24], [52, 25],
-    [66, 42], [68, 56], [60, 67], [50, 72],
-    [35, 77], [18, 80], [0, 80], [-14, 79], [-28, 75],
-    [-42, 68], [-56, 56], [-64, 43],
-    [-72, 28], [-72, 14], [-72, 0], [-72, -14],
-    [-69, -28], [-62, -43], [-52, -54], [-38, -61],
-    [-22, -60], [-10, -52], [2, -40],
+    [5, -13],
+    [5, -26],
+    [5, -38],
+    [5, -47],
+    [10, -57],
+    [22, -66],
+    [38, -70],
+    [50, -70],
+    [60, -65],
+    [68, -54],
+    [72, -42],
+    [72, -28],
+    [72, -12],
+    [72, 4],
+    [72, 18],
+    [65, 24],
+    [52, 25],
+    [66, 42],
+    [68, 56],
+    [60, 67],
+    [50, 72],
+    [35, 77],
+    [18, 80],
+    [0, 80],
+    [-14, 79],
+    [-28, 75],
+    [-42, 68],
+    [-56, 56],
+    [-64, 43],
+    [-72, 28],
+    [-72, 14],
+    [-72, 0],
+    [-72, -14],
+    [-69, -28],
+    [-62, -43],
+    [-52, -54],
+    [-38, -61],
+    [-22, -60],
+    [-10, -52],
+    [2, -40],
 ];
 
 function resamplePath(pts, spacing) {
     const out = [[pts[0][0], pts[0][1]]];
     let carry = 0;
     for (let i = 1; i < pts.length; i++) {
-        const ax = pts[i - 1][0], az = pts[i - 1][1];
-        const bx = pts[i][0], bz = pts[i][1];
-        const dx = bx - ax, dz = bz - az;
+        const ax = pts[i - 1][0],
+            az = pts[i - 1][1];
+        const bx = pts[i][0],
+            bz = pts[i][1];
+        const dx = bx - ax,
+            dz = bz - az;
         const segLen = Math.sqrt(dx * dx + dz * dz);
         let d = carry;
         while (d < segLen) {
@@ -99,23 +131,35 @@ function buildTrack(scene) {
     for (let i = 0; i < N; i++) {
         const [cx, cz] = pts[i];
         const [nx, nz] = pts[(i + 1) % N];
-        const dx = nx - cx, dz = nz - cz;
+        const dx = nx - cx,
+            dz = nz - cz;
         const len = Math.sqrt(dx * dx + dz * dz) || 1;
-        const px = -dz / len, pz = dx / len;
+        const px = -dz / len,
+            pz = dx / len;
 
-        const lx = cx - px * HALF, lz = cz - pz * HALF;
-        const rx = cx + px * HALF, rz = cz + pz * HALF;
+        const lx = cx - px * HALF,
+            lz = cz - pz * HALF;
+        const rx = cx + px * HALF,
+            rz = cz + pz * HALF;
 
         const vi = i * 6;
-        positions[vi] = lx;     positions[vi + 1] = groundY(lx, lz) + 0.08; positions[vi + 2] = lz;
-        positions[vi + 3] = rx; positions[vi + 4] = groundY(rx, rz) + 0.08; positions[vi + 5] = rz;
+        positions[vi] = lx;
+        positions[vi + 1] = groundY(lx, lz) + 0.08;
+        positions[vi + 2] = lz;
+        positions[vi + 3] = rx;
+        positions[vi + 4] = groundY(rx, rz) + 0.08;
+        positions[vi + 5] = rz;
 
         const even = Math.floor(i / TILE_STEP) % 2 === 0;
         const r = even ? 1.0 : 0.18;
         const g = even ? 1.0 : 0.72;
         const b = even ? 1.0 : 0.92;
-        vertColors[vi] = r;     vertColors[vi + 1] = g; vertColors[vi + 2] = b;
-        vertColors[vi + 3] = r; vertColors[vi + 4] = g; vertColors[vi + 5] = b;
+        vertColors[vi] = r;
+        vertColors[vi + 1] = g;
+        vertColors[vi + 2] = b;
+        vertColors[vi + 3] = r;
+        vertColors[vi + 4] = g;
+        vertColors[vi + 5] = b;
 
         if (i < N - 1) {
             const a = i * 2;

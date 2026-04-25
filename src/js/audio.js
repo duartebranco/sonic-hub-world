@@ -1,7 +1,7 @@
 // music paths relative to index.html
 const MUSIC = {
     explore: "../audio/music/Emerald Lobby Loop.mp3",
-    race:    "../audio/music/Emerald Breeze Zone.mp3",
+    race: "../audio/music/Emerald Breeze Zone.mp3",
 };
 
 export class AudioManager {
@@ -40,8 +40,12 @@ export class AudioManager {
         this._musicTrack = null;
     }
 
-    startExploreMusic() { this._playMusic("explore"); }
-    startRaceMusic()    { this._playMusic("race"); }
+    startExploreMusic() {
+        this._playMusic("explore");
+    }
+    startRaceMusic() {
+        this._playMusic("race");
+    }
 
     // --- synthesized sfx ---
 

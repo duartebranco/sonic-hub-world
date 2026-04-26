@@ -4,6 +4,80 @@
 
 import { groundY } from "../world/index.js";
 import { TOP_SPEED as SPIN_TOP_SPEED } from "./spin.js";
+import { CYLINDER_COLLIDERS, BOX_COLLIDERS, BRIDGE_SURFACES, WORLD_RADIUS } from "../world/colliders.js";
+
+const PLAYER_RADIUS = 0.45;
+
+// returns bridge plank surface y at (x,z), or -Infinity if not over a bridge
+function bridgeSurfaceY(x, z) {
+    for (const b of BRIDGE_SURFACES) {
+        const halfLen = b.length / 2;
+        const halfWid = b.width / 2;
+        const localSpan = b.spanAxis === "x" ? x - b.x : z - b.z;
+        const localCross = b.spanAxis === "x" ? z - b.z : x - b.x;
+        if (Math.abs(localSpan) <= halfLen && Math.abs(localCross) <= halfWid) {
+            const arch = Math.cos((localSpan / halfLen) * Math.PI * 0.5) * 2.0;
+            return b.y + arch + 0.2;
+        }
+    }
+    return -Infinity;
+}
+
+function effectiveGroundY(x, z) {
+    return Math.max(groundY(x, z), bridgeSurfaceY(x, z));
+}
+
+function resolveColliders(pos, vel) {
+    for (const c of CYLINDER_COLLIDERS) {
+        const dx = pos.x - c.x;
+        const dz = pos.z - c.z;
+        const distSq = dx * dx + dz * dz;
+        const minDist = c.radius + PLAYER_RADIUS;
+        if (distSq < minDist * minDist && distSq > 0.0001) {
+            const dist = Math.sqrt(distSq);
+            const nx = dx / dist;
+            const nz = dz / dist;
+            pos.x += nx * (minDist - dist);
+            pos.z += nz * (minDist - dist);
+            const vDot = vel.x * nx + vel.z * nz;
+            if (vDot < 0) {
+                vel.x -= vDot * nx;
+                vel.z -= vDot * nz;
+            }
+        }
+    }
+
+    for (const b of BOX_COLLIDERS) {
+        const dx = Math.abs(pos.x - b.x);
+        const dz = Math.abs(pos.z - b.z);
+        const px = b.hw + PLAYER_RADIUS - dx;
+        const pz = b.hl + PLAYER_RADIUS - dz;
+        if (px > 0 && pz > 0) {
+            if (px < pz) {
+                pos.x += pos.x > b.x ? px : -px;
+                vel.x = 0;
+            } else {
+                pos.z += pos.z > b.z ? pz : -pz;
+                vel.z = 0;
+            }
+        }
+    }
+
+    // world border — push player inward from the circular wall
+    const distOrigin = Math.sqrt(pos.x * pos.x + pos.z * pos.z);
+    const borderLimit = WORLD_RADIUS - PLAYER_RADIUS;
+    if (distOrigin > borderLimit) {
+        const nx = pos.x / distOrigin;
+        const nz = pos.z / distOrigin;
+        pos.x = nx * borderLimit;
+        pos.z = nz * borderLimit;
+        const vDot = vel.x * nx + vel.z * nz;
+        if (vDot > 0) {
+            vel.x -= vDot * nx;
+            vel.z -= vDot * nz;
+        }
+    }
+}
 
 export const WALK_SPEED = 10.0;
 export const RUN_SPEED = 24.0;
@@ -130,7 +204,7 @@ export function updatePhysics(player, dt, hasInput, inputDir, doJump, jumpHeld) 
 
     const nextX = pos.x + vel.x * dt;
     const nextZ = pos.z + vel.z * dt;
-    const nextGround = groundY(nextX, nextZ);
+    const nextGround = effectiveGroundY(nextX, nextZ);
     const heightDiff = nextGround - pos.y;
 
     if ((player.speed * dt > 0.001 && heightDiff / (player.speed * dt) > 1.2) || heightDiff > 0.5) {
@@ -141,7 +215,9 @@ export function updatePhysics(player, dt, hasInput, inputDir, doJump, jumpHeld) 
         pos.z = nextZ;
     }
 
-    const actualGround = groundY(pos.x, pos.z);
+    resolveColliders(pos, vel);
+
+    const actualGround = effectiveGroundY(pos.x, pos.z);
 
     if (!player._inAir) {
         if (actualGround < pos.y - 0.15) {

@@ -19,12 +19,12 @@ function makeFlower(scene, x, z) {
     g.position.set(x, ty + 0.01, z);
     g.rotation.y = rnd(0, Math.PI * 2);
 
-    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.45, 6), STEM_MAT);
-    stem.position.y = 0.225;
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 0.9, 6), STEM_MAT);
+    stem.position.y = 0.45;
     g.add(stem);
 
     const head = new THREE.Group();
-    head.position.y = 0.5;
+    head.position.y = 1.0;
 
     const col = PETAL_COLORS[Math.floor(Math.random() * PETAL_COLORS.length)];
     const pMat = new THREE.MeshStandardMaterial({
@@ -34,12 +34,12 @@ function makeFlower(scene, x, z) {
 
     for (let i = 0; i < 6; i++) {
         const a = (i / 6) * Math.PI * 2;
-        const p = new THREE.Mesh(new THREE.SphereGeometry(0.09, 6, 5), pMat);
-        p.position.set(Math.cos(a) * 0.14, 0, Math.sin(a) * 0.14);
+        const p = new THREE.Mesh(new THREE.SphereGeometry(0.18, 6, 5), pMat);
+        p.position.set(Math.cos(a) * 0.28, 0, Math.sin(a) * 0.28);
         head.add(p);
     }
 
-    head.add(new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 6), CENTRE_MAT));
+    head.add(new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 6), CENTRE_MAT));
     g.add(head);
     scene.add(g);
 

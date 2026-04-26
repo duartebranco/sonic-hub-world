@@ -130,6 +130,8 @@ export function updatePhysics(player, dt, hasInput, inputDir, doJump, jumpHeld) 
     const slopeMag = Math.sqrt(slopeX * slopeX + slopeZ * slopeZ);
 
     const flatSpeed = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
+    player.justJumped = false;
+    player.justLanded = false;
 
     if (!spin.charging) {
         if (player._inAir) {
@@ -242,6 +244,7 @@ export function updatePhysics(player, dt, hasInput, inputDir, doJump, jumpHeld) 
                 vel.z += jumpSpeed * n.z;
                 player._inAir = true;
                 player._jumpHeld = true;
+                player.justJumped = true;
             }
         }
     } else {
@@ -260,6 +263,7 @@ export function updatePhysics(player, dt, hasInput, inputDir, doJump, jumpHeld) 
             player._jumpVel = 0;
             player._inAir = false;
             player._jumpHeld = false;
+            player.justLanded = true;
         }
     }
 }

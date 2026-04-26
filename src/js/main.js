@@ -236,7 +236,7 @@ function animate() {
         const dx = player.pos.x - r.mesh.position.x;
         const dy = player.pos.y + 0.5 - r.mesh.position.y;
         const dz = player.pos.z - r.mesh.position.z;
-        if (dx * dx + dy * dy + dz * dz < 0.9) {
+        if (dx * dx + dy * dy + dz * dz < 2.5) {
             r.collected = true;
             sparkleSystem.spawn(r.mesh.position.clone());
             scene.remove(r.mesh);

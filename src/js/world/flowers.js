@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { groundY } from "./terrain.js";
+import { MAP_CONFIG } from "./map_design.js";
 
 const STEM_MAT = new THREE.MeshStandardMaterial({ color: 0x66bb6a });
 const CENTRE_MAT = new THREE.MeshStandardMaterial({
@@ -46,14 +47,5 @@ function makeFlower(scene, x, z) {
 }
 
 export function buildFlowers(scene) {
-    const spinners = [];
-    const COUNT = 100;
-
-    for (let i = 0; i < COUNT; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const r = Math.random() * 22 + 2;
-        spinners.push(makeFlower(scene, Math.cos(angle) * r, Math.sin(angle) * r));
-    }
-
-    return spinners;
+    return MAP_CONFIG.flowers.map((f) => makeFlower(scene, f.x, f.z));
 }

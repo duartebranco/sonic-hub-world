@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { groundY } from "./terrain.js";
-import { isPointOccupied, MAP_CONFIG } from "./map_design.js";
+import { isPointOccupied, MAP_CONFIG } from "./map_design_test.js";
 
 const TRUNK_MAT = new THREE.MeshStandardMaterial({
     color: 0x8d6e63,

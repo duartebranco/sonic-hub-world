@@ -44,6 +44,19 @@ export const MAP_CONFIG = {
         { type: "motobug", x: 93.31, z: -17.05, patrolRadius: 5 },
         { type: "motobug", x: 72.61, z: 73.94, patrolRadius: 5 },
     ],
+
+    trees: [],
+
+    flowers: [],
+
+    rings: [
+        { x: 0, z: -6 }, { x: 0, z: -3 }, { x: 0, z: 0 }, { x: 0, z: 3 }, { x: 0, z: 6 },
+        { x: 1.4, z: -1.5 }, { x: -1.4, z: -1.5 }, { x: 1.4, z: 1.5 }, { x: -1.4, z: 1.5 },
+        { x: 7, z: 8 }, { x: 8, z: 8 }, { x: 9, z: 8 }, { x: -7, z: 8 }, { x: -8, z: 8 },
+        { x: 5, z: -12 }, { x: -5, z: -12 }, { x: 0, z: -14 },
+        { x: 10, z: -4 }, { x: -10, z: -4 },
+        { x: 4, z: 17 }, { x: 0, z: 17 }, { x: -4, z: 17 },
+    ],
 };
 
 export function groundY(x, z) {

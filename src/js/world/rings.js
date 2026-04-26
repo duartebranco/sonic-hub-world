@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { groundY } from "./terrain.js";
+import { MAP_CONFIG } from "./map_design.js";
 
 const RING_GEO = new THREE.TorusGeometry(0.3, 0.065, 14, 32);
 const RING_MAT = new THREE.MeshStandardMaterial({
@@ -10,33 +11,8 @@ const RING_MAT = new THREE.MeshStandardMaterial({
     metalness: 0.75,
 });
 
-const RING_SPOTS = [
-    [0, -6],
-    [0, -3],
-    [0, 0],
-    [0, 3],
-    [0, 6],
-    [1.4, -1.5],
-    [-1.4, -1.5],
-    [1.4, 1.5],
-    [-1.4, 1.5],
-    [7, 8],
-    [8, 8],
-    [9, 8],
-    [-7, 8],
-    [-8, 8],
-    [5, -12],
-    [-5, -12],
-    [0, -14],
-    [10, -4],
-    [-10, -4],
-    [4, 17],
-    [0, 17],
-    [-4, 17],
-];
-
 export function buildRings(scene) {
-    return RING_SPOTS.map(([x, z]) => {
+    return MAP_CONFIG.rings.map(({ x, z }) => {
         const mesh = new THREE.Mesh(RING_GEO, RING_MAT.clone());
         mesh.position.set(x, groundY(x, z) + 1.0, z);
         mesh.castShadow = true;

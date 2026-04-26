@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { groundY as mapGroundY, buildMapObjects } from "./map_design.js";
+import { groundY as mapGroundY, buildMapObjects } from "./map_design_test.js";
 
 // Re-export groundY so that physics and other modules continue to work
 export function groundY(x, z) {

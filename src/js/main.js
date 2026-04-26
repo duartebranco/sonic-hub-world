@@ -32,9 +32,8 @@ function onStartInput() {
 }
 
 document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") onStartInput();
+    if (e.key === "Enter") onStartInput();
 });
-document.addEventListener("click", onStartInput);
 
 // ─── Renderer ────────────────────────────────────────────
 const container = $("canvas-container");

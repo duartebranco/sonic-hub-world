@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { groundY as mapGroundY, buildMapObjects } from "./map_design_test.js";
+import { groundY as mapGroundY, buildMapObjects } from "./map_design.js";
 
 // Re-export groundY so that physics and other modules continue to work
 export function groundY(x, z) {
@@ -66,37 +66,5 @@ export function buildTerrain(scene) {
 }
 
 export function buildPath(scene) {
-    // 1. Build the explicit map objects (Water, Bridges, etc.) from map_design.js
     buildMapObjects(scene);
-
-    // 2. Build a starting plaza in the center of the hub
-    const matA = new THREE.MeshStandardMaterial({
-        color: 0xfff9e6,
-        roughness: 0.55,
-    });
-    const matB = new THREE.MeshStandardMaterial({
-        color: 0x26c6da,
-        roughness: 0.55,
-    });
-
-    const S = 2.0;
-    const geo = new THREE.BoxGeometry(S, 0.14, S);
-    const RADIUS = 6;
-
-    for (let r = -RADIUS; r <= RADIUS; r++) {
-        for (let c = -RADIUS; c <= RADIUS; c++) {
-            // Make it circular
-            if (r * r + c * c > RADIUS * RADIUS) continue;
-
-            const x = c * S;
-            const z = r * S;
-            const y = groundY(x, z) + 0.05;
-
-            const mat = (Math.abs(r) + Math.abs(c)) % 2 === 0 ? matA : matB;
-            const m = new THREE.Mesh(geo, mat);
-            m.position.set(x, y, z);
-            m.receiveShadow = true;
-            scene.add(m);
-        }
-    }
 }

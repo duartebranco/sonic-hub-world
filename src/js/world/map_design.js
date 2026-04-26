@@ -31,11 +31,11 @@ export const MAP_CONFIG = {
     ],
 
     trenches: [
-        { x: -56.15, z: -1.5, width: 52, length: 200, depth: 7.5 },
+        { x: -56.15, z: -1.5, width: 52, length: 270, depth: 7.5 },
     ],
 
     waterPlanes: [
-        { x: -19.06, y: -2.5, z: -17.01, width: 236, length: 229 },
+        { x: -19.06, y: -2.5, z: -17.01, width: 264, length: 299 },
     ],
 
     bridges: [
@@ -60,14 +60,17 @@ export function groundY(x, z) {
         y = Math.max(y, 0);
     }
 
+    // compute plateau influence first — used to guard lower-priority features
+    let plateauY = 0;
     for (const p of MAP_CONFIG.plateaus) {
         const dist = Math.sqrt((x - p.x) ** 2 + (z - p.z) ** 2);
         const transition = Math.max(0, Math.min(1, (p.radius - dist) / 2.0 + 0.5));
         if (transition > 0) {
             const smooth = transition * transition * (3 - 2 * transition);
-            y = Math.max(y, smooth * p.height);
+            plateauY = Math.max(plateauY, smooth * p.height);
         }
     }
+    y = Math.max(y, plateauY);
 
     for (const r of MAP_CONFIG.ramps) {
         const hw = r.width / 2.0;
@@ -82,24 +85,28 @@ export function groundY(x, z) {
         }
     }
 
+    // lakes and trenches only apply where no plateau exists
+    if (plateauY === 0) {
+        for (const lake of MAP_CONFIG.lakes) {
+            const dist = Math.sqrt((x - lake.x) ** 2 + (z - lake.z) ** 2);
+            if (dist < lake.radius) {
+                y -= Math.cos(((dist / lake.radius) * Math.PI) / 2) * lake.depth;
+            }
+        }
+
+        for (const t of MAP_CONFIG.trenches) {
+            const hw = t.width / 2.0;
+            const hl = t.length / 2.0;
+            if (x > t.x - hw && x < t.x + hw && z > t.z - hl && z < t.z + hl) {
+                y = Math.min(y, -t.depth);
+            }
+        }
+    }
+
+    // world radius wall wins over everything — applied last
     if (distOrigin > MAP_CONFIG.worldRadius) {
         const t = Math.max(0, Math.min(1, (distOrigin - MAP_CONFIG.worldRadius) / 10.0));
         if (t > 0) y = Math.max(y, t * t * (3 - 2 * t) * 40.0);
-    }
-
-    for (const lake of MAP_CONFIG.lakes) {
-        const dist = Math.sqrt((x - lake.x) ** 2 + (z - lake.z) ** 2);
-        if (dist < lake.radius) {
-            y -= Math.cos(((dist / lake.radius) * Math.PI) / 2) * lake.depth;
-        }
-    }
-
-    for (const t of MAP_CONFIG.trenches) {
-        const hw = t.width / 2.0;
-        const hl = t.length / 2.0;
-        if (x > t.x - hw && x < t.x + hw && z > t.z - hl && z < t.z + hl) {
-            y = Math.min(y, -t.depth);
-        }
     }
 
     return y;

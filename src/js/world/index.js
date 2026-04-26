@@ -2,12 +2,12 @@ import { buildTerrain, buildPath, groundY } from "./terrain.js";
 import { buildCliffs } from "./cliffs.js";
 import { buildTrees } from "./trees.js";
 import { buildFlowers } from "./flowers.js";
-import { buildRings, buildSparkleSystem, buildGoalRing } from "./rings.js";
+import { buildRings, buildSparkleSystem, buildGoalRing, resetRings } from "./rings.js";
 import { buildClouds } from "./clouds.js";
 import { buildAmbientParticles } from "./particles.js";
 import { buildMobs } from "./mobs.js";
 
-export { groundY };
+export { groundY, resetRings };
 
 export function buildWorld(scene) {
     buildTerrain(scene);

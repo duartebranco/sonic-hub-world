@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
-import { buildWorld, groundY } from "./world/index.js";
+import { buildWorld, groundY, resetRings } from "./world/index.js";
 import { Player } from "./player/index.js";
 import { SpinDash } from "./player/spin.js";
 import { ThirdPersonCamera } from "./camera.js";
@@ -140,10 +140,58 @@ loadAssets().catch((err) => {
 });
 
 // ─── Game state ──────────────────────────────────────────
+const RING_TARGET = 50;
 let ringCount = 0;
 let raceTime = 0;
 let timerRunning = false;
-let raceFinished = false;
+let raceActive = false;
+let insideGoalRing = false;
+
+function formatTime(t) {
+    const mins = Math.floor(t / 60);
+    const secs = Math.floor(t % 60);
+    const ms = Math.floor((t * 100) % 100);
+    return `${mins}:${secs.toString().padStart(2, "0")}.${ms.toString().padStart(2, "0")}`;
+}
+
+function startChallenge() {
+    resetRings(scene, rings);
+    ringCount = 0;
+    raceTime = 0;
+    raceActive = true;
+    timerRunning = true;
+    $("ring-count").textContent = `0/${RING_TARGET}`;
+    $("time-count").textContent = "0:00.00";
+    $("time-count").style.color = "";
+    $("time-count").style.animation = "";
+    $("challenge-hint").classList.remove("hidden");
+    $("challenge-complete").classList.add("hidden");
+}
+
+function finishChallenge() {
+    raceActive = false;
+    timerRunning = false;
+
+    const timeStr = formatTime(raceTime);
+    $("time-count").style.color = "#ffe000";
+
+    const stored = localStorage.getItem("ringChallengeBest");
+    const best = stored !== null ? parseFloat(stored) : Infinity;
+    const isRecord = raceTime < best;
+    if (isRecord) localStorage.setItem("ringChallengeBest", String(raceTime));
+
+    $("cc-time").textContent = timeStr;
+    if (isRecord) {
+        $("cc-record").classList.remove("hidden");
+        $("cc-best").textContent = "";
+    } else {
+        $("cc-record").classList.add("hidden");
+        $("cc-best").textContent = `Best: ${formatTime(best)}`;
+    }
+    $("challenge-hint").classList.add("hidden");
+    $("challenge-complete").classList.remove("hidden");
+    setTimeout(() => $("challenge-complete").classList.add("hidden"), 5000);
+}
 
 // ─── Game loop ───────────────────────────────────────────
 const clock = new THREE.Clock();
@@ -155,22 +203,15 @@ function animate() {
     const now = performance.now() / 1000;
 
     if (userPressedStart && assetsReady) {
-        if ((player.speed > 0 || player.inAir) && !raceFinished) timerRunning = true;
-
-        if (timerRunning && !raceFinished) {
+        if (timerRunning) {
             raceTime += dt;
-            const mins = Math.floor(raceTime / 60);
-            const secs = Math.floor(raceTime % 60);
-            const ms = Math.floor((raceTime * 100) % 100);
-            $("time-count").textContent =
-                `${mins}:${secs.toString().padStart(2, "0")}.${ms.toString().padStart(2, "0")}`;
+            $("time-count").textContent = formatTime(raceTime);
         }
     }
 
     player.update(dt, tpCam.yaw);
     tpCam.update(dt, player.pos);
 
-    // speed lines only at max speed (not just running)
     if (player.speed >= MAX_SPEED * 0.88 && !player.inAir) {
         speedLinesEl.classList.add("active");
     } else {
@@ -192,28 +233,25 @@ function animate() {
         const dx = player.pos.x - r.mesh.position.x;
         const dy = player.pos.y + 0.5 - r.mesh.position.y;
         const dz = player.pos.z - r.mesh.position.z;
-        if (dx * dx + dy * dy + dz * dz < 0.9) {
+        if (dx * dx + dy * dy + dz * dz < 2.5) {
             r.collected = true;
             sparkleSystem.spawn(r.mesh.position.clone());
             scene.remove(r.mesh);
-            ringCount++;
-            $("ring-count").textContent = String(ringCount);
+            if (raceActive) {
+                ringCount++;
+                $("ring-count").textContent = `${ringCount}/${RING_TARGET}`;
+                if (ringCount >= RING_TARGET) finishChallenge();
+            }
         }
     });
 
-    if (!raceFinished) {
-        goalRing.rotation.y += dt * 1.5;
-        const dx = player.pos.x - goalRing.position.x;
-        const dy = player.pos.y + 0.5 - goalRing.position.y;
-        const dz = player.pos.z - goalRing.position.z;
-        if (dx * dx + dy * dy + dz * dz < 25.0) {
-            // Goal ring radius is 4.0
-            raceFinished = true;
-            timerRunning = false;
-            $("time-count").style.color = "#ffe000";
-            $("time-count").style.animation = "ts-blink 0.5s step-end infinite";
-        }
-    }
+    goalRing.rotation.y += dt * 1.5;
+    const gdx = player.pos.x - goalRing.position.x;
+    const gdy = player.pos.y + 0.5 - goalRing.position.y;
+    const gdz = player.pos.z - goalRing.position.z;
+    const nowInsideGoalRing = gdx * gdx + gdy * gdy + gdz * gdz < 25.0;
+    if (nowInsideGoalRing && !insideGoalRing) startChallenge();
+    insideGoalRing = nowInsideGoalRing;
 
     sparkleSystem.update(dt);
 

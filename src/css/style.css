@@ -254,6 +254,105 @@ body {
     }
 }
 
+/* ── Challenge UI ──────────────────────────────────────── */
+
+#challenge-hint {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    pointer-events: none;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+#challenge-hint.hidden {
+    display: none;
+}
+
+.ch-text {
+    font-family: "Press Start 2P", system-ui, sans-serif;
+    font-size: clamp(0.55rem, 1.5vw, 0.9rem);
+    color: #ffffff;
+    background-color: #3200f8;
+    border: 2px solid #501000;
+    outline: 2px solid #fcb400;
+    padding: 8px 18px;
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
+    letter-spacing: 2px;
+    animation: ts-blink 1.4s step-end infinite;
+}
+
+.ch-sub {
+    font-family: "Press Start 2P", system-ui, sans-serif;
+    font-size: clamp(0.45rem, 1.1vw, 0.65rem);
+    color: rgba(255, 255, 255, 0.75);
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.7);
+}
+
+#challenge-complete {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    pointer-events: none;
+    text-align: center;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+    background-color: #3200f8;
+    border: 2px solid #501000;
+    outline: 2px solid #fcb400;
+    padding: 10px 24px;
+}
+
+#challenge-complete.hidden {
+    display: none;
+}
+
+.cc-title {
+    font-family: "Press Start 2P", system-ui, sans-serif;
+    font-size: clamp(0.55rem, 1.5vw, 0.9rem);
+    color: #ffe000;
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
+    letter-spacing: 3px;
+}
+
+.cc-time {
+    font-family: "Press Start 2P", system-ui, sans-serif;
+    font-size: clamp(0.55rem, 1.5vw, 0.9rem);
+    color: #ffffff;
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
+    letter-spacing: 2px;
+}
+
+.cc-record {
+    font-family: "Press Start 2P", system-ui, sans-serif;
+    font-size: clamp(0.55rem, 1.5vw, 0.9rem);
+    color: #ffe000;
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
+    letter-spacing: 2px;
+    animation: ts-blink 0.5s step-end infinite;
+}
+
+.cc-record.hidden {
+    display: none;
+}
+
+.cc-best {
+    font-family: "Press Start 2P", system-ui, sans-serif;
+    font-size: clamp(0.45rem, 1.1vw, 0.65rem);
+    color: rgba(255, 255, 255, 0.7);
+    letter-spacing: 1px;
+}
+
 .ts-copyright {
     position: absolute;
     bottom: 18px;

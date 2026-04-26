@@ -191,6 +191,8 @@ export const MAP_CONFIG = {
         { x: 25, z: 9 },
     ],
 
+    goalRing: [{ x: 25, z: 122 }],
+
     walls: [],
 };
 

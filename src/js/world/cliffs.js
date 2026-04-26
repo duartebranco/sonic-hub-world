@@ -1,15 +1,11 @@
 import * as THREE from "three";
 import { groundY } from "./terrain.js";
+import { MAP_CONFIG } from "./map_design.js";
 
-const MAT_A = new THREE.MeshStandardMaterial({
-    color: 0xb5835a,
-    roughness: 0.85,
-});
-const MAT_B = new THREE.MeshStandardMaterial({
-    color: 0x8b5e3c,
-    roughness: 0.85,
-});
+const MAT_A = new THREE.MeshStandardMaterial({ color: 0xb5835a, roughness: 0.85 });
+const MAT_B = new THREE.MeshStandardMaterial({ color: 0x8b5e3c, roughness: 0.85 });
 
+// Used for manually-placed MAP_CONFIG.walls (individual meshes, small counts)
 function makeCliffWall(scene, cx, cz, width, height, rotY, tileSize = 1.0) {
     const group = new THREE.Group();
     const cols = Math.ceil(width / tileSize);
@@ -33,13 +29,88 @@ function makeCliffWall(scene, cx, cz, width, height, rotY, tileSize = 1.0) {
     scene.add(group);
 }
 
+// Procedural walls around plateaus and the world border, rendered via InstancedMesh.
+// rotY = -π/2 - angle makes local-X span tangentially so tiles tile correctly around circles.
+function buildProceduralWalls(scene) {
+    const TILE = 1.1;
+    const BTILE = 2.2; // larger tiles for the distant world border
+
+    const dummy = new THREE.Object3D();
+
+    // Collect tile matrices per material before creating InstancedMesh
+    const pA = [], pB = []; // plateau tiles
+    const bA = [], bB = []; // border tiles
+
+    // ── Plateau edges ─────────────────────────────────────────────────────────
+    for (const p of MAP_CONFIG.plateaus) {
+        const wallRows = Math.max(1, Math.ceil(p.height / TILE));
+        // Place just outside the blend zone (groundY ≈ 0 at radius+1)
+        const DIST = p.radius + 1.0;
+        const N = Math.max(8, Math.ceil((2 * Math.PI * DIST) / TILE));
+        const dAngle = (2 * Math.PI) / N;
+
+        for (let si = 0; si < N; si++) {
+            const angle = si * dAngle;
+            const rotY = -Math.PI / 2 - angle;
+            const wx = p.x + DIST * Math.cos(angle);
+            const wz = p.z + DIST * Math.sin(angle);
+
+            for (let r = 0; r < wallRows; r++) {
+                dummy.position.set(wx, r * TILE, wz);
+                dummy.rotation.set(0, rotY, 0);
+                dummy.updateMatrix();
+                if ((si + r) % 2 === 0) pA.push(dummy.matrix.clone());
+                else pB.push(dummy.matrix.clone());
+            }
+        }
+    }
+
+    // ── World border ──────────────────────────────────────────────────────────
+    {
+        const R = MAP_CONFIG.worldRadius;
+        const WALL_H = 10; // rows (10 × 2.2 = 22 units)
+        const N = Math.max(12, Math.ceil((2 * Math.PI * R) / BTILE));
+        const dAngle = (2 * Math.PI) / N;
+
+        for (let si = 0; si < N; si++) {
+            const angle = si * dAngle;
+            const rotY = -Math.PI / 2 - angle;
+            const wx = R * Math.cos(angle);
+            const wz = R * Math.sin(angle);
+
+            for (let r = 0; r < WALL_H; r++) {
+                dummy.position.set(wx, r * BTILE, wz);
+                dummy.rotation.set(0, rotY, 0);
+                dummy.updateMatrix();
+                if ((si + r) % 2 === 0) bA.push(dummy.matrix.clone());
+                else bB.push(dummy.matrix.clone());
+            }
+        }
+    }
+
+    // ── Spawn InstancedMeshes ─────────────────────────────────────────────────
+    const tileGeo = new THREE.BoxGeometry(TILE, TILE, TILE * 0.55);
+    const borderGeo = new THREE.BoxGeometry(BTILE, BTILE, BTILE * 0.55);
+
+    function spawn(geo, mat, matrices) {
+        if (!matrices.length) return;
+        const inst = new THREE.InstancedMesh(geo, mat, matrices.length);
+        matrices.forEach((m, i) => inst.setMatrixAt(i, m));
+        inst.instanceMatrix.needsUpdate = true;
+        inst.castShadow = true;
+        inst.receiveShadow = true;
+        scene.add(inst);
+    }
+
+    spawn(tileGeo, MAT_A, pA);
+    spawn(tileGeo, MAT_B, pB);
+    spawn(borderGeo, MAT_A, bA);
+    spawn(borderGeo, MAT_B, bB);
+}
+
 export function buildCliffs(scene) {
-    makeCliffWall(scene, -22, 0, 10, 4, Math.PI / 2, 1.1);
-    makeCliffWall(scene, 22, 0, 10, 4, Math.PI / 2, 1.1);
-    makeCliffWall(scene, 0, -22, 12, 5, 0, 1.1);
-    makeCliffWall(scene, 0, 22, 12, 4, 0, 1.1);
-    makeCliffWall(scene, -16, -16, 8, 3, Math.PI / 4, 1.0);
-    makeCliffWall(scene, 16, -16, 8, 3, -Math.PI / 4, 1.0);
-    makeCliffWall(scene, -16, 16, 8, 3, -Math.PI / 4, 1.0);
-    makeCliffWall(scene, 16, 16, 8, 3, Math.PI / 4, 1.0);
+    for (const w of MAP_CONFIG.walls) {
+        makeCliffWall(scene, w.x, w.z, w.width, w.height, w.rotY * (Math.PI / 180), w.tileSize ?? 1.0);
+    }
+    buildProceduralWalls(scene);
 }

@@ -708,6 +708,19 @@
                         { key: "z", min: -130, max: 130, step: 0.5 },
                     ],
                 },
+                walls: {
+                    label: "Walls",
+                    color: 0xb5835a,
+                    defaults: { x: 0, z: 0, width: 10, height: 4, rotY: 0, tileSize: 1.1 },
+                    fields: [
+                        { key: "x", min: -130, max: 130, step: 0.5 },
+                        { key: "z", min: -130, max: 130, step: 0.5 },
+                        { key: "width", min: 1, max: 60, step: 0.5 },
+                        { key: "height", min: 1, max: 20, step: 1 },
+                        { key: "rotY", min: -180, max: 180, step: 5 },
+                        { key: "tileSize", min: 0.5, max: 3.0, step: 0.05 },
+                    ],
+                },
             };
 
             const FALLBACK_CONFIG = {
@@ -723,6 +736,7 @@
                 trees: [],
                 flowers: [],
                 rings: [],
+                walls: [],
             };
 
             // ─── State ────────────────────────────────────────────────────────────────────
@@ -1080,6 +1094,16 @@
                     const disc = makeDiscOverlay(spec.color, 0.5, y, 0.8);
                     disc.userData.pickable = true;
                     group.add(disc);
+                    group.position.set(obj.x, 0, obj.z);
+                } else if (type === "walls") {
+                    const ts = obj.tileSize ?? 1.0;
+                    const depth = ts * 0.6;
+                    const y = groundY(obj.x, obj.z);
+                    const rect = makeRectOverlay(spec.color, obj.width, depth, y, 0.7);
+                    rect.userData.pickable = true;
+                    group.add(rect);
+                    group.add(makeRectOutline(spec.color, obj.width, depth, y));
+                    group.rotation.y = obj.rotY * (Math.PI / 180);
                     group.position.set(obj.x, 0, obj.z);
                 }
 
@@ -1600,6 +1624,7 @@
                     "trees",
                     "flowers",
                     "rings",
+                    "walls",
                 ]) {
                     const arr = cfg[key] || [];
                     if (arr.length === 0) {

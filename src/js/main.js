@@ -145,7 +145,6 @@ let ringCount = 0;
 let raceTime = 0;
 let timerRunning = false;
 let raceActive = false;
-let raceComplete = false;
 let insideGoalRing = false;
 
 function formatTime(t) {
@@ -160,7 +159,6 @@ function startChallenge() {
     ringCount = 0;
     raceTime = 0;
     raceActive = true;
-    raceComplete = false;
     timerRunning = true;
     $("ring-count").textContent = `0/${RING_TARGET}`;
     $("time-count").textContent = "0:00.00";
@@ -171,7 +169,6 @@ function startChallenge() {
 }
 
 function finishChallenge() {
-    raceComplete = true;
     raceActive = false;
     timerRunning = false;
 

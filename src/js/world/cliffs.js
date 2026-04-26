@@ -37,7 +37,8 @@ function buildProceduralWalls(scene) {
     const dummy = new THREE.Object3D();
 
     // Collect tile matrices per material before creating InstancedMesh
-    const bA = [], bB = []; // border tiles
+    const bA = [],
+        bB = []; // border tiles
 
     // ── World border ──────────────────────────────────────────────────────────
     {
@@ -81,7 +82,15 @@ function buildProceduralWalls(scene) {
 
 export function buildCliffs(scene) {
     for (const w of MAP_CONFIG.walls) {
-        makeCliffWall(scene, w.x, w.z, w.width, w.height, w.rotY * (Math.PI / 180), w.tileSize ?? 1.0);
+        makeCliffWall(
+            scene,
+            w.x,
+            w.z,
+            w.width,
+            w.height,
+            w.rotY * (Math.PI / 180),
+            w.tileSize ?? 1.0
+        );
     }
     buildProceduralWalls(scene);
 }

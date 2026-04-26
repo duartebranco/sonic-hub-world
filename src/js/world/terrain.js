@@ -33,14 +33,9 @@ export function buildTerrain(scene) {
         // Subtle height-based brightness
         const t = Math.max(0, Math.min(1, y / 20));
 
-        // Suppress brown on plateau edges — tile walls sit there and cover the slope face
+        // Suppress brown on world border inner face (walls sit at worldRadius)
         let wallCovered = false;
         if (slope > 0.8) {
-            for (const p of MAP_CONFIG.plateaus) {
-                const dist = Math.sqrt((x - p.x) ** 2 + (z - p.z) ** 2);
-                if (dist < p.radius + 1.5) { wallCovered = true; break; }
-            }
-            // Also suppress on the world border inner face (walls sit at worldRadius)
             const d = Math.sqrt(x * x + z * z);
             if (d > MAP_CONFIG.worldRadius - 1.0) wallCovered = true;
         }

@@ -21,13 +21,29 @@ export function buildRings(scene) {
     });
 }
 
+const GOAL_MAT = new THREE.MeshStandardMaterial({
+    color: 0x00e5ff,
+    emissive: 0x0077aa,
+    emissiveIntensity: 0.7,
+    roughness: 0.1,
+    metalness: 0.8,
+});
+
 export function buildGoalRing(scene) {
+    const { x, z } = MAP_CONFIG.goalRing[0];
     const geo = new THREE.TorusGeometry(4.0, 0.8, 16, 64);
-    const mesh = new THREE.Mesh(geo, RING_MAT.clone());
-    mesh.position.set(0, groundY(0, -180) + 4.0, -180);
+    const mesh = new THREE.Mesh(geo, GOAL_MAT.clone());
+    mesh.position.set(x, groundY(x, z) + 4.0, z);
     mesh.castShadow = true;
     scene.add(mesh);
     return mesh;
+}
+
+export function resetRings(scene, rings) {
+    rings.forEach((r) => {
+        r.collected = false;
+        scene.add(r.mesh);
+    });
 }
 
 export function buildSparkleSystem(scene) {

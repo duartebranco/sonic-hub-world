@@ -1,29 +1,55 @@
 import * as THREE from "three";
 
 export const MAP_CONFIG = {
-    worldRadius: 110,
-    hubRadius: 25,
+    worldRadius: 133,
+    hubRadius: 9,
 
     plateaus: [
-        { x: 35, z: 30, radius: 15, height: 6.0 },
-        { x: -20, z: 45, radius: 18, height: 5.0 },
-        { x: -45, z: -45, radius: 15, height: 8.0 },
+        { x: 0.75, z: 94.88, radius: 15, height: 4.5 },
+        { x: -0.66, z: 125.32, radius: 18, height: 9 },
+        { x: -75.24, z: -93.79, radius: 17.5, height: 8 },
+        { x: 25.7, z: 113.97, radius: 22.5, height: 14.5 },
+        { x: -32.28, z: -48.71, radius: 15.5, height: 5 },
+        { x: 104.55, z: -68.16, radius: 12, height: 5 },
+        { x: 113.07, z: -57.31, radius: 12, height: 5 },
+        { x: 96.75, z: -81.29, radius: 12, height: 5 },
+        { x: 85.42, z: -94.09, radius: 12, height: 5 },
+        { x: 72.76, z: -105.86, radius: 12, height: 10.5 },
+        { x: 82.92, z: -80.37, radius: 12, height: 5 },
+        { x: 98.56, z: -55.73, radius: 12, height: 5 },
+        { x: 89.03, z: -67.5, radius: 12, height: 5 },
     ],
 
-    // facing: "north" (-Z), "south" (+Z), "east" (+X), "west" (-X)
     ramps: [
-        { x: 0, z: -40, width: 30, length: 60, height: 4.0, facing: "north" },
-        { x: -40, z: 0, width: 30, length: 60, height: 4.0, facing: "east" },
+        { x: 24.91, z: 18.86, width: 28.5, length: 79.5, height: 11, facing: "south" },
+        { x: -98.67, z: 7.05, width: 30, length: 60, height: 4, facing: "east" },
     ],
 
-    lakes: [{ x: 45, z: -45, radius: 40, depth: 8.0 }],
-    trenches: [{ x: 45, z: 2.5, width: 20, length: 35, depth: 4.0 }],
+    lakes: [
+        { x: -31.5, z: -99.5, radius: 40, depth: 8 },
+        { x: 25, z: -104.5, radius: 45.5, depth: 9 },
+    ],
 
-    waterPlanes: [{ x: 45, y: -2.5, z: -20, width: 120, length: 120 }],
+    trenches: [
+        { x: -56.15, z: -1.5, width: 52, length: 200, depth: 7.5 },
+    ],
 
-    bridges: [{ x: 45, y: -0.5, z: 5, length: 24, width: 6, spanAxis: "x" }],
+    waterPlanes: [
+        { x: -19.06, y: -2.5, z: -17.01, width: 236, length: 229 },
+    ],
 
-    mobs: [{ type: "motobug", x: 0, z: -15, patrolRadius: 5.0 }],
+    bridges: [
+        { x: -56.22, y: -0.5, z: 62.64, length: 59.5, width: 6, spanAxis: "x" },
+    ],
+
+    mobs: [
+        { type: "motobug", x: 88.54, z: 16.39, patrolRadius: 5 },
+        { type: "motobug", x: 87.03, z: 55.53, patrolRadius: 5 },
+        { type: "motobug", x: 74.11, z: 35.54, patrolRadius: 5 },
+        { type: "motobug", x: 72.34, z: -0.56, patrolRadius: 5 },
+        { type: "motobug", x: 93.31, z: -17.05, patrolRadius: 5 },
+        { type: "motobug", x: 72.61, z: 73.94, patrolRadius: 5 },
+    ],
 };
 
 export function groundY(x, z) {

@@ -42,7 +42,7 @@ export class AudioManager {
             return;
         }
 
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const AudioCtx = window.AudioContext || /** @type {any} */ (window).webkitAudioContext;
         if (!AudioCtx) return;
 
         this._ctx = new AudioCtx();

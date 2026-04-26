@@ -24,6 +24,9 @@ export class Player {
         this._jumpQueued = false;
         this._jumpHeld = false;
 
+        this.justJumped = false;
+        this.justLanded = false;
+
         this.model = null;
         this._bones = {};
         this._initRot = {};

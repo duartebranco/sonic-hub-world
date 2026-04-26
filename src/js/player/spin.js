@@ -17,6 +17,8 @@ export class SpinDash {
         this.charging = false;
         this.charge = 0;
         this.active = false;
+        this.justStartedCharging = false;
+        this.justReleased = false;
         this._holdTime = 0;
         this._activeTimer = 0;
         this._roll = 0;
@@ -83,6 +85,11 @@ export class SpinDash {
 
     // modifies vel in-place: decelerates while charging, boosts on release
     update(dt, spinKey, inAir, vel, pos, yaw, jumpSpin) {
+        this.justStartedCharging = false;
+        this.justReleased = false;
+        const wasCharging = this.charging;
+        const wasActive = this.active;
+
         if (spinKey && !inAir) {
             this._holdTime += dt;
             if (this._holdTime >= HOLD_THRESHOLD) {
@@ -108,6 +115,14 @@ export class SpinDash {
             this.charging = false;
             this.charge = 0;
             this._holdTime = 0;
+        }
+
+        if (!wasCharging && this.charging) {
+            this.justStartedCharging = true;
+        }
+
+        if (!wasActive && this.active) {
+            this.justReleased = true;
         }
 
         if (this.active) {

@@ -6,6 +6,8 @@ import { Player } from "./player/index.js";
 import { SpinDash } from "./player/spin.js";
 import { ThirdPersonCamera } from "./camera.js";
 import { MAX_SPEED } from "./player/physics.js";
+import { AudioManager } from "./audio/manager.js";
+import { MAP_CONFIG } from "./world/map_design.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -20,6 +22,7 @@ function startGame() {
 }
 
 function onStartInput() {
+    audio.unlock();
     if (userPressedStart) return;
     userPressedStart = true;
     if (assetsReady) {
@@ -33,6 +36,10 @@ function onStartInput() {
 
 document.addEventListener("keydown", (e) => {
     if (e.key === "Enter") onStartInput();
+    if ((e.key === "m" || e.key === "M") && !e.repeat) {
+        audio.unlock();
+        audio.toggleMute();
+    }
 });
 
 document.addEventListener("click", () => {
@@ -86,6 +93,8 @@ const spin = new SpinDash(scene, $("spin-charge-bar"), $("spin-charge-fill"));
 const player = new Player(scene, spin);
 const tpCam = new ThirdPersonCamera(camera, renderer.domElement);
 const speedLinesEl = $("speed-lines");
+const audio = new AudioManager($("audio-toggle"));
+const waterLevel = Math.min(...MAP_CONFIG.waterPlanes.map((w) => w.y));
 
 // ─── Resize ──────────────────────────────────────────────
 function onResize() {
@@ -146,6 +155,8 @@ let raceTime = 0;
 let timerRunning = false;
 let raceActive = false;
 let insideGoalRing = false;
+let wasInWater = false;
+let hitCooldown = 0;
 
 function formatTime(t) {
     const mins = Math.floor(t / 60);
@@ -160,6 +171,8 @@ function startChallenge() {
     raceTime = 0;
     raceActive = true;
     timerRunning = true;
+    audio.setMusicMode("challenge");
+    audio.playChallengeStart();
     $("ring-count").textContent = `0/${RING_TARGET}`;
     $("time-count").textContent = "0:00.00";
     $("time-count").style.color = "";
@@ -171,6 +184,8 @@ function startChallenge() {
 function finishChallenge() {
     raceActive = false;
     timerRunning = false;
+    audio.setMusicMode("hub");
+    audio.playChallengeComplete();
 
     const timeStr = formatTime(raceTime);
     $("time-count").style.color = "#ffe000";
@@ -193,6 +208,30 @@ function finishChallenge() {
     setTimeout(() => $("challenge-complete").classList.add("hidden"), 5000);
 }
 
+function failChallenge() {
+    raceActive = false;
+    timerRunning = false;
+    insideGoalRing = false;
+    audio.setMusicMode("hub");
+    $("challenge-hint").classList.add("hidden");
+    $("challenge-complete").classList.add("hidden");
+    $("ring-count").textContent = "0";
+    $("time-count").textContent = "0:00.00";
+    $("time-count").style.color = "";
+    $("time-count").style.animation = "";
+}
+
+function respawnPlayer() {
+    const gy = groundY(0, 0);
+    player.pos.set(0, gy, 0);
+    player._vel.set(0, 0, 0);
+    player._jumpVel = 0;
+    player._groundY = gy;
+    player._inAir = false;
+    player._jumpHeld = false;
+    player._airTime = 0;
+}
+
 // ─── Game loop ───────────────────────────────────────────
 const clock = new THREE.Clock();
 
@@ -211,6 +250,29 @@ function animate() {
 
     player.update(dt, tpCam.yaw);
     tpCam.update(dt, player.pos);
+
+    if (spin.justStartedCharging) {
+        audio.startSpinCharge();
+    }
+    if (spin.charging) {
+        audio.updateSpinCharge(spin.charge);
+    } else {
+        audio.stopSpinCharge();
+    }
+    if (spin.justReleased) {
+        audio.playSpinRelease();
+    }
+
+    if (player.justJumped) audio.playJump();
+    if (player.justLanded) audio.playLanding();
+
+    const inWater = player.pos.y < waterLevel + 0.15;
+    if (inWater !== wasInWater) {
+        audio.playWaterSplash();
+        wasInWater = inWater;
+    }
+
+    if (hitCooldown > 0) hitCooldown -= dt;
 
     if (player.speed >= MAX_SPEED * 0.88 && !player.inAir) {
         speedLinesEl.classList.add("active");
@@ -237,6 +299,7 @@ function animate() {
             r.collected = true;
             sparkleSystem.spawn(r.mesh.position.clone());
             scene.remove(r.mesh);
+            audio.playRing();
             if (raceActive) {
                 ringCount++;
                 $("ring-count").textContent = `${ringCount}/${RING_TARGET}`;
@@ -264,7 +327,35 @@ function animate() {
         f.head.rotation.y += dt * 1.2;
     });
 
-    mobs.forEach((m) => m.update(dt));
+    mobs.forEach((m) => {
+        m.update(dt);
+        if (!raceActive || hitCooldown > 0) return;
+
+        const dx = player.pos.x - m.mesh.position.x;
+        const dz = player.pos.z - m.mesh.position.z;
+        const dy = player.pos.y - m.mesh.position.y;
+        const distSq = dx * dx + dz * dz + dy * dy;
+        if (distSq > 1.6) return;
+
+        hitCooldown = 1.1;
+
+        if (ringCount > 0) {
+            audio.playPlayerHit();
+            audio.playRingScatter();
+            ringCount = Math.max(0, ringCount - 8);
+            $("ring-count").textContent = `${ringCount}/${RING_TARGET}`;
+            const awayLen = Math.max(0.001, Math.sqrt(dx * dx + dz * dz));
+            player._vel.x = (dx / awayLen) * 20;
+            player._vel.z = (dz / awayLen) * 20;
+            player._jumpVel = 8;
+            player._inAir = true;
+            player._groundY = player.pos.y;
+        } else {
+            audio.playDeath();
+            failChallenge();
+            setTimeout(() => respawnPlayer(), 700);
+        }
+    });
 
     const ap = ambientParticles.geo.attributes.position;
     for (let i = 0; i < ap.count; i++) {

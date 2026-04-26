@@ -133,7 +133,7 @@ export class AudioManager {
     }
 
     playJump() {
-        if (this._playSample("jump", { gain: 0.28 })) return;
+        if (this._playSample("jump", { gain: 0.36, playbackRate: 1.08 })) return;
         this._playTone(580, 840, 0.08, "square", 0.06);
     }
 

@@ -21,6 +21,8 @@ function makeFlower(scene, x, z) {
 
     const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 0.9, 6), STEM_MAT);
     stem.position.y = 0.45;
+    stem.castShadow = true;
+    stem.receiveShadow = true;
     g.add(stem);
 
     const head = new THREE.Group();
@@ -36,10 +38,15 @@ function makeFlower(scene, x, z) {
         const a = (i / 6) * Math.PI * 2;
         const p = new THREE.Mesh(new THREE.SphereGeometry(0.18, 6, 5), pMat);
         p.position.set(Math.cos(a) * 0.28, 0, Math.sin(a) * 0.28);
+        p.castShadow = true;
+        p.receiveShadow = true;
         head.add(p);
     }
 
-    head.add(new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 6), CENTRE_MAT));
+    const centre = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 6), CENTRE_MAT);
+    centre.castShadow = true;
+    centre.receiveShadow = true;
+    head.add(centre);
     g.add(head);
     scene.add(g);
 

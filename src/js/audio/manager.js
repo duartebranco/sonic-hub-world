@@ -4,6 +4,12 @@ const CHALLENGE_MUSIC_URL = new URL(
     import.meta.url
 );
 
+const SFX_SAMPLE_URLS = {
+    jump: new URL("../../../audio/sfx/sonic-jump.wav", import.meta.url),
+    spinCharge: new URL("../../../audio/sfx/sonic-spindash-charge-loop.wav", import.meta.url),
+    spinRelease: new URL("../../../audio/sfx/sonic-spindash-release.wav", import.meta.url),
+};
+
 export class AudioManager {
     constructor(muteButton) {
         this._muteButton = muteButton;
@@ -13,6 +19,8 @@ export class AudioManager {
         this._musicMode = "hub";
         this._activeTrack = null;
         this._spinChargeNodes = null;
+        this._sampleBuffers = new Map();
+        this._sampleLoadStarted = false;
 
         this._tracks = {
             hub: this._makeTrack(HUB_MUSIC_URL),
@@ -43,6 +51,7 @@ export class AudioManager {
         this._master.connect(this._ctx.destination);
         this._isUnlocked = true;
 
+        this._preloadSamples();
         this._applyMusicState();
     }
 
@@ -77,48 +86,44 @@ export class AudioManager {
 
     startSpinCharge() {
         if (!this._canPlaySfx() || this._spinChargeNodes) return;
+        const spinChargeBuffer = this._sampleBuffers.get("spinCharge");
+        if (!spinChargeBuffer) return;
 
-        const osc = this._ctx.createOscillator();
+        const source = this._ctx.createBufferSource();
         const gain = this._ctx.createGain();
-        const filter = this._ctx.createBiquadFilter();
-        filter.type = "lowpass";
-        filter.frequency.value = 920;
-
-        osc.type = "sawtooth";
-        osc.frequency.value = 90;
+        source.buffer = spinChargeBuffer;
+        source.loop = true;
+        source.playbackRate.value = 1;
         gain.gain.value = 0;
 
-        osc.connect(filter);
-        filter.connect(gain);
+        source.connect(gain);
         gain.connect(this._master);
 
         const t = this._ctx.currentTime;
         gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.exponentialRampToValueAtTime(0.05, t + 0.06);
-        osc.start(t);
+        gain.gain.exponentialRampToValueAtTime(0.18, t + 0.08);
+        source.start(t);
 
-        this._spinChargeNodes = { osc, gain, filter };
+        this._spinChargeNodes = { source, gain };
     }
 
     updateSpinCharge(charge) {
         if (!this._spinChargeNodes || !this._ctx) return;
         const clamped = Math.max(0, Math.min(1, charge));
         const t = this._ctx.currentTime;
-        const freq = 90 + clamped * 240;
-
-        this._spinChargeNodes.osc.frequency.setTargetAtTime(freq, t, 0.03);
-        this._spinChargeNodes.filter.frequency.setTargetAtTime(900 + clamped * 1300, t, 0.04);
-        this._spinChargeNodes.gain.gain.setTargetAtTime(0.04 + clamped * 0.1, t, 0.03);
+        const playbackRate = 0.84 + clamped * 0.56;
+        this._spinChargeNodes.source.playbackRate.setTargetAtTime(playbackRate, t, 0.03);
+        this._spinChargeNodes.gain.gain.setTargetAtTime(0.14 + clamped * 0.1, t, 0.03);
     }
 
     stopSpinCharge() {
         if (!this._spinChargeNodes || !this._ctx) return;
 
-        const { osc, gain } = this._spinChargeNodes;
+        const { source, gain } = this._spinChargeNodes;
         const t = this._ctx.currentTime;
         gain.gain.cancelScheduledValues(t);
         gain.gain.setTargetAtTime(0.0001, t, 0.03);
-        osc.stop(t + 0.12);
+        source.stop(t + 0.12);
         this._spinChargeNodes = null;
     }
 
@@ -128,6 +133,7 @@ export class AudioManager {
     }
 
     playJump() {
+        if (this._playSample("jump", { gain: 0.28 })) return;
         this._playTone(580, 840, 0.08, "square", 0.06);
     }
 
@@ -137,6 +143,7 @@ export class AudioManager {
     }
 
     playSpinRelease() {
+        if (this._playSample("spinRelease", { gain: 0.36 })) return;
         this._playNoise(0.14, 0.15, 1800);
         this._playTone(240, 90, 0.12, "sawtooth", 0.07);
     }
@@ -204,6 +211,40 @@ export class AudioManager {
     _canPlaySfx() {
         if (!this._isUnlocked || this._muted || !this._ctx || !this._master) return false;
         this._ctx.resume();
+        return true;
+    }
+
+    _preloadSamples() {
+        if (this._sampleLoadStarted || !this._ctx) return;
+        this._sampleLoadStarted = true;
+
+        for (const [name, url] of Object.entries(SFX_SAMPLE_URLS)) {
+            fetch(url)
+                .then((res) => {
+                    if (!res.ok) throw new Error(`missing sample ${name}`);
+                    return res.arrayBuffer();
+                })
+                .then((arr) => this._ctx.decodeAudioData(arr))
+                .then((buffer) => this._sampleBuffers.set(name, buffer))
+                .catch(() => {});
+        }
+    }
+
+    _playSample(name, options = {}) {
+        if (!this._canPlaySfx()) return false;
+        const buffer = this._sampleBuffers.get(name);
+        if (!buffer) return false;
+
+        const source = this._ctx.createBufferSource();
+        const gain = this._ctx.createGain();
+
+        source.buffer = buffer;
+        source.playbackRate.value = options.playbackRate ?? 1;
+        gain.gain.value = options.gain ?? 0.25;
+
+        source.connect(gain);
+        gain.connect(this._master);
+        source.start();
         return true;
     }
 

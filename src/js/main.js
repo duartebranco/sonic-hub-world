@@ -166,7 +166,7 @@ function startChallenge() {
     $("time-count").textContent = "0:00.00";
     $("time-count").style.color = "";
     $("time-count").style.animation = "";
-    $("challenge-hint").classList.add("hidden");
+    $("challenge-hint").classList.remove("hidden");
     $("challenge-complete").classList.add("hidden");
 }
 
@@ -191,8 +191,8 @@ function finishChallenge() {
         $("cc-record").classList.add("hidden");
         $("cc-best").textContent = `Best: ${formatTime(best)}`;
     }
-    $("challenge-complete").classList.remove("hidden");
     $("challenge-hint").classList.add("hidden");
+    $("challenge-complete").classList.remove("hidden");
 }
 
 // ─── Game loop ───────────────────────────────────────────

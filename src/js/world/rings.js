@@ -22,11 +22,11 @@ export function buildRings(scene) {
 }
 
 const GOAL_MAT = new THREE.MeshStandardMaterial({
-    color: 0x00e5ff,
-    emissive: 0x0077aa,
-    emissiveIntensity: 0.7,
-    roughness: 0.1,
-    metalness: 0.8,
+    color: 0xffd54f,
+    emissive: 0xff8f00,
+    emissiveIntensity: 0.5,
+    roughness: 0.15,
+    metalness: 0.75,
 });
 
 export function buildGoalRing(scene) {

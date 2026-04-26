@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { groundY } from "./terrain.js";
-import { isPointOccupied, MAP_CONFIG } from "./map_design.js";
+import { MAP_CONFIG } from "./map_design.js";
 
 const TRUNK_MAT = new THREE.MeshStandardMaterial({
     color: 0x8d6e63,
@@ -67,45 +67,8 @@ function makePalmTree(scene, x, z, sc = 1) {
     scene.add(g);
 }
 
-function isValidTreeSpot(x, z, placedSpots) {
-    // 1. Check if the map design specifically blocks this area (water, bridges, ramps, hub)
-    if (isPointOccupied(x, z)) return false;
-
-    // 2. Keep within world boundaries
-    const dOrigin = Math.sqrt(x * x + z * z);
-    if (dOrigin > MAP_CONFIG.worldRadius - 5) return false;
-
-    // 3. Avoid steep slopes (trees should only spawn on relatively flat ground)
-    const y = groundY(x, z);
-    const dx = groundY(x + 0.5, z) - y;
-    const dz = groundY(x, z + 0.5) - y;
-    const slope = Math.sqrt(dx * dx + dz * dz) / 0.5;
-    if (slope > 0.6) return false;
-
-    // 4. Prevent trees from overlapping
-    for (const spot of placedSpots) {
-        const d = Math.sqrt((x - spot.x) ** 2 + (z - spot.z) ** 2);
-        if (d < 7.0) return false;
-    }
-
-    return true;
-}
-
 export function buildTrees(scene) {
-    const rnd = (a, b) => Math.random() * (b - a) + a;
-    const placedSpots = [];
-    const TARGET_TREES = 60;
-    let attempts = 0;
-
-    // Dynamically attempt to place trees avoiding core structures
-    while (placedSpots.length < TARGET_TREES && attempts < 2000) {
-        const x = rnd(-MAP_CONFIG.worldRadius, MAP_CONFIG.worldRadius);
-        const z = rnd(-MAP_CONFIG.worldRadius, MAP_CONFIG.worldRadius);
-
-        if (isValidTreeSpot(x, z, placedSpots)) {
-            placedSpots.push({ x, z });
-            makePalmTree(scene, x, z, rnd(0.8, 1.45));
-        }
-        attempts++;
+    for (const t of MAP_CONFIG.trees) {
+        makePalmTree(scene, t.x, t.z, t.scale ?? 1.0);
     }
 }

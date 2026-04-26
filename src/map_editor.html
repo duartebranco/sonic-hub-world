@@ -557,18 +557,6 @@
                         />
                         <input type="number" class="val-num" id="g-worldR-num" step="1" />
                     </div>
-                    <div class="field">
-                        <label>Hub R</label>
-                        <input
-                            type="range"
-                            class="val-range"
-                            id="g-hubR"
-                            min="5"
-                            max="80"
-                            step="1"
-                        />
-                        <input type="number" class="val-num" id="g-hubR-num" step="1" />
-                    </div>
                 </div>
 
                 <!-- OBJECT GROUPS -->
@@ -576,6 +564,18 @@
                     <div class="section-title">
                         Objects
                         <span class="count" id="total-count">0</span>
+                    </div>
+                    <div
+                        style="
+                            font-size: 9px;
+                            color: var(--muted);
+                            margin-bottom: 10px;
+                            letter-spacing: 0.5px;
+                        "
+                    >
+                        Priority: <span style="color: var(--text)">World R</span> &gt;
+                        <span style="color: #69ff47">Plateaus</span> &gt; Ramps &gt;
+                        <span style="color: #ff4081">Lakes / Trenches</span>
                     </div>
                     <div id="groups"></div>
                 </div>
@@ -689,11 +689,52 @@
                         { key: "patrolRadius", min: 0, max: 20, step: 0.5 },
                     ],
                 },
+                trees: {
+                    label: "Trees",
+                    color: 0x43a047,
+                    defaults: { x: 0, z: 0, scale: 1.0 },
+                    fields: [
+                        { key: "x", min: -130, max: 130, step: 0.5 },
+                        { key: "z", min: -130, max: 130, step: 0.5 },
+                        { key: "scale", min: 0.3, max: 3.0, step: 0.05 },
+                    ],
+                },
+                flowers: {
+                    label: "Flowers",
+                    color: 0xff4081,
+                    defaults: { x: 0, z: 0 },
+                    fields: [
+                        { key: "x", min: -130, max: 130, step: 0.5 },
+                        { key: "z", min: -130, max: 130, step: 0.5 },
+                    ],
+                },
+                rings: {
+                    label: "Rings",
+                    color: 0xffd54f,
+                    defaults: { x: 0, z: 0 },
+                    fields: [
+                        { key: "x", min: -130, max: 130, step: 0.5 },
+                        { key: "z", min: -130, max: 130, step: 0.5 },
+                    ],
+                },
+                walls: {
+                    label: "Walls",
+                    color: 0xb5835a,
+                    defaults: { x: 0, z: 0, width: 10, height: 4, rotY: 0, tileSize: 1.1 },
+                    fields: [
+                        { key: "x", min: -130, max: 130, step: 0.5 },
+                        { key: "z", min: -130, max: 130, step: 0.5 },
+                        { key: "width", min: 1, max: 60, step: 0.5 },
+                        { key: "height", min: 1, max: 20, step: 1 },
+                        { key: "rotY", min: -180, max: 180, step: 5 },
+                        { key: "tileSize", min: 0.5, max: 3.0, step: 0.05 },
+                    ],
+                },
             };
 
             const FALLBACK_CONFIG = {
                 worldRadius: 110,
-                hubRadius: 25,
+                hubRadius: 9,
                 plateaus: [],
                 ramps: [],
                 lakes: [],
@@ -701,6 +742,10 @@
                 waterPlanes: [],
                 bridges: [],
                 mobs: [],
+                trees: [],
+                flowers: [],
+                rings: [],
+                walls: [],
             };
 
             // ─── State ────────────────────────────────────────────────────────────────────
@@ -709,7 +754,7 @@
             let selected = null; // { type, index }
             const collapsed = new Set(); // group ids that are collapsed
 
-            // ─── groundY — MUST mirror map_design.js exactly ──────────────────────────────
+            // groundY — mirrors map_design.js priority: world R > plateaus > lakes/trenches
             function groundY(x, z) {
                 let y = 0;
                 const distOrigin = Math.sqrt(x * x + z * z);
@@ -718,14 +763,16 @@
                     y = Math.max(y, 0);
                 }
 
+                let plateauY = 0;
                 for (const p of MAP_CONFIG.plateaus) {
                     const dist = Math.sqrt((x - p.x) ** 2 + (z - p.z) ** 2);
                     const transition = Math.max(0, Math.min(1, (p.radius - dist) / 2.0 + 0.5));
                     if (transition > 0) {
                         const smooth = transition * transition * (3 - 2 * transition);
-                        y = Math.max(y, smooth * p.height);
+                        plateauY = Math.max(plateauY, smooth * p.height);
                     }
                 }
+                y = Math.max(y, plateauY);
 
                 for (const r of MAP_CONFIG.ramps) {
                     const hw = r.width / 2.0;
@@ -740,27 +787,30 @@
                     }
                 }
 
+                if (plateauY === 0) {
+                    for (const lake of MAP_CONFIG.lakes) {
+                        const dist = Math.sqrt((x - lake.x) ** 2 + (z - lake.z) ** 2);
+                        if (dist < lake.radius) {
+                            y -= Math.cos(((dist / lake.radius) * Math.PI) / 2) * lake.depth;
+                        }
+                    }
+
+                    for (const t of MAP_CONFIG.trenches) {
+                        const hw = t.width / 2.0;
+                        const hl = t.length / 2.0;
+                        if (x > t.x - hw && x < t.x + hw && z > t.z - hl && z < t.z + hl) {
+                            y = Math.min(y, -t.depth);
+                        }
+                    }
+                }
+
+                // world radius wall wins over everything
                 if (distOrigin > MAP_CONFIG.worldRadius) {
                     const t = Math.max(
                         0,
                         Math.min(1, (distOrigin - MAP_CONFIG.worldRadius) / 10.0)
                     );
                     if (t > 0) y = Math.max(y, t * t * (3 - 2 * t) * 40.0);
-                }
-
-                for (const lake of MAP_CONFIG.lakes) {
-                    const dist = Math.sqrt((x - lake.x) ** 2 + (z - lake.z) ** 2);
-                    if (dist < lake.radius) {
-                        y -= Math.cos(((dist / lake.radius) * Math.PI) / 2) * lake.depth;
-                    }
-                }
-
-                for (const t of MAP_CONFIG.trenches) {
-                    const hw = t.width / 2.0;
-                    const hl = t.length / 2.0;
-                    if (x > t.x - hw && x < t.x + hw && z > t.z - hl && z < t.z + hl) {
-                        y = Math.min(y, -t.depth);
-                    }
                 }
 
                 return y;
@@ -1034,6 +1084,36 @@
                         group.add(makeRingOverlay(spec.color, obj.patrolRadius, 0.02, 0.2));
                     }
                     group.position.set(obj.x, 0, obj.z);
+                } else if (type === "trees") {
+                    const sc = obj.scale ?? 1.0;
+                    const y = groundY(obj.x, obj.z);
+                    const disc = makeDiscOverlay(spec.color, 1.5 * sc, y, 0.28);
+                    disc.userData.pickable = true;
+                    group.add(disc);
+                    group.add(makeRingOverlay(spec.color, 1.5 * sc, y));
+                    group.position.set(obj.x, 0, obj.z);
+                } else if (type === "flowers") {
+                    const y = groundY(obj.x, obj.z);
+                    const disc = makeDiscOverlay(spec.color, 0.7, y, 0.75);
+                    disc.userData.pickable = true;
+                    group.add(disc);
+                    group.position.set(obj.x, 0, obj.z);
+                } else if (type === "rings") {
+                    const y = groundY(obj.x, obj.z) + 1.0;
+                    const disc = makeDiscOverlay(spec.color, 0.5, y, 0.8);
+                    disc.userData.pickable = true;
+                    group.add(disc);
+                    group.position.set(obj.x, 0, obj.z);
+                } else if (type === "walls") {
+                    const ts = obj.tileSize ?? 1.0;
+                    const depth = ts * 0.6;
+                    const y = groundY(obj.x, obj.z);
+                    const rect = makeRectOverlay(spec.color, obj.width, depth, y, 0.7);
+                    rect.userData.pickable = true;
+                    group.add(rect);
+                    group.add(makeRectOutline(spec.color, obj.width, depth, y));
+                    group.rotation.y = obj.rotY * (Math.PI / 180);
+                    group.position.set(obj.x, 0, obj.z);
                 }
 
                 group.children.forEach((c) => {
@@ -1047,7 +1127,7 @@
 
             function rebuildOverlays() {
                 clearOverlays();
-                // World & hub radius rings
+                // World radius ring
                 const worldRing = new THREE.Mesh(
                     new THREE.RingGeometry(
                         MAP_CONFIG.worldRadius - 0.3,
@@ -1063,17 +1143,6 @@
                 worldRing.rotation.x = -Math.PI / 2;
                 worldRing.position.y = 0.2;
                 overlayRoot.add(worldRing);
-                const hubRing = new THREE.Mesh(
-                    new THREE.RingGeometry(MAP_CONFIG.hubRadius - 0.25, MAP_CONFIG.hubRadius, 64),
-                    new THREE.MeshBasicMaterial({
-                        color: 0x00e5ff,
-                        transparent: true,
-                        opacity: 0.5,
-                    })
-                );
-                hubRing.rotation.x = -Math.PI / 2;
-                hubRing.position.y = 0.2;
-                overlayRoot.add(hubRing);
 
                 for (const type of Object.keys(TYPES)) {
                     const list = MAP_CONFIG[type] || [];
@@ -1308,22 +1377,13 @@
             }
 
             function renderGlobals() {
-                const pairs = [
-                    ["g-worldR", "worldRadius"],
-                    ["g-hubR", "hubRadius"],
-                ];
-                for (const [id, key] of pairs) {
-                    const r = document.getElementById(id);
-                    const n = document.getElementById(id + "-num");
-                    r.value = MAP_CONFIG[key];
-                    n.value = MAP_CONFIG[key];
-                }
+                const r = document.getElementById("g-worldR");
+                const n = document.getElementById("g-worldR-num");
+                r.value = MAP_CONFIG.worldRadius;
+                n.value = MAP_CONFIG.worldRadius;
             }
 
-            for (const [id, key] of [
-                ["g-worldR", "worldRadius"],
-                ["g-hubR", "hubRadius"],
-            ]) {
+            for (const [id, key] of [["g-worldR", "worldRadius"]]) {
                 const r = document.getElementById(id);
                 const n = document.getElementById(id + "-num");
                 const onInput = (src, other) => () => {
@@ -1570,6 +1630,10 @@
                     "waterPlanes",
                     "bridges",
                     "mobs",
+                    "trees",
+                    "flowers",
+                    "rings",
+                    "walls",
                 ]) {
                     const arr = cfg[key] || [];
                     if (arr.length === 0) {

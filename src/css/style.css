@@ -297,20 +297,20 @@ body {
 
 #challenge-complete {
     position: fixed;
-    top: 50%;
+    bottom: 40px;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translateX(-50%);
     z-index: 20;
     pointer-events: none;
     text-align: center;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: 16px;
+    gap: 20px;
     background-color: #3200f8;
     border: 2px solid #501000;
     outline: 2px solid #fcb400;
-    padding: 28px 40px;
+    padding: 10px 24px;
 }
 
 #challenge-complete.hidden {
@@ -319,26 +319,26 @@ body {
 
 .cc-title {
     font-family: "Press Start 2P", system-ui, sans-serif;
-    font-size: clamp(1rem, 3vw, 1.8rem);
+    font-size: clamp(0.55rem, 1.5vw, 0.9rem);
     color: #ffe000;
-    text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5);
-    letter-spacing: 4px;
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
+    letter-spacing: 3px;
 }
 
 .cc-time {
     font-family: "Press Start 2P", system-ui, sans-serif;
-    font-size: clamp(1.2rem, 3.5vw, 2.2rem);
+    font-size: clamp(0.55rem, 1.5vw, 0.9rem);
     color: #ffffff;
     text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
-    letter-spacing: 3px;
+    letter-spacing: 2px;
 }
 
 .cc-record {
     font-family: "Press Start 2P", system-ui, sans-serif;
-    font-size: clamp(0.7rem, 2vw, 1.1rem);
+    font-size: clamp(0.55rem, 1.5vw, 0.9rem);
     color: #ffe000;
     text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
-    letter-spacing: 3px;
+    letter-spacing: 2px;
     animation: ts-blink 0.5s step-end infinite;
 }
 
@@ -348,17 +348,9 @@ body {
 
 .cc-best {
     font-family: "Press Start 2P", system-ui, sans-serif;
-    font-size: clamp(0.5rem, 1.3vw, 0.7rem);
+    font-size: clamp(0.45rem, 1.1vw, 0.65rem);
     color: rgba(255, 255, 255, 0.7);
-    letter-spacing: 2px;
-}
-
-.cc-hint {
-    font-family: "Press Start 2P", system-ui, sans-serif;
-    font-size: clamp(0.4rem, 1vw, 0.55rem);
-    color: rgba(255, 255, 255, 0.5);
     letter-spacing: 1px;
-    margin-top: 6px;
 }
 
 .ts-copyright {

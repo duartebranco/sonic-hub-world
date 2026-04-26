@@ -193,6 +193,7 @@ function finishChallenge() {
     }
     $("challenge-hint").classList.add("hidden");
     $("challenge-complete").classList.remove("hidden");
+    setTimeout(() => $("challenge-complete").classList.add("hidden"), 5000);
 }
 
 // ─── Game loop ───────────────────────────────────────────

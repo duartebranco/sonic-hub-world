@@ -144,17 +144,6 @@ export const MAP_CONFIG = {
         { x: 83.82, z: -38.44 },
     ],
 
-    walls: [
-        { x: -22, z: 0, width: 10, height: 4, rotY: 90, tileSize: 1.1 },
-        { x: 22, z: 0, width: 10, height: 4, rotY: 90, tileSize: 1.1 },
-        { x: 0, z: -22, width: 12, height: 5, rotY: 0, tileSize: 1.1 },
-        { x: 0, z: 22, width: 12, height: 4, rotY: 0, tileSize: 1.1 },
-        { x: -16, z: -16, width: 8, height: 3, rotY: 45, tileSize: 1.0 },
-        { x: 16, z: -16, width: 8, height: 3, rotY: -45, tileSize: 1.0 },
-        { x: -16, z: 16, width: 8, height: 3, rotY: -45, tileSize: 1.0 },
-        { x: 16, z: 16, width: 8, height: 3, rotY: 45, tileSize: 1.0 },
-    ],
-
     rings: [
         { x: 25, z: 100.5 },
         { x: 21.4, z: 100.5 },
@@ -207,6 +196,8 @@ export const MAP_CONFIG = {
         { x: 25, z: 3.5 },
         { x: 25, z: 9 },
     ],
+
+    walls: [],
 };
 
 export function groundY(x, z) {

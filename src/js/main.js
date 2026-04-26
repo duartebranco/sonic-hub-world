@@ -35,6 +35,11 @@ document.addEventListener("keydown", (e) => {
     if (e.key === "Enter") onStartInput();
 });
 
+document.addEventListener("click", () => {
+    renderer.domElement.requestPointerLock?.();
+    onStartInput();
+});
+
 // ─── Renderer ────────────────────────────────────────────
 const container = $("canvas-container");
 const renderer = new THREE.WebGLRenderer({ antialias: true });

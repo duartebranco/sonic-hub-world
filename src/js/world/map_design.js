@@ -31,11 +31,11 @@ export const MAP_CONFIG = {
     ],
 
     trenches: [
-        { x: -56.15, z: -1.5, width: 52, length: 200, depth: 7.5 },
+        { x: -56.15, z: -1.5, width: 52, length: 268.5, depth: 7.5 },
     ],
 
     waterPlanes: [
-        { x: -65.86, y: -2.5, z: -28.14, width: 236, length: 229 },
+        { x: 2, y: -2.5, z: 2, width: 266, length: 293 },
     ],
 
     bridges: [
@@ -47,7 +47,7 @@ export const MAP_CONFIG = {
         { type: "motobug", x: 87.03, z: 55.53, patrolRadius: 5 },
         { type: "motobug", x: 74.11, z: 35.54, patrolRadius: 5 },
         { type: "motobug", x: 72.34, z: -0.56, patrolRadius: 5 },
-        { type: "motobug", x: 93.31, z: -17.05, patrolRadius: 5 },
+        { type: "motobug", x: 86.5, z: -21.98, patrolRadius: 5 },
         { type: "motobug", x: 72.61, z: 73.94, patrolRadius: 5 },
     ],
 
@@ -60,6 +60,29 @@ export const MAP_CONFIG = {
         { x: -119.77, z: 48.02, scale: 1 },
         { x: -95.88, z: 85.14, scale: 1 },
         { x: -88.56, z: 93.03, scale: 1 },
+        { x: 89.39, z: 89.36, scale: 1 },
+        { x: 58.43, z: 109.91, scale: 1 },
+        { x: 54.29, z: 96.33, scale: 1 },
+        { x: 66.99, z: 101.73, scale: 1 },
+        { x: 43.43, z: 86.82, scale: 1 },
+        { x: 32.76, z: 82.75, scale: 1 },
+        { x: 79.09, z: 96.34, scale: 1 },
+        { x: 99.2, z: 79.34, scale: 1 },
+        { x: 22.53, z: 80.78, scale: 1 },
+        { x: 126.18, z: -24.09, scale: 1 },
+        { x: 128.46, z: -4.06, scale: 1 },
+        { x: 127.17, z: 18.16, scale: 1 },
+        { x: 121.28, z: 42.53, scale: 1 },
+        { x: 114.64, z: -34.37, scale: 1 },
+        { x: 117.06, z: -12.97, scale: 1 },
+        { x: 118.55, z: 6.39, scale: 1 },
+        { x: 114.81, z: 27.4, scale: 1 },
+        { x: 111.39, z: 54.92, scale: 1 },
+        { x: 105.23, z: -23.45, scale: 1 },
+        { x: 104.83, z: 40.38, scale: 1 },
+        { x: 106.21, z: -2.59, scale: 1 },
+        { x: 104.88, z: 20.01, scale: 1 },
+        { x: 98.38, z: 63.86, scale: 1 },
     ],
 
     flowers: [],

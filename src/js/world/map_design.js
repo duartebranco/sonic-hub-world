@@ -30,17 +30,11 @@ export const MAP_CONFIG = {
         { x: 25, z: -104.5, radius: 45.5, depth: 9 },
     ],
 
-    trenches: [
-        { x: -56.15, z: -1.5, width: 52, length: 270, depth: 7.5 },
-    ],
+    trenches: [{ x: -56.15, z: -1.5, width: 52, length: 200, depth: 7.5 }],
 
-    waterPlanes: [
-        { x: -19.06, y: -2.5, z: -17.01, width: 264, length: 299 },
-    ],
+    waterPlanes: [{ x: -19.06, y: -2.5, z: -17.01, width: 236, length: 229 }],
 
-    bridges: [
-        { x: -56.22, y: -0.5, z: 62.64, length: 59.5, width: 6, spanAxis: "x" },
-    ],
+    bridges: [{ x: -56.22, y: -0.5, z: 62.64, length: 59.5, width: 6, spanAxis: "x" }],
 
     mobs: [
         { type: "motobug", x: 88.54, z: 16.39, patrolRadius: 5 },

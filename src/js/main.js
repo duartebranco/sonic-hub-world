@@ -229,7 +229,6 @@ function failChallenge() {
     $("time-count").style.animation = "";
 }
 
-
 // ─── Game loop ───────────────────────────────────────────
 const clock = new THREE.Clock();
 

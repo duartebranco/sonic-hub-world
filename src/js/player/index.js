@@ -34,8 +34,11 @@ export class Player {
         this._walkKFs = [];
         this._runKFs = [];
         this._jumpKFs = [];
+        this._hitKFs = [];
         this._walkT = 0;
         this._runT = 0;
+        this._inHit = false;
+        this._hitT = 0;
 
         this._keys = {};
         bindInput(this);
@@ -77,6 +80,10 @@ export class Player {
 
     setJumpKeyframes(kfs) {
         this._jumpKFs = kfs;
+    }
+
+    setHitKeyframes(kfs) {
+        this._hitKFs = kfs;
     }
 
     update(dt, camYaw) {

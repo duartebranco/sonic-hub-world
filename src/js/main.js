@@ -136,6 +136,9 @@ async function loadAssets() {
         fetch("../animations/jump.json")
             .then((r) => r.json())
             .then((d) => player.setJumpKeyframes(d.keyframes)),
+        fetch("../animations/hit.json")
+            .then((r) => r.json())
+            .then((d) => player.setHitKeyframes(d.keyframes)),
     ]);
 
     assetsReady = true;
@@ -329,7 +332,7 @@ function animate() {
 
     mobs.forEach((m) => {
         m.update(dt, player.pos);
-        if (!raceActive || hitCooldown > 0) return;
+        if (hitCooldown > 0) return;
 
         const dx = player.pos.x - m.mesh.position.x;
         const dz = player.pos.z - m.mesh.position.z;
@@ -338,19 +341,22 @@ function animate() {
         if (distSq > 1.6) return;
 
         hitCooldown = 1.1;
+        player._inHit = true;
+        player._hitT = 0;
+        audio.playPlayerHit();
 
-        if (ringCount > 0) {
-            audio.playPlayerHit();
+        const awayLen = Math.max(0.001, Math.sqrt(dx * dx + dz * dz));
+        player._vel.x = (dx / awayLen) * 20;
+        player._vel.z = (dz / awayLen) * 20;
+        player._jumpVel = 8;
+        player._inAir = true;
+        player._groundY = player.pos.y;
+
+        if (raceActive && ringCount > 0) {
             audio.playRingScatter();
             ringCount = Math.max(0, ringCount - 8);
             $("ring-count").textContent = `${ringCount}/${RING_TARGET}`;
-            const awayLen = Math.max(0.001, Math.sqrt(dx * dx + dz * dz));
-            player._vel.x = (dx / awayLen) * 20;
-            player._vel.z = (dz / awayLen) * 20;
-            player._jumpVel = 8;
-            player._inAir = true;
-            player._groundY = player.pos.y;
-        } else {
+        } else if (raceActive) {
             audio.playDeath();
             failChallenge();
             setTimeout(() => respawnPlayer(), 700);

@@ -161,6 +161,10 @@ let insideGoalRing = false;
 let wasInWater = false;
 let hitCooldown = 0;
 
+function updateRingHUD() {
+    $("ring-count").textContent = raceActive ? `${ringCount}/${RING_TARGET}` : `${ringCount}`;
+}
+
 function formatTime(t) {
     const mins = Math.floor(t / 60);
     const secs = Math.floor(t % 60);
@@ -215,6 +219,7 @@ function failChallenge() {
     raceActive = false;
     timerRunning = false;
     insideGoalRing = false;
+    ringCount = 0;
     audio.setMusicMode("hub");
     $("challenge-hint").classList.add("hidden");
     $("challenge-complete").classList.add("hidden");
@@ -224,16 +229,6 @@ function failChallenge() {
     $("time-count").style.animation = "";
 }
 
-function respawnPlayer() {
-    const gy = groundY(0, 0);
-    player.pos.set(0, gy, 0);
-    player._vel.set(0, 0, 0);
-    player._jumpVel = 0;
-    player._groundY = gy;
-    player._inAir = false;
-    player._jumpHeld = false;
-    player._airTime = 0;
-}
 
 // ─── Game loop ───────────────────────────────────────────
 const clock = new THREE.Clock();
@@ -303,11 +298,9 @@ function animate() {
             sparkleSystem.spawn(r.mesh.position.clone());
             scene.remove(r.mesh);
             audio.playRing();
-            if (raceActive) {
-                ringCount++;
-                $("ring-count").textContent = `${ringCount}/${RING_TARGET}`;
-                if (ringCount >= RING_TARGET) finishChallenge();
-            }
+            ringCount++;
+            updateRingHUD();
+            if (raceActive && ringCount >= RING_TARGET) finishChallenge();
         }
     });
 
@@ -352,15 +345,15 @@ function animate() {
         player._inAir = true;
         player._groundY = player.pos.y;
 
-        if (raceActive && ringCount > 0) {
+        if (ringCount > 0) {
+            ringCount = 0;
+            updateRingHUD();
             audio.playRingScatter();
-            ringCount = Math.max(0, ringCount - 8);
-            $("ring-count").textContent = `${ringCount}/${RING_TARGET}`;
-        } else if (raceActive) {
-            audio.playDeath();
-            failChallenge();
-            setTimeout(() => respawnPlayer(), 700);
+        } else {
+            setTimeout(() => location.reload(), 700);
         }
+
+        if (raceActive) failChallenge();
     });
 
     const ap = ambientParticles.geo.attributes.position;

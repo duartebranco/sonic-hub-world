@@ -328,7 +328,7 @@ function animate() {
     });
 
     mobs.forEach((m) => {
-        m.update(dt);
+        m.update(dt, player.pos);
         if (!raceActive || hitCooldown > 0) return;
 
         const dx = player.pos.x - m.mesh.position.x;

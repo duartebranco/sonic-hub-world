@@ -106,14 +106,36 @@ export class MotoBug {
         this.update(0);
     }
 
-    update(dt) {
+    update(dt, playerPos) {
         // Patrol speed
         const linearSpeed = 3.0;
-        const angularSpeed = linearSpeed / Math.max(1, this.patrolRadius);
-        this.angle += angularSpeed * dt;
+        let targetX, targetZ;
 
-        const targetX = this.startX + Math.cos(this.angle) * this.patrolRadius;
-        const targetZ = this.startZ + Math.sin(this.angle) * this.patrolRadius;
+        let distToPlayer = Infinity;
+        if (playerPos) {
+            const px = playerPos.x - this.mesh.position.x;
+            const pz = playerPos.z - this.mesh.position.z;
+            distToPlayer = Math.sqrt(px * px + pz * pz);
+        }
+
+        const AGGRO_RANGE = 15.0;
+
+        if (distToPlayer < AGGRO_RANGE && distToPlayer > 0.1) {
+            const dirX = (playerPos.x - this.mesh.position.x) / distToPlayer;
+            const dirZ = (playerPos.z - this.mesh.position.z) / distToPlayer;
+            targetX = this.mesh.position.x + dirX * linearSpeed * dt;
+            targetZ = this.mesh.position.z + dirZ * linearSpeed * dt;
+
+            // Recenter the patrol circle so it resumes smoothly
+            this.startX = targetX - Math.cos(this.angle) * this.patrolRadius;
+            this.startZ = targetZ - Math.sin(this.angle) * this.patrolRadius;
+        } else {
+            const angularSpeed = linearSpeed / Math.max(1, this.patrolRadius);
+            this.angle += angularSpeed * dt;
+
+            targetX = this.startX + Math.cos(this.angle) * this.patrolRadius;
+            targetZ = this.startZ + Math.sin(this.angle) * this.patrolRadius;
+        }
 
         const dx = targetX - this.mesh.position.x;
         const dz = targetZ - this.mesh.position.z;

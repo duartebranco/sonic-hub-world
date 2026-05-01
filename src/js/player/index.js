@@ -113,7 +113,7 @@ export class Player {
 
         this.model.visible = !inSpin;
         this.model.position.copy(this.pos);
-        this.model.rotation.y = this.yaw;
+        this.model.rotation.y = this._inHit ? this.yaw + Math.PI : this.yaw;
         this.model.rotation.x = 0;
 
         // ── Animation ────────────────────────────────────────

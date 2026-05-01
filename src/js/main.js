@@ -348,7 +348,7 @@ function animate() {
         const awayLen = Math.max(0.001, Math.sqrt(dx * dx + dz * dz));
         player._vel.x = (dx / awayLen) * 20;
         player._vel.z = (dz / awayLen) * 20;
-        player._jumpVel = 8;
+        player._jumpVel = 4;
         player._inAir = true;
         player._groundY = player.pos.y;
 

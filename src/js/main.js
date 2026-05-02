@@ -246,7 +246,7 @@ function animate() {
     }
 
     player.update(dt, tpCam.yaw);
-    tpCam.update(dt, player.pos);
+    tpCam.update(dt, player.pos, player.yaw);
 
     if (spin.justStartedCharging) {
         audio.startSpinCharge();

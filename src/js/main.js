@@ -323,14 +323,23 @@ function animate() {
     });
 
     mobs.forEach((m) => {
+        if (m.dead) return;
         m.update(dt, player.pos);
-        if (hitCooldown > 0) return;
 
         const dx = player.pos.x - m.mesh.position.x;
         const dz = player.pos.z - m.mesh.position.z;
         const dy = player.pos.y - m.mesh.position.y;
         const distSq = dx * dx + dz * dz + dy * dy;
         if (distSq > 1.6) return;
+
+        if (player.inSpin) {
+            m.dead = true;
+            scene.remove(m.mesh);
+            audio.playMobDestroy();
+            return;
+        }
+
+        if (hitCooldown > 0) return;
 
         hitCooldown = 1.1;
         player._inHit = true;

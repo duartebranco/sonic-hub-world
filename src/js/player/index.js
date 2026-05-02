@@ -135,4 +135,8 @@ export class Player {
     get jumpVel() {
         return this._jumpVel;
     }
+    get inSpin() {
+        const jumpSpin = this._inAir && this._airTime > 0.3;
+        return this._spin.charging || this._spin.active || jumpSpin;
+    }
 }

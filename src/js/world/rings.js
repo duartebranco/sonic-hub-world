@@ -46,6 +46,96 @@ export function resetRings(scene, rings) {
     });
 }
 
+const SCATTER_MAT = new THREE.MeshStandardMaterial({
+    color: 0xffd54f,
+    emissive: 0xff8f00,
+    emissiveIntensity: 0.6,
+    roughness: 0.15,
+    metalness: 0.75,
+    transparent: true,
+    opacity: 1,
+});
+
+const GRAVITY = 14;
+const MAX_SCATTER = 20;
+const LIFETIME = 4.0;
+const BLINK_START = 1.5;
+
+export function buildScatterRingSystem(scene) {
+    const active = [];
+
+    function spawn(pos, count) {
+        const n = Math.min(count, MAX_SCATTER);
+        for (let i = 0; i < n; i++) {
+            const angle = (i / n) * Math.PI * 2;
+            // alternate two arc tiers like classic sonic
+            const outer = i % 2 === 0;
+            const hSpeed = outer ? 5.5 : 4.0;
+            const vSpeed = outer ? 7.0 : 5.0;
+
+            const mesh = new THREE.Mesh(RING_GEO, SCATTER_MAT.clone());
+            mesh.position.set(pos.x, pos.y + 0.5, pos.z);
+            mesh.castShadow = true;
+            scene.add(mesh);
+
+            active.push({
+                mesh,
+                vel: new THREE.Vector3(Math.cos(angle) * hSpeed, vSpeed, Math.sin(angle) * hSpeed),
+                rotSpeed: new THREE.Vector3(
+                    (Math.random() - 0.5) * 4,
+                    (Math.random() - 0.5) * 4,
+                    Math.random() * 6 + 3
+                ),
+                life: LIFETIME,
+                bounced: false,
+            });
+        }
+    }
+
+    function update(dt) {
+        for (let i = active.length - 1; i >= 0; i--) {
+            const r = active[i];
+            r.life -= dt;
+
+            if (r.life <= 0) {
+                scene.remove(r.mesh);
+                r.mesh.material.dispose();
+                active.splice(i, 1);
+                continue;
+            }
+
+            r.vel.y -= GRAVITY * dt;
+            r.mesh.position.addScaledVector(r.vel, dt);
+            r.mesh.rotation.x += r.rotSpeed.x * dt;
+            r.mesh.rotation.y += r.rotSpeed.y * dt;
+            r.mesh.rotation.z += r.rotSpeed.z * dt;
+
+            const floor = groundY(r.mesh.position.x, r.mesh.position.z) + 0.3;
+            if (r.mesh.position.y < floor) {
+                r.mesh.position.y = floor;
+                if (!r.bounced) {
+                    r.bounced = true;
+                    r.vel.y = Math.abs(r.vel.y) * 0.45;
+                    r.vel.x *= 0.6;
+                    r.vel.z *= 0.6;
+                } else {
+                    r.vel.y = 0;
+                    r.vel.x *= 0.9;
+                    r.vel.z *= 0.9;
+                }
+            }
+
+            // blink out in the last BLINK_START seconds
+            if (r.life < BLINK_START) {
+                const blinkRate = 8 + (1 - r.life / BLINK_START) * 16;
+                r.mesh.visible = Math.sin(r.life * blinkRate) > 0;
+            }
+        }
+    }
+
+    return { spawn, update };
+}
+
 export function buildSparkleSystem(scene) {
     const sparkles = [];
 

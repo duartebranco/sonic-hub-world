@@ -99,7 +99,7 @@ skyFill.position.set(-10, 12, -8);
 scene.add(skyFill);
 
 // ─── World ───────────────────────────────────────────────
-const { flowerSpinners, cloudDrifters, rings, goalRing, sparkleSystem, ambientParticles, mobs } =
+const { flowerSpinners, cloudDrifters, rings, goalRing, sparkleSystem, scatterRingSystem, ambientParticles, mobs } =
     buildWorld(scene);
 
 // ─── Player + camera controller ──────────────────────────
@@ -329,6 +329,7 @@ function animate() {
     insideGoalRing = nowInsideGoalRing;
 
     sparkleSystem.update(dt);
+    scatterRingSystem.update(dt);
 
     cloudDrifters.forEach((c) => {
         c.mesh.position.x += c.speed * dt * 0.3;
@@ -371,9 +372,11 @@ function animate() {
         player._groundY = player.pos.y;
 
         if (ringCount > 0) {
+            const scattered = ringCount;
             ringCount = 0;
             updateRingHUD();
             audio.playRingScatter();
+            scatterRingSystem.spawn(player.pos.clone(), scattered);
         } else {
             player._inDead = true;
         }

@@ -10,9 +10,8 @@
         "target": "es2022",
         "lib": ["es2022", "dom"],
         "paths": {
-            "three": ["./node_modules/three/src/Three.Core.js"],
-            "three/addons/*": ["./node_modules/three/examples/jsm/*"]
-        }
+            "three/addons/*": ["./node_modules/three/examples/jsm/*"],
+        },
     },
-    "include": ["src/js/**/*.js"]
+    "include": ["src/js/**/*.js"],
 }

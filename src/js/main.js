@@ -245,7 +245,7 @@ function animate() {
         }
     }
 
-    player.update(dt, tpCam.yaw);
+    player.update(dt, tpCam.yaw, mobs);
     tpCam.update(dt, player.pos, player.yaw);
 
     if (spin.justStartedCharging) {

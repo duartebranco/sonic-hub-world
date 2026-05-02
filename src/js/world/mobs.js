@@ -3,6 +3,7 @@ import { groundY, MAP_CONFIG } from "./map_design.js";
 
 export class MotoBug {
     constructor(scene, x, z, radius) {
+        this.dead = false;
         this.startX = x;
         this.startZ = z;
         this.patrolRadius = radius;

@@ -153,6 +153,12 @@ export class AudioManager {
         this._playTone(260, 160, 0.14, "triangle", 0.04);
     }
 
+    playMobDestroy() {
+        this._playNoise(0.08, 0.18, 2400);
+        this._playTone(480, 120, 0.22, "sawtooth", 0.1);
+        this._playTone(320, 80, 0.18, "square", 0.07, 0.04);
+    }
+
     playPlayerHit() {
         this._playTone(700, 240, 0.18, "sawtooth", 0.09);
     }

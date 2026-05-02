@@ -136,6 +136,9 @@ async function loadAssets() {
         fetch("../animations/jump.json")
             .then((r) => r.json())
             .then((d) => player.setJumpKeyframes(d.keyframes)),
+        fetch("../animations/hit.json")
+            .then((r) => r.json())
+            .then((d) => player.setHitKeyframes(d.keyframes)),
     ]);
 
     assetsReady = true;
@@ -157,6 +160,10 @@ let raceActive = false;
 let insideGoalRing = false;
 let wasInWater = false;
 let hitCooldown = 0;
+
+function updateRingHUD() {
+    $("ring-count").textContent = raceActive ? `${ringCount}/${RING_TARGET}` : `${ringCount}`;
+}
 
 function formatTime(t) {
     const mins = Math.floor(t / 60);
@@ -212,6 +219,7 @@ function failChallenge() {
     raceActive = false;
     timerRunning = false;
     insideGoalRing = false;
+    ringCount = 0;
     audio.setMusicMode("hub");
     $("challenge-hint").classList.add("hidden");
     $("challenge-complete").classList.add("hidden");
@@ -219,17 +227,6 @@ function failChallenge() {
     $("time-count").textContent = "0:00.00";
     $("time-count").style.color = "";
     $("time-count").style.animation = "";
-}
-
-function respawnPlayer() {
-    const gy = groundY(0, 0);
-    player.pos.set(0, gy, 0);
-    player._vel.set(0, 0, 0);
-    player._jumpVel = 0;
-    player._groundY = gy;
-    player._inAir = false;
-    player._jumpHeld = false;
-    player._airTime = 0;
 }
 
 // ─── Game loop ───────────────────────────────────────────
@@ -248,8 +245,8 @@ function animate() {
         }
     }
 
-    player.update(dt, tpCam.yaw);
-    tpCam.update(dt, player.pos);
+    player.update(dt, tpCam.yaw, mobs);
+    tpCam.update(dt, player.pos, player.yaw);
 
     if (spin.justStartedCharging) {
         audio.startSpinCharge();
@@ -300,11 +297,9 @@ function animate() {
             sparkleSystem.spawn(r.mesh.position.clone());
             scene.remove(r.mesh);
             audio.playRing();
-            if (raceActive) {
-                ringCount++;
-                $("ring-count").textContent = `${ringCount}/${RING_TARGET}`;
-                if (ringCount >= RING_TARGET) finishChallenge();
-            }
+            ringCount++;
+            updateRingHUD();
+            if (raceActive && ringCount >= RING_TARGET) finishChallenge();
         }
     });
 
@@ -328,8 +323,8 @@ function animate() {
     });
 
     mobs.forEach((m) => {
-        m.update(dt);
-        if (!raceActive || hitCooldown > 0) return;
+        if (m.dead) return;
+        m.update(dt, player.pos);
 
         const dx = player.pos.x - m.mesh.position.x;
         const dz = player.pos.z - m.mesh.position.z;
@@ -337,24 +332,36 @@ function animate() {
         const distSq = dx * dx + dz * dz + dy * dy;
         if (distSq > 1.6) return;
 
+        if (player.inSpin) {
+            m.dead = true;
+            scene.remove(m.mesh);
+            audio.playMobDestroy();
+            return;
+        }
+
+        if (hitCooldown > 0) return;
+
         hitCooldown = 1.1;
+        player._inHit = true;
+        player._hitT = 0;
+        audio.playPlayerHit();
+
+        const awayLen = Math.max(0.001, Math.sqrt(dx * dx + dz * dz));
+        player._vel.x = (dx / awayLen) * 20;
+        player._vel.z = (dz / awayLen) * 20;
+        player._jumpVel = 4;
+        player._inAir = true;
+        player._groundY = player.pos.y;
 
         if (ringCount > 0) {
-            audio.playPlayerHit();
+            ringCount = 0;
+            updateRingHUD();
             audio.playRingScatter();
-            ringCount = Math.max(0, ringCount - 8);
-            $("ring-count").textContent = `${ringCount}/${RING_TARGET}`;
-            const awayLen = Math.max(0.001, Math.sqrt(dx * dx + dz * dz));
-            player._vel.x = (dx / awayLen) * 20;
-            player._vel.z = (dz / awayLen) * 20;
-            player._jumpVel = 8;
-            player._inAir = true;
-            player._groundY = player.pos.y;
         } else {
-            audio.playDeath();
-            failChallenge();
-            setTimeout(() => respawnPlayer(), 700);
+            setTimeout(() => location.reload(), 700);
         }
+
+        if (raceActive) failChallenge();
     });
 
     const ap = ambientParticles.geo.attributes.position;

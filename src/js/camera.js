@@ -17,6 +17,7 @@ export class ThirdPersonCamera {
         this._mouseHeld = false;
         this._lmx = 0;
         this._lmy = 0;
+        this.idleTime = 0;
 
         this._bindEvents(domElement);
     }
@@ -39,11 +40,13 @@ export class ThirdPersonCamera {
             if (document.pointerLockElement === el) {
                 this.yaw -= e.movementX * 0.0028;
                 this.pitch += e.movementY * 0.0028;
+                this.idleTime = 0;
             } else if (this._mouseHeld) {
                 this.yaw -= (e.clientX - this._lmx) * 0.004;
                 this.pitch += (e.clientY - this._lmy) * 0.004;
                 this._lmx = e.clientX;
                 this._lmy = e.clientY;
+                this.idleTime = 0;
             }
             this.pitch = Math.max(PITCH_MIN, Math.min(PITCH_MAX, this.pitch));
         });
@@ -59,7 +62,20 @@ export class ThirdPersonCamera {
         el.addEventListener("contextmenu", (e) => e.preventDefault());
     }
 
-    update(dt, playerPos) {
+    update(dt, playerPos, playerYaw) {
+        this.idleTime += dt;
+
+        if (this.idleTime > 1.0 && playerYaw !== undefined) {
+            // The model's default orientation makes playerYaw target the left side
+            // Offset by +90 degrees (+Math.PI / 2) to target the back
+            const targetYaw = playerYaw + Math.PI / 2;
+            let diff = ((targetYaw - this.yaw + Math.PI) % (Math.PI * 2)) - Math.PI;
+            if (diff < -Math.PI) diff += Math.PI * 2;
+
+            // Only auto-adjust if there's a significant difference, and do it smoothly
+            this.yaw += diff * Math.min(1, dt * 2.0);
+        }
+
         const desired = new THREE.Vector3(playerPos.x, playerPos.y + 1.5, playerPos.z);
         this.target.lerp(desired, Math.min(1, dt * 7));
 

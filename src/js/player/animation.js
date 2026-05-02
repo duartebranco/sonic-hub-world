@@ -2,6 +2,7 @@ import { WALK_SPEED, RUN_SPEED } from "./physics.js";
 
 const ANIM_WALK = 1.8;
 const ANIM_RUN = 5.5;
+const HIT_DURATION = 0.55;
 
 const smooth = (t) => t * t * (3 - 2 * t);
 
@@ -37,6 +38,16 @@ export function updateAnimation(player, dt, inSpin) {
         player._walkT = 0;
         player._runT = 0;
         restPose(player);
+        return;
+    }
+
+    if (player._inHit) {
+        player._hitT += dt;
+        if (player._hitT >= HIT_DURATION) {
+            player._inHit = false;
+        } else if (player._hitKFs.length >= 1) {
+            applyKFInterp(player, 0, [player._hitKFs[0], player._hitKFs[0]]);
+        }
         return;
     }
 

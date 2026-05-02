@@ -42,6 +42,7 @@ export class SpinDash {
                 roughness: 0.3,
             })
         );
+        this._innerBall.castShadow = true;
         this._innerBall.add(
             new THREE.Mesh(
                 new THREE.SphereGeometry(1.02, 16, 16),

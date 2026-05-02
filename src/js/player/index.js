@@ -34,11 +34,28 @@ export class Player {
         this._walkKFs = [];
         this._runKFs = [];
         this._jumpKFs = [];
+        this._hitKFs = [];
         this._walkT = 0;
         this._runT = 0;
+        this._inHit = false;
+        this._hitT = 0;
 
         this._keys = {};
         bindInput(this);
+
+        // Homing attack reticle
+        this.reticle = new THREE.Mesh(
+            new THREE.RingGeometry(0.6, 0.8, 16),
+            new THREE.MeshBasicMaterial({
+                color: 0xff0000,
+                transparent: true,
+                opacity: 0.8,
+                side: THREE.DoubleSide,
+            })
+        );
+        this.reticle.rotation.x = Math.PI / 2;
+        this.reticle.visible = false;
+        this.scene.add(this.reticle);
     }
 
     setModel(gltfScene) {
@@ -79,7 +96,11 @@ export class Player {
         this._jumpKFs = kfs;
     }
 
-    update(dt, camYaw) {
+    setHitKeyframes(kfs) {
+        this._hitKFs = kfs;
+    }
+
+    update(dt, camYaw, mobs) {
         if (!this.model) return;
 
         const { hasInput, inputDir, spinKey } = getPlayerInput(this, camYaw);
@@ -90,6 +111,49 @@ export class Player {
             this._airTime = 0;
         }
         const jumpSpin = this._inAir && this._airTime > 0.3;
+
+        // ── Homing Attack Logic ──────────────────────────────
+        this.homingTarget = null;
+        let closestDist = 15; // Max targeting range
+
+        if (this._inAir && jumpSpin && mobs) {
+            for (const mob of mobs) {
+                if (mob.dead) continue;
+                const dist = this.pos.distanceTo(mob.mesh.position);
+                if (dist < closestDist) {
+                    closestDist = dist;
+                    this.homingTarget = mob;
+                }
+            }
+        }
+
+        if (this.homingTarget) {
+            this.reticle.visible = true;
+            this.reticle.position.copy(this.homingTarget.mesh.position);
+            this.reticle.position.y += 1.0; // Center of the mob roughly
+
+            // Make it always face the camera/player like a billboard
+            this.reticle.lookAt(this.pos);
+        } else {
+            this.reticle.visible = false;
+        }
+
+        if (this._inAir && this._jumpQueued && this.homingTarget) {
+            // Transport directly to the mob
+            this.pos.copy(this.homingTarget.mesh.position);
+            this.pos.y += 1.0;
+            this._groundY = this.pos.y;
+
+            // Kill mob
+            // reassure. since this is probably not needed
+            this.homingTarget.dead = true;
+            this.homingTarget.mesh.visible = false;
+
+            // Bounce up
+            this._jumpVel = 15;
+
+            this._jumpQueued = false;
+        }
 
         // ── Spin dash ────────────────────────────────────────
         this._spin.update(dt, spinKey, this._inAir, this._vel, this.pos, this.yaw, jumpSpin);
@@ -106,7 +170,7 @@ export class Player {
 
         this.model.visible = !inSpin;
         this.model.position.copy(this.pos);
-        this.model.rotation.y = this.yaw;
+        this.model.rotation.y = this._inHit ? this.yaw + Math.PI : this.yaw;
         this.model.rotation.x = 0;
 
         // ── Animation ────────────────────────────────────────
@@ -127,5 +191,9 @@ export class Player {
     }
     get jumpVel() {
         return this._jumpVel;
+    }
+    get inSpin() {
+        const jumpSpin = this._inAir && this._airTime > 0.3;
+        return this._spin.charging || this._spin.active || jumpSpin;
     }
 }

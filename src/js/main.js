@@ -356,7 +356,7 @@ function animate() {
             return;
         }
 
-        if (hitCooldown > 0) return;
+        if (hitCooldown > 0 || player._inDead) return;
 
         hitCooldown = 1.1;
         player._inHit = true;

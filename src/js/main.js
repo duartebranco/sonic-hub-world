@@ -105,8 +105,16 @@ skyFill.position.set(-10, 12, -8);
 scene.add(skyFill);
 
 // ─── World ───────────────────────────────────────────────
-const { flowerSpinners, cloudDrifters, rings, goalRing, sparkleSystem, scatterRingSystem, ambientParticles, mobs } =
-    buildWorld(scene);
+const {
+    flowerSpinners,
+    cloudDrifters,
+    rings,
+    goalRing,
+    sparkleSystem,
+    scatterRingSystem,
+    ambientParticles,
+    mobs,
+} = buildWorld(scene);
 
 // ─── Player + camera controller ──────────────────────────
 const spin = new SpinDash(scene, $("spin-charge-bar"), $("spin-charge-fill"));

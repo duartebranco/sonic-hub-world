@@ -2,7 +2,13 @@ import { buildTerrain, buildPath, groundY } from "./terrain.js";
 import { buildCliffs } from "./cliffs.js";
 import { buildTrees } from "./trees.js";
 import { buildFlowers } from "./flowers.js";
-import { buildRings, buildSparkleSystem, buildGoalRing, resetRings, buildScatterRingSystem } from "./rings.js";
+import {
+    buildRings,
+    buildSparkleSystem,
+    buildGoalRing,
+    resetRings,
+    buildScatterRingSystem,
+} from "./rings.js";
 import { buildClouds } from "./clouds.js";
 import { buildAmbientParticles } from "./particles.js";
 import { buildMobs } from "./mobs.js";

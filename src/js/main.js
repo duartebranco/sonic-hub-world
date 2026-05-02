@@ -46,7 +46,10 @@ function onStartInput() {
 
 document.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
-        if (gameOverShown) { location.reload(); return; }
+        if (gameOverShown) {
+            location.reload();
+            return;
+        }
         onStartInput();
     }
     if ((e.key === "m" || e.key === "M") && !e.repeat) {
@@ -56,7 +59,10 @@ document.addEventListener("keydown", (e) => {
 });
 
 document.addEventListener("click", () => {
-    if (gameOverShown) { location.reload(); return; }
+    if (gameOverShown) {
+        location.reload();
+        return;
+    }
     renderer.domElement.requestPointerLock?.();
     onStartInput();
 });

@@ -35,10 +35,14 @@ export class Player {
         this._runKFs = [];
         this._jumpKFs = [];
         this._hitKFs = [];
+        this._deathKFs = [];
         this._walkT = 0;
         this._runT = 0;
         this._inHit = false;
         this._hitT = 0;
+        this._inDead = false;
+        this._deadT = 0;
+        this._deadAnimDone = false;
 
         this._keys = {};
         bindInput(this);
@@ -100,8 +104,25 @@ export class Player {
         this._hitKFs = kfs;
     }
 
+    setDeathKeyframes(kfs) {
+        this._deathKFs = kfs;
+    }
+
     update(dt, camYaw, mobs) {
         if (!this.model) return;
+
+        // freeze everything after hit anim ends on death
+        if (this._inDead && !this._inHit) {
+            this._vel.set(0, 0, 0);
+            this._jumpVel = 0;
+            updateAnimation(this, dt, false);
+            this.model.visible = true;
+            this.model.position.copy(this.pos);
+            this.model.rotation.y = this.yaw + Math.PI;
+            this.model.rotation.x = 0;
+            this._dust.update(dt, this.pos, 0, false, this.yaw);
+            return;
+        }
 
         const { hasInput, inputDir, spinKey } = getPlayerInput(this, camYaw);
 

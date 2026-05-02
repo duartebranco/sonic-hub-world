@@ -3,6 +3,7 @@ import { WALK_SPEED, RUN_SPEED } from "./physics.js";
 const ANIM_WALK = 1.8;
 const ANIM_RUN = 5.5;
 const HIT_DURATION = 0.55;
+const DEATH_HOLD = 1.8;
 
 const smooth = (t) => t * t * (3 - 2 * t);
 
@@ -47,6 +48,17 @@ export function updateAnimation(player, dt, inSpin) {
             player._inHit = false;
         } else if (player._hitKFs.length >= 1) {
             applyKFInterp(player, 0, [player._hitKFs[0], player._hitKFs[0]]);
+        }
+        return;
+    }
+
+    if (player._inDead) {
+        player._deadT += dt;
+        if (player._deathKFs.length >= 1) {
+            applyKFInterp(player, 0, [player._deathKFs[0], player._deathKFs[0]]);
+        }
+        if (player._deadT >= DEATH_HOLD) {
+            player._deadAnimDone = true;
         }
         return;
     }

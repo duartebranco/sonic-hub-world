@@ -14,11 +14,21 @@ const $ = (id) => document.getElementById(id);
 // ─── Title screen / start gate ───────────────────────────
 let assetsReady = false;
 let userPressedStart = false;
+let gameOverShown = false;
 
 function startGame() {
     const ts = $("title-screen");
     ts.classList.add("out");
     setTimeout(() => (ts.style.display = "none"), 750);
+}
+
+function showGameOver() {
+    if (gameOverShown) return;
+    gameOverShown = true;
+    document.exitPointerLock?.();
+    const go = $("game-over-screen");
+    go.style.display = "flex";
+    requestAnimationFrame(() => go.classList.add("in"));
 }
 
 function onStartInput() {
@@ -35,7 +45,10 @@ function onStartInput() {
 }
 
 document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") onStartInput();
+    if (e.key === "Enter") {
+        if (gameOverShown) { location.reload(); return; }
+        onStartInput();
+    }
     if ((e.key === "m" || e.key === "M") && !e.repeat) {
         audio.unlock();
         audio.toggleMute();
@@ -43,6 +56,7 @@ document.addEventListener("keydown", (e) => {
 });
 
 document.addEventListener("click", () => {
+    if (gameOverShown) { location.reload(); return; }
     renderer.domElement.requestPointerLock?.();
     onStartInput();
 });
@@ -139,6 +153,9 @@ async function loadAssets() {
         fetch("../animations/hit.json")
             .then((r) => r.json())
             .then((d) => player.setHitKeyframes(d.keyframes)),
+        fetch("../animations/death.json")
+            .then((r) => r.json())
+            .then((d) => player.setDeathKeyframes(d.keyframes)),
     ]);
 
     assetsReady = true;
@@ -358,11 +375,13 @@ function animate() {
             updateRingHUD();
             audio.playRingScatter();
         } else {
-            setTimeout(() => location.reload(), 700);
+            player._inDead = true;
         }
 
         if (raceActive) failChallenge();
     });
+
+    if (player._deadAnimDone) showGameOver();
 
     const ap = ambientParticles.geo.attributes.position;
     for (let i = 0; i < ap.count; i++) {

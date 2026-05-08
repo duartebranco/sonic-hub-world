@@ -8,7 +8,7 @@ export function groundY(x, z) {
 
 export function buildTerrain(scene) {
     // 300x300 world with high subdivision to clearly render steep walls
-    const geo = new THREE.PlaneGeometry(300, 300, 300, 300);
+    const geo = new THREE.PlaneGeometry(300, 300, 60, 60);
     geo.rotateX(-Math.PI / 2);
 
     const pos = geo.attributes.position;
@@ -62,7 +62,7 @@ export function buildTerrain(scene) {
     geo.setAttribute("color", new THREE.BufferAttribute(cols, 3));
     geo.computeVertexNormals();
 
-    const mat = new THREE.MeshStandardMaterial({
+    const mat = new THREE.MeshStandardMaterial({ flatShading: true,
         vertexColors: true,
         roughness: 0.85,
         metalness: 0.0,

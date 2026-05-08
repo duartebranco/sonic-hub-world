@@ -80,7 +80,6 @@ container.appendChild(renderer.domElement);
 // ─── Scene ───────────────────────────────────────────────
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x4fc3f7);
-scene.fog = new THREE.FogExp2(0x87ceeb, 0.018);
 
 // ─── Camera ──────────────────────────────────────────────
 const camera = new THREE.PerspectiveCamera(58, 1, 0.05, 400);
@@ -143,6 +142,13 @@ async function loadAssets() {
         loader.load(
             "../models/sonic.glb",
             (gltf) => {
+                // Apply flat shading to sonic
+                gltf.scene.traverse((child) => {
+                    if (child.isMesh && child.material) {
+                        child.material.flatShading = true;
+                        child.material.needsUpdate = true;
+                    }
+                });
                 player.setModel(gltf.scene);
                 res();
             },

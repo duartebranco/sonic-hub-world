@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-const CLOUD_MAT = new THREE.MeshStandardMaterial({
+const CLOUD_MAT = new THREE.MeshStandardMaterial({ flatShading: true,
     color: 0xffffff,
     roughness: 1,
 });

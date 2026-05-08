@@ -35,7 +35,7 @@ export class SpinDash {
 
         this._innerBall = new THREE.Mesh(
             new THREE.SphereGeometry(1, 16, 16),
-            new THREE.MeshStandardMaterial({
+            new THREE.MeshStandardMaterial({ flatShading: true,
                 color: 0x1565c0,
                 emissive: 0x002299,
                 emissiveIntensity: 0.4,

@@ -2,8 +2,8 @@ import * as THREE from "three";
 import { groundY } from "./terrain.js";
 import { MAP_CONFIG } from "./map_design.js";
 
-const MAT_A = new THREE.MeshStandardMaterial({ color: 0xb5835a, roughness: 0.85 });
-const MAT_B = new THREE.MeshStandardMaterial({ color: 0x8b5e3c, roughness: 0.85 });
+const MAT_A = new THREE.MeshStandardMaterial({ flatShading: true, color: 0xb5835a, roughness: 0.85 });
+const MAT_B = new THREE.MeshStandardMaterial({ flatShading: true, color: 0x8b5e3c, roughness: 0.85 });
 
 // Used for manually-placed MAP_CONFIG.walls (individual meshes, small counts)
 function makeCliffWall(scene, cx, cz, width, height, rotY, tileSize = 1.0) {

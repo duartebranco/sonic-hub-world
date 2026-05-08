@@ -14,11 +14,21 @@ const $ = (id) => document.getElementById(id);
 // ─── Title screen / start gate ───────────────────────────
 let assetsReady = false;
 let userPressedStart = false;
+let gameOverShown = false;
 
 function startGame() {
     const ts = $("title-screen");
     ts.classList.add("out");
     setTimeout(() => (ts.style.display = "none"), 750);
+}
+
+function showGameOver() {
+    if (gameOverShown) return;
+    gameOverShown = true;
+    document.exitPointerLock?.();
+    const go = $("game-over-screen");
+    go.style.display = "flex";
+    requestAnimationFrame(() => go.classList.add("in"));
 }
 
 function onStartInput() {
@@ -35,7 +45,13 @@ function onStartInput() {
 }
 
 document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") onStartInput();
+    if (e.key === "Enter") {
+        if (gameOverShown) {
+            location.reload();
+            return;
+        }
+        onStartInput();
+    }
     if ((e.key === "m" || e.key === "M") && !e.repeat) {
         audio.unlock();
         audio.toggleMute();
@@ -43,6 +59,10 @@ document.addEventListener("keydown", (e) => {
 });
 
 document.addEventListener("click", () => {
+    if (gameOverShown) {
+        location.reload();
+        return;
+    }
     renderer.domElement.requestPointerLock?.();
     onStartInput();
 });
@@ -85,8 +105,16 @@ skyFill.position.set(-10, 12, -8);
 scene.add(skyFill);
 
 // ─── World ───────────────────────────────────────────────
-const { flowerSpinners, cloudDrifters, rings, goalRing, sparkleSystem, ambientParticles, mobs } =
-    buildWorld(scene);
+const {
+    flowerSpinners,
+    cloudDrifters,
+    rings,
+    goalRing,
+    sparkleSystem,
+    scatterRingSystem,
+    ambientParticles,
+    mobs,
+} = buildWorld(scene);
 
 // ─── Player + camera controller ──────────────────────────
 const spin = new SpinDash(scene, $("spin-charge-bar"), $("spin-charge-fill"));
@@ -139,6 +167,9 @@ async function loadAssets() {
         fetch("../animations/hit.json")
             .then((r) => r.json())
             .then((d) => player.setHitKeyframes(d.keyframes)),
+        fetch("../animations/death.json")
+            .then((r) => r.json())
+            .then((d) => player.setDeathKeyframes(d.keyframes)),
     ]);
 
     assetsReady = true;
@@ -312,6 +343,14 @@ function animate() {
     insideGoalRing = nowInsideGoalRing;
 
     sparkleSystem.update(dt);
+    const scatterCollected = scatterRingSystem.update(dt, player._inDead ? null : player.pos);
+    if (scatterCollected > 0) {
+        sparkleSystem.spawn(player.pos.clone());
+        audio.playRing();
+        ringCount += scatterCollected;
+        updateRingHUD();
+        if (raceActive && ringCount >= RING_TARGET) finishChallenge();
+    }
 
     cloudDrifters.forEach((c) => {
         c.mesh.position.x += c.speed * dt * 0.3;
@@ -339,7 +378,7 @@ function animate() {
             return;
         }
 
-        if (hitCooldown > 0) return;
+        if (hitCooldown > 0 || player._inDead) return;
 
         hitCooldown = 1.1;
         player._inHit = true;
@@ -354,15 +393,19 @@ function animate() {
         player._groundY = player.pos.y;
 
         if (ringCount > 0) {
+            const scattered = ringCount;
             ringCount = 0;
             updateRingHUD();
             audio.playRingScatter();
+            scatterRingSystem.spawn(player.pos.clone(), scattered);
         } else {
-            setTimeout(() => location.reload(), 700);
+            player._inDead = true;
         }
 
         if (raceActive) failChallenge();
     });
+
+    if (player._deadAnimDone) showGameOver();
 
     const ap = ambientParticles.geo.attributes.position;
     for (let i = 0; i < ap.count; i++) {

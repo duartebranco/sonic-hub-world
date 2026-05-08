@@ -9,7 +9,6 @@ import {
     resetRings,
     buildScatterRingSystem,
 } from "./rings.js";
-import { buildClouds } from "./clouds.js";
 import { buildAmbientParticles } from "./particles.js";
 import { buildMobs } from "./mobs.js";
 
@@ -22,7 +21,6 @@ export function buildWorld(scene) {
     buildTrees(scene);
 
     const flowerSpinners = buildFlowers(scene);
-    const cloudDrifters = buildClouds(scene);
     const rings = buildRings(scene);
     const goalRing = buildGoalRing(scene);
     const sparkleSystem = buildSparkleSystem(scene);
@@ -32,7 +30,6 @@ export function buildWorld(scene) {
 
     return {
         flowerSpinners,
-        cloudDrifters,
         rings,
         goalRing,
         sparkleSystem,

@@ -106,7 +106,6 @@ scene.add(skyFill);
 // ─── World ───────────────────────────────────────────────
 const {
     flowerSpinners,
-    cloudDrifters,
     rings,
     goalRing,
     sparkleSystem,
@@ -357,11 +356,6 @@ function animate() {
         updateRingHUD();
         if (raceActive && ringCount >= RING_TARGET) finishChallenge();
     }
-
-    cloudDrifters.forEach((c) => {
-        c.mesh.position.x += c.speed * dt * 0.3;
-        if (c.mesh.position.x > 110) c.mesh.position.x = -110;
-    });
 
     flowerSpinners.forEach((f) => {
         f.head.rotation.y += dt * 1.2;

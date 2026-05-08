@@ -141,13 +141,6 @@ async function loadAssets() {
         loader.load(
             "../models/sonic.glb",
             (gltf) => {
-                // Apply flat shading to sonic
-                gltf.scene.traverse((child) => {
-                    if (child.isMesh && child.material) {
-                        child.material.flatShading = true;
-                        child.material.needsUpdate = true;
-                    }
-                });
                 player.setModel(gltf.scene);
                 res();
             },

@@ -60,6 +60,8 @@ const GRAVITY = 14;
 const MAX_SCATTER = 20;
 const LIFETIME = 4.0;
 const BLINK_START = 1.5;
+const PICKUP_DELAY = 1.1;
+const PICKUP_RADIUS_SQ = 1.4 * 1.4;
 
 export function buildScatterRingSystem(scene) {
     const active = [];
@@ -88,20 +90,36 @@ export function buildScatterRingSystem(scene) {
                 ),
                 life: LIFETIME,
                 bounced: false,
+                pickupT: PICKUP_DELAY,
             });
         }
     }
 
-    function update(dt) {
+    function update(dt, playerPos) {
+        let collected = 0;
         for (let i = active.length - 1; i >= 0; i--) {
             const r = active[i];
             r.life -= dt;
+            r.pickupT -= dt;
 
             if (r.life <= 0) {
                 scene.remove(r.mesh);
                 r.mesh.material.dispose();
                 active.splice(i, 1);
                 continue;
+            }
+
+            if (playerPos && r.pickupT <= 0) {
+                const dx = playerPos.x - r.mesh.position.x;
+                const dy = playerPos.y + 0.5 - r.mesh.position.y;
+                const dz = playerPos.z - r.mesh.position.z;
+                if (dx * dx + dy * dy + dz * dz < PICKUP_RADIUS_SQ) {
+                    scene.remove(r.mesh);
+                    r.mesh.material.dispose();
+                    active.splice(i, 1);
+                    collected++;
+                    continue;
+                }
             }
 
             r.vel.y -= GRAVITY * dt;
@@ -131,6 +149,7 @@ export function buildScatterRingSystem(scene) {
                 r.mesh.visible = Math.sin(r.life * blinkRate) > 0;
             }
         }
+        return collected;
     }
 
     return { spawn, update };

@@ -335,7 +335,14 @@ function animate() {
     insideGoalRing = nowInsideGoalRing;
 
     sparkleSystem.update(dt);
-    scatterRingSystem.update(dt);
+    const scatterCollected = scatterRingSystem.update(dt, player._inDead ? null : player.pos);
+    if (scatterCollected > 0) {
+        sparkleSystem.spawn(player.pos.clone());
+        audio.playRing();
+        ringCount += scatterCollected;
+        updateRingHUD();
+        if (raceActive && ringCount >= RING_TARGET) finishChallenge();
+    }
 
     cloudDrifters.forEach((c) => {
         c.mesh.position.x += c.speed * dt * 0.3;

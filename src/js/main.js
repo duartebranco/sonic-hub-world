@@ -79,7 +79,11 @@ container.appendChild(renderer.domElement);
 
 // ─── Scene ───────────────────────────────────────────────
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x4fc3f7);
+const textureLoader = new THREE.TextureLoader();
+const skyTexture = textureLoader.load("../textures/sky.png");
+skyTexture.mapping = THREE.EquirectangularReflectionMapping;
+skyTexture.colorSpace = THREE.SRGBColorSpace;
+scene.background = skyTexture;
 
 // ─── Camera ──────────────────────────────────────────────
 const camera = new THREE.PerspectiveCamera(58, 1, 0.05, 400);

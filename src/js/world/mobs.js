@@ -15,7 +15,8 @@ export class MotoBug {
         this.wheel = new THREE.Group();
         const wheelGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.4, 16);
         wheelGeo.rotateX(Math.PI / 2);
-        const wheelMat = new THREE.MeshStandardMaterial({ flatShading: true,
+        const wheelMat = new THREE.MeshStandardMaterial({
+            flatShading: true,
             color: 0x222222,
             roughness: 0.9,
         });
@@ -37,7 +38,8 @@ export class MotoBug {
 
         // 2. Body (Red Sphere)
         const bodyGeo = new THREE.SphereGeometry(0.55, 32, 16);
-        const bodyMat = new THREE.MeshStandardMaterial({ flatShading: true,
+        const bodyMat = new THREE.MeshStandardMaterial({
+            flatShading: true,
             color: 0xcc0000,
             roughness: 0.5,
         });
@@ -49,7 +51,8 @@ export class MotoBug {
         // 3. Face (Grey Sphere intersecting the body)
         const faceGroup = new THREE.Group();
         const faceGeo = new THREE.SphereGeometry(0.38, 32, 16);
-        const faceMat = new THREE.MeshStandardMaterial({ flatShading: true,
+        const faceMat = new THREE.MeshStandardMaterial({
+            flatShading: true,
             color: 0x999999,
             roughness: 0.4,
             metalness: 0.2,

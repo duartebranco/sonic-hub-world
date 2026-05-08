@@ -257,7 +257,8 @@ export function groundY(x, z) {
 }
 
 export function buildMapObjects(scene) {
-    const waterMat = new THREE.MeshStandardMaterial({ flatShading: true,
+    const waterMat = new THREE.MeshStandardMaterial({
+        flatShading: true,
         color: 0x1ca3ec,
         transparent: true,
         opacity: 0.75,
@@ -273,7 +274,11 @@ export function buildMapObjects(scene) {
         scene.add(mesh);
     }
 
-    const woodMat = new THREE.MeshStandardMaterial({ flatShading: true, color: 0x8b5a2b, roughness: 0.9 });
+    const woodMat = new THREE.MeshStandardMaterial({
+        flatShading: true,
+        color: 0x8b5a2b,
+        roughness: 0.9,
+    });
 
     for (const b of MAP_CONFIG.bridges) {
         const group = new THREE.Group();

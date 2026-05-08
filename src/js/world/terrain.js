@@ -62,7 +62,8 @@ export function buildTerrain(scene) {
     geo.setAttribute("color", new THREE.BufferAttribute(cols, 3));
     geo.computeVertexNormals();
 
-    const mat = new THREE.MeshStandardMaterial({ flatShading: true,
+    const mat = new THREE.MeshStandardMaterial({
+        flatShading: true,
         vertexColors: true,
         roughness: 0.85,
         metalness: 0.0,

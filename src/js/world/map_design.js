@@ -250,7 +250,7 @@ export function groundY(x, z) {
     // world radius wall wins over everything — applied last
     if (distOrigin > MAP_CONFIG.worldRadius) {
         const t = Math.max(0, Math.min(1, (distOrigin - MAP_CONFIG.worldRadius) / 10.0));
-        if (t > 0) y = Math.max(y, t * t * (3 - 2 * t) * 40.0);
+        if (t > 0) y = Math.max(y, t * t * (3 - 2 * t) * 15.0);
     }
 
     return y;

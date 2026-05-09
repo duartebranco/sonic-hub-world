@@ -80,10 +80,19 @@ container.appendChild(renderer.domElement);
 // ─── Scene ───────────────────────────────────────────────
 const scene = new THREE.Scene();
 const textureLoader = new THREE.TextureLoader();
-const skyTexture = textureLoader.load("../textures/sky.png");
-skyTexture.mapping = THREE.EquirectangularReflectionMapping;
-skyTexture.colorSpace = THREE.SRGBColorSpace;
-scene.background = skyTexture;
+textureLoader.load(
+    "../textures/sky.png",
+    (tex) => {
+        tex.mapping = THREE.EquirectangularReflectionMapping;
+        tex.colorSpace = THREE.SRGBColorSpace;
+        scene.background = tex;
+    },
+    undefined,
+    (err) => {
+        console.error("sky texture failed to load:", err);
+        scene.background = new THREE.Color(0x79c3e3);
+    }
+);
 scene.fog = new THREE.Fog(0x79c3e3, 55, 200);
 
 // ─── Camera ──────────────────────────────────────────────

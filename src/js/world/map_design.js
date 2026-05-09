@@ -297,6 +297,8 @@ export function buildMapObjects(scene) {
     const loader = new THREE.TextureLoader();
     const walTex = loader.load("../textures/wal.png");
     walTex.wrapS = walTex.wrapT = THREE.RepeatWrapping;
+    const walTopTex = loader.load("../textures/wal_top.png");
+    walTopTex.wrapS = walTopTex.wrapT = THREE.RepeatWrapping;
     // grass textures for cylinder tops — same settings as terrain shader
     const grassLightTex = loader.load("../textures/grass_light.png");
     const grassShadowTex = loader.load("../textures/grass_shadow.png");
@@ -369,27 +371,48 @@ export function buildMapObjects(scene) {
         );
     };
 
+    // fixed row count: all cylinders have exactly NUM_ROWS rows regardless of height
+    const NUM_ROWS = 3;
+    const uRepeat = (p) => (2 * Math.PI * p.radius) / 10;
+
     for (const p of MAP_CONFIG.plateaus) {
-        const wallH = p.height + 4;
+        const totalH = p.height + 4;
+        const rowH   = totalH / NUM_ROWS;
+        const bodyH  = totalH - rowH; // bottom (NUM_ROWS-1) rows
 
-        const sideTex = walTex.clone();
-        sideTex.repeat.set((2 * Math.PI * p.radius) / 10, wallH / 10);
-        sideTex.needsUpdate = true;
-        const side = new THREE.Mesh(
-            new THREE.CylinderGeometry(p.radius, p.radius, wallH, 64, 1, true),
-            new THREE.MeshStandardMaterial({ map: sideTex, roughness: 0.85 })
+        // body: wal.png, NUM_ROWS-1 vertical tiles
+        const bodyTex = walTex.clone();
+        bodyTex.repeat.set(uRepeat(p), NUM_ROWS - 1);
+        bodyTex.needsUpdate = true;
+        const body = new THREE.Mesh(
+            new THREE.CylinderGeometry(p.radius, p.radius, bodyH, 64, 1, true),
+            new THREE.MeshStandardMaterial({ map: bodyTex, roughness: 0.85 })
         );
-        side.position.set(p.x, p.height / 2 - 2, p.z);
-        side.castShadow = true;
-        side.receiveShadow = true;
-        scene.add(side);
+        body.position.set(p.x, -4 + bodyH / 2, p.z);
+        body.castShadow = true;
+        body.receiveShadow = true;
+        scene.add(body);
 
-        const topGeo = new THREE.CircleGeometry(p.radius, 64);
-        topGeo.rotateX(-Math.PI / 2);
-        const top = new THREE.Mesh(topGeo, grassTopMat);
-        top.position.set(p.x, p.height + 0.01, p.z);
-        top.receiveShadow = true;
-        scene.add(top);
+        // top band: wal_top.png, 1 vertical tile — sits just below the grass cap
+        const topBandTex = walTopTex.clone();
+        topBandTex.repeat.set(uRepeat(p), 1);
+        topBandTex.needsUpdate = true;
+        const topBand = new THREE.Mesh(
+            new THREE.CylinderGeometry(p.radius, p.radius, rowH, 64, 1, true),
+            new THREE.MeshStandardMaterial({ map: topBandTex, roughness: 0.85 })
+        );
+        topBand.position.set(p.x, p.height - rowH / 2, p.z);
+        topBand.castShadow = true;
+        topBand.receiveShadow = true;
+        scene.add(topBand);
+
+        // grass disc cap the player lands on
+        const capGeo = new THREE.CircleGeometry(p.radius, 64);
+        capGeo.rotateX(-Math.PI / 2);
+        const cap = new THREE.Mesh(capGeo, grassTopMat);
+        cap.position.set(p.x, p.height + 0.01, p.z);
+        cap.receiveShadow = true;
+        scene.add(cap);
     }
 
     const waterMat = new THREE.MeshStandardMaterial({

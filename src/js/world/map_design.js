@@ -382,9 +382,9 @@ export function buildMapObjects(scene) {
     const uRepeat = (p) => (2 * Math.PI * p.radius) / TILE;
 
     for (const p of MAP_CONFIG.plateaus) {
-        const bodyTop    = p.height - TOP_H;
-        const numRows    = Math.ceil((bodyTop + 15) / TILE);
-        const bodyH      = numRows * TILE;
+        const bodyTop = p.height - TOP_H;
+        const numRows = Math.ceil((bodyTop + 15) / TILE);
+        const bodyH = numRows * TILE;
         const bodyBottom = bodyTop - bodyH;
 
         // body: wal.png, square tiles

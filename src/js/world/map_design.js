@@ -372,7 +372,7 @@ export function buildMapObjects(scene) {
     };
 
     const TILE = 10; // world units per tile edge — same for every cylinder
-    const TOP_H = 2.5; // height of the wal_top band
+    const TOP_H = 4; // height of the wal_top band
     const uRepeat = (p) => (2 * Math.PI * p.radius) / TILE;
 
     for (const p of MAP_CONFIG.plateaus) {

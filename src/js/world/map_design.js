@@ -258,7 +258,6 @@ export function groundY(x, z) {
 
 export function buildMapObjects(scene) {
     const waterMat = new THREE.MeshStandardMaterial({
-        flatShading: true,
         color: 0x1ca3ec,
         transparent: true,
         opacity: 0.75,
@@ -275,7 +274,6 @@ export function buildMapObjects(scene) {
     }
 
     const woodMat = new THREE.MeshStandardMaterial({
-        flatShading: true,
         color: 0x8b5a2b,
         roughness: 0.9,
     });

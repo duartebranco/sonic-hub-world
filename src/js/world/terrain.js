@@ -8,11 +8,12 @@ export function groundY(x, z) {
 
 export function buildTerrain(scene) {
     // 300x300 world with high subdivision to clearly render steep walls
-    const geo = new THREE.PlaneGeometry(300, 300, 60, 60);
+    const geo = new THREE.PlaneGeometry(300, 300, 300, 300);
     geo.rotateX(-Math.PI / 2);
 
     const pos = geo.attributes.position;
-    const cols = new Float32Array(pos.count * 3);
+    // 0 = grass_light, 1 = grass_shadow, 2 = cliff
+    const selectors = new Float32Array(pos.count);
 
     for (let i = 0; i < pos.count; i++) {
         const x = pos.getX(i);
@@ -20,20 +21,10 @@ export function buildTerrain(scene) {
         const y = groundY(x, z);
         pos.setY(i, y);
 
-        // Checkerboard grid sizing
-        const cx = Math.floor(x / 4);
-        const cz = Math.floor(z / 4);
-        const even = (cx + cz) % 2 === 0;
-
-        // Detect steep slopes to color them as cliff faces
         const dx = groundY(x + 0.5, z) - y;
         const dz = groundY(x, z + 0.5) - y;
         const slope = Math.sqrt(dx * dx + dz * dz) / 0.5;
 
-        // Subtle height-based brightness
-        const t = Math.max(0, Math.min(1, y / 20));
-
-        // Suppress brown on world border inner face (walls sit at worldRadius)
         let wallCovered = false;
         if (slope > 0.8) {
             const d = Math.sqrt(x * x + z * z);
@@ -41,33 +32,69 @@ export function buildTerrain(scene) {
         }
 
         if (slope > 0.8 && !wallCovered) {
-            // Cliff walls (dirt/rock brown) — only where no tile wall is placed
-            cols[i * 3] = 0.55 + t * 0.1;
-            cols[i * 3 + 1] = 0.35 + t * 0.1;
-            cols[i * 3 + 2] = 0.15 + t * 0.1;
+            selectors[i] = 2;
         } else {
-            // Flat runnable plains (classic green checkerboard)
-            if (even) {
-                cols[i * 3] = 0.2;
-                cols[i * 3 + 1] = 0.65 + t * 0.1;
-                cols[i * 3 + 2] = 0.15;
-            } else {
-                cols[i * 3] = 0.15;
-                cols[i * 3 + 1] = 0.55 + t * 0.1;
-                cols[i * 3 + 2] = 0.1;
-            }
+            const cx = Math.floor(x / 4);
+            const cz = Math.floor(z / 4);
+            selectors[i] = (cx + cz) % 2 === 0 ? 0 : 1;
         }
     }
 
-    geo.setAttribute("color", new THREE.BufferAttribute(cols, 3));
+    geo.setAttribute("selector", new THREE.BufferAttribute(selectors, 1));
     geo.computeVertexNormals();
 
+    const loader = new THREE.TextureLoader();
+    const grassLightTex = loader.load("../textures/grass_light.png");
+    const grassShadowTex = loader.load("../textures/grass_shadow.png");
+    const walTex = loader.load("../textures/wal.png");
+    for (const tex of [grassLightTex, grassShadowTex, walTex]) {
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    }
+
     const mat = new THREE.MeshStandardMaterial({
-        flatShading: true,
-        vertexColors: true,
         roughness: 0.85,
         metalness: 0.0,
     });
+
+    mat.onBeforeCompile = (shader) => {
+        shader.uniforms.grassLight = { value: grassLightTex };
+        shader.uniforms.grassShadow = { value: grassShadowTex };
+        shader.uniforms.walTex = { value: walTex };
+
+        shader.vertexShader = shader.vertexShader.replace(
+            "void main() {",
+            `attribute float selector;
+            varying float vSelector;
+            varying vec2 vGrassUv;
+            void main() {
+                vSelector = selector;
+                vGrassUv = position.xz / 10.0;`
+        );
+
+        shader.fragmentShader = shader.fragmentShader.replace(
+            "uniform vec3 diffuse;",
+            `uniform vec3 diffuse;
+            uniform sampler2D grassLight;
+            uniform sampler2D grassShadow;
+            uniform sampler2D walTex;
+            varying float vSelector;
+            varying vec2 vGrassUv;`
+        );
+
+        shader.fragmentShader = shader.fragmentShader.replace(
+            "#include <color_fragment>",
+            `#include <color_fragment>
+            float sel = floor(vSelector + 0.5);
+            if (sel < 0.5) {
+                diffuseColor.rgb = texture2D(grassLight, vGrassUv).rgb;
+            } else if (sel < 1.5) {
+                diffuseColor.rgb = texture2D(grassShadow, vGrassUv).rgb;
+            } else {
+                diffuseColor.rgb = texture2D(walTex, vGrassUv).rgb;
+            }`
+        );
+    };
+
     const mesh = new THREE.Mesh(geo, mat);
     mesh.receiveShadow = true;
     scene.add(mesh);

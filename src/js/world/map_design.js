@@ -204,15 +204,11 @@ export function groundY(x, z) {
         y = Math.max(y, 0);
     }
 
-    // compute plateau influence first — used to guard lower-priority features
+    // hard step at plateau radius — cylinder walls in buildMapObjects handle the visual
     let plateauY = 0;
     for (const p of MAP_CONFIG.plateaus) {
         const dist = Math.sqrt((x - p.x) ** 2 + (z - p.z) ** 2);
-        const transition = Math.max(0, Math.min(1, (p.radius - dist) / 2.0 + 0.5));
-        if (transition > 0) {
-            const smooth = transition * transition * (3 - 2 * transition);
-            plateauY = Math.max(plateauY, smooth * p.height);
-        }
+        if (dist < p.radius) plateauY = Math.max(plateauY, p.height);
     }
     y = Math.max(y, plateauY);
 
@@ -256,7 +252,146 @@ export function groundY(x, z) {
     return y;
 }
 
+// terrain mesh uses this — no plateau heights, so the mesh stays flat inside cylinders
+export function baseTerrainY(x, z) {
+    let y = 0;
+    const distOrigin = Math.sqrt(x * x + z * z);
+
+    for (const r of MAP_CONFIG.ramps) {
+        const hw = r.width / 2.0;
+        const hl = r.length / 2.0;
+        if (x > r.x - hw && x < r.x + hw && z > r.z - hl && z < r.z + hl) {
+            let t = 0;
+            if (r.facing === "north") t = (r.z + hl - z) / r.length;
+            else if (r.facing === "south") t = (z - (r.z - hl)) / r.length;
+            else if (r.facing === "east") t = (x - (r.x - hw)) / r.width;
+            else if (r.facing === "west") t = (r.x + hw - x) / r.width;
+            if (t > 0) y = Math.max(y, t * t * r.height);
+        }
+    }
+
+    for (const lake of MAP_CONFIG.lakes) {
+        const dist = Math.sqrt((x - lake.x) ** 2 + (z - lake.z) ** 2);
+        if (dist < lake.radius) {
+            y -= Math.cos(((dist / lake.radius) * Math.PI) / 2) * lake.depth;
+        }
+    }
+
+    for (const t of MAP_CONFIG.trenches) {
+        const hw = t.width / 2.0;
+        const hl = t.length / 2.0;
+        if (x > t.x - hw && x < t.x + hw && z > t.z - hl && z < t.z + hl) {
+            y = Math.min(y, -t.depth);
+        }
+    }
+
+    if (distOrigin > MAP_CONFIG.worldRadius) {
+        const t = Math.max(0, Math.min(1, (distOrigin - MAP_CONFIG.worldRadius) / 10.0));
+        if (t > 0) y = Math.max(y, t * t * (3 - 2 * t) * 15.0);
+    }
+
+    return y;
+}
+
 export function buildMapObjects(scene) {
+    const loader = new THREE.TextureLoader();
+    const walTex = loader.load("../textures/wal.png");
+    walTex.wrapS = walTex.wrapT = THREE.RepeatWrapping;
+    // grass textures for cylinder tops — same settings as terrain shader
+    const grassLightTex = loader.load("../textures/grass_light.png");
+    const grassShadowTex = loader.load("../textures/grass_shadow.png");
+    for (const tex of [grassLightTex, grassShadowTex]) {
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    }
+
+    // shared grass material for all top caps — uses world-space XZ for UV so
+    // the texture aligns seamlessly with the terrain regardless of cylinder position
+    const grassTopMat = new THREE.MeshStandardMaterial({ roughness: 0.85, metalness: 0.0 });
+    grassTopMat.onBeforeCompile = (shader) => {
+        shader.uniforms.grassLight = { value: grassLightTex };
+        shader.uniforms.grassShadow = { value: grassShadowTex };
+
+        shader.vertexShader = shader.vertexShader.replace(
+            "void main() {",
+            `varying vec2 vDetailUv;
+            varying vec2 vMacroUv;
+            varying vec2 vNoiseUv;
+            varying vec3 vTint;
+            void main() {
+                vec4 wp = modelMatrix * vec4(position, 1.0);
+                vDetailUv = wp.xz / 18.0;
+                vMacroUv  = wp.xz / 90.0;
+                vNoiseUv  = wp.xz * 0.07;
+                float t = (sin(wp.x * 0.31 + 1.7) * cos(wp.z * 0.29 + 0.8) + 1.0) * 0.5;
+                vTint = vec3(0.88 + t * 0.12, 0.92 + t * 0.08, 0.84 + t * 0.14);`
+        );
+
+        shader.fragmentShader = shader.fragmentShader.replace(
+            "uniform vec3 diffuse;",
+            `uniform vec3 diffuse;
+            uniform sampler2D grassLight;
+            uniform sampler2D grassShadow;
+            varying vec2 vDetailUv;
+            varying vec2 vMacroUv;
+            varying vec2 vNoiseUv;
+            varying vec3 vTint;
+
+            float hash(vec2 p) {
+                p = fract(p * vec2(234.34, 435.345));
+                p += dot(p, p + 34.23);
+                return fract(p.x * p.y);
+            }
+            float noise(vec2 p) {
+                vec2 i = floor(p);
+                vec2 f = fract(p);
+                f = f * f * (3.0 - 2.0 * f);
+                return mix(
+                    mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
+                    mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x),
+                    f.y
+                );
+            }`
+        );
+
+        shader.fragmentShader = shader.fragmentShader.replace(
+            "#include <color_fragment>",
+            `#include <color_fragment>
+            vec3 gLight = texture2D(grassLight, vDetailUv).rgb;
+            vec3 gShadow = texture2D(grassShadow, vDetailUv).rgb;
+            float n = noise(vNoiseUv);
+            vec3 grass = mix(gLight, gShadow, smoothstep(0.35, 0.65, n));
+            grass *= vTint;
+            vec3 macro = texture2D(grassLight, vMacroUv).rgb;
+            grass = mix(grass, grass * macro * 1.4, 0.18);
+            float luma = dot(grass, vec3(0.299, 0.587, 0.114));
+            grass = mix(vec3(luma), grass, 1.8) * vec3(0.82, 1.08, 0.72);
+            diffuseColor.rgb = grass;`
+        );
+    };
+
+    for (const p of MAP_CONFIG.plateaus) {
+        const wallH = p.height + 4;
+
+        const sideTex = walTex.clone();
+        sideTex.repeat.set((2 * Math.PI * p.radius) / 10, wallH / 10);
+        sideTex.needsUpdate = true;
+        const side = new THREE.Mesh(
+            new THREE.CylinderGeometry(p.radius, p.radius, wallH, 64, 1, true),
+            new THREE.MeshStandardMaterial({ map: sideTex, roughness: 0.85 })
+        );
+        side.position.set(p.x, p.height / 2 - 2, p.z);
+        side.castShadow = true;
+        side.receiveShadow = true;
+        scene.add(side);
+
+        const topGeo = new THREE.CircleGeometry(p.radius, 64);
+        topGeo.rotateX(-Math.PI / 2);
+        const top = new THREE.Mesh(topGeo, grassTopMat);
+        top.position.set(p.x, p.height + 0.01, p.z);
+        top.receiveShadow = true;
+        scene.add(top);
+    }
+
     const waterMat = new THREE.MeshStandardMaterial({
         color: 0x1ca3ec,
         transparent: true,

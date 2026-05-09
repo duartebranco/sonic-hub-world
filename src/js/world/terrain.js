@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { groundY as mapGroundY, buildMapObjects, MAP_CONFIG } from "./map_design.js";
+import { groundY as mapGroundY, baseTerrainY, buildMapObjects, MAP_CONFIG } from "./map_design.js";
 
 export function groundY(x, z) {
     return mapGroundY(x, z);
@@ -10,39 +10,26 @@ export function buildTerrain(scene) {
     geo.rotateX(-Math.PI / 2);
 
     const pos = geo.attributes.position;
-    const isCliff = new Float32Array(pos.count);
     const tints = new Float32Array(pos.count * 3);
 
     for (let i = 0; i < pos.count; i++) {
         const x = pos.getX(i);
         const z = pos.getZ(i);
-        const y = groundY(x, z);
-        pos.setY(i, y);
+        pos.setY(i, baseTerrainY(x, z));
 
-        const dx = groundY(x + 0.5, z) - y;
-        const dz = groundY(x, z + 0.5) - y;
-        const slope = Math.sqrt(dx * dx + dz * dz) / 0.5;
-
-        const d = Math.sqrt(x * x + z * z);
-        const wallCovered = slope > 0.8 && d > MAP_CONFIG.worldRadius - 1.0;
-        isCliff[i] = slope > 0.8 && !wallCovered ? 1.0 : 0.0;
-
-        // subtle warm/cool tint variation using overlapping sine waves
         const t = (Math.sin(x * 0.31 + 1.7) * Math.cos(z * 0.29 + 0.8) + 1.0) * 0.5;
         tints[i * 3 + 0] = 0.88 + t * 0.12;
         tints[i * 3 + 1] = 0.92 + t * 0.08;
         tints[i * 3 + 2] = 0.84 + t * 0.14;
     }
 
-    geo.setAttribute("isCliff", new THREE.BufferAttribute(isCliff, 1));
     geo.setAttribute("tint", new THREE.BufferAttribute(tints, 3));
     geo.computeVertexNormals();
 
     const loader = new THREE.TextureLoader();
     const grassLightTex = loader.load("../textures/grass_light.png");
     const grassShadowTex = loader.load("../textures/grass_shadow.png");
-    const walTex = loader.load("../textures/wal.png");
-    for (const tex of [grassLightTex, grassShadowTex, walTex]) {
+    for (const tex of [grassLightTex, grassShadowTex]) {
         tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
     }
 
@@ -51,19 +38,15 @@ export function buildTerrain(scene) {
     mat.onBeforeCompile = (shader) => {
         shader.uniforms.grassLight = { value: grassLightTex };
         shader.uniforms.grassShadow = { value: grassShadowTex };
-        shader.uniforms.walTex = { value: walTex };
 
         shader.vertexShader = shader.vertexShader.replace(
             "void main() {",
-            `attribute float isCliff;
-            attribute vec3 tint;
-            varying float vIsCliff;
+            `attribute vec3 tint;
             varying vec3 vTint;
             varying vec2 vDetailUv;
             varying vec2 vMacroUv;
             varying vec2 vNoiseUv;
             void main() {
-                vIsCliff = isCliff;
                 vTint = tint;
                 vDetailUv = position.xz / 18.0;
                 vMacroUv = position.xz / 90.0;
@@ -75,8 +58,6 @@ export function buildTerrain(scene) {
             `uniform vec3 diffuse;
             uniform sampler2D grassLight;
             uniform sampler2D grassShadow;
-            uniform sampler2D walTex;
-            varying float vIsCliff;
             varying vec3 vTint;
             varying vec2 vDetailUv;
             varying vec2 vMacroUv;
@@ -103,27 +84,16 @@ export function buildTerrain(scene) {
         shader.fragmentShader = shader.fragmentShader.replace(
             "#include <color_fragment>",
             `#include <color_fragment>
-            if (vIsCliff > 0.5) {
-                diffuseColor.rgb = texture2D(walTex, vDetailUv).rgb;
-            } else {
-                vec3 gLight = texture2D(grassLight, vDetailUv).rgb;
-                vec3 gShadow = texture2D(grassShadow, vDetailUv).rgb;
-
-                float n = noise(vNoiseUv);
-                vec3 grass = mix(gLight, gShadow, smoothstep(0.35, 0.65, n));
-
-                grass *= vTint;
-
-                // macro texture overlay (grass_light sampled at large scale)
-                vec3 macro = texture2D(grassLight, vMacroUv).rgb;
-                grass = mix(grass, grass * macro * 1.4, 0.18);
-
-                // boost green saturation
-                float luma = dot(grass, vec3(0.299, 0.587, 0.114));
-                grass = mix(vec3(luma), grass, 1.8) * vec3(0.82, 1.08, 0.72);
-
-                diffuseColor.rgb = grass;
-            }`
+            vec3 gLight = texture2D(grassLight, vDetailUv).rgb;
+            vec3 gShadow = texture2D(grassShadow, vDetailUv).rgb;
+            float n = noise(vNoiseUv);
+            vec3 grass = mix(gLight, gShadow, smoothstep(0.35, 0.65, n));
+            grass *= vTint;
+            vec3 macro = texture2D(grassLight, vMacroUv).rgb;
+            grass = mix(grass, grass * macro * 1.4, 0.18);
+            float luma = dot(grass, vec3(0.299, 0.587, 0.114));
+            grass = mix(vec3(luma), grass, 1.8) * vec3(0.82, 1.08, 0.72);
+            diffuseColor.rgb = grass;`
         );
     };
 

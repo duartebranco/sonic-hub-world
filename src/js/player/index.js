@@ -60,6 +60,10 @@ export class Player {
         this.reticle.rotation.x = Math.PI / 2;
         this.reticle.visible = false;
         this.scene.add(this.reticle);
+
+        // Reusable objects for homing attack frustum culling
+        this._frustum = new THREE.Frustum();
+        this._frustumMatrix = new THREE.Matrix4();
     }
 
     setModel(gltfScene) {
@@ -138,19 +142,16 @@ export class Player {
         let closestDist = 15; // Max targeting range
 
         if (this._inAir && jumpSpin && mobs) {
-            let frustum = null;
             if (camera) {
-                frustum = new THREE.Frustum();
-                frustum.setFromProjectionMatrix(
-                    new THREE.Matrix4().multiplyMatrices(
-                        camera.projectionMatrix,
-                        camera.matrixWorldInverse
-                    )
+                this._frustumMatrix.multiplyMatrices(
+                    camera.projectionMatrix,
+                    camera.matrixWorldInverse
                 );
+                this._frustum.setFromProjectionMatrix(this._frustumMatrix);
             }
             for (const mob of mobs) {
                 if (mob.dead) continue;
-                if (frustum && !frustum.containsPoint(mob.mesh.position)) continue;
+                if (camera && !this._frustum.containsPoint(mob.mesh.position)) continue;
                 const dist = this.pos.distanceTo(mob.mesh.position);
                 if (dist < closestDist) {
                     closestDist = dist;

@@ -371,37 +371,38 @@ export function buildMapObjects(scene) {
         );
     };
 
-    // fixed row count: all cylinders have exactly NUM_ROWS rows regardless of height
-    const NUM_ROWS = 3;
-    const uRepeat = (p) => (2 * Math.PI * p.radius) / 10;
+    const TILE = 10; // world units per tile edge — same for every cylinder
+    const TOP_H = 2.5; // height of the wal_top band
+    const uRepeat = (p) => (2 * Math.PI * p.radius) / TILE;
 
     for (const p of MAP_CONFIG.plateaus) {
-        const totalH = p.height + 4;
-        const rowH   = totalH / NUM_ROWS;
-        const bodyH  = totalH - rowH; // bottom (NUM_ROWS-1) rows
+        const bodyTop    = p.height - TOP_H;
+        const numRows    = Math.ceil((bodyTop + 15) / TILE);
+        const bodyH      = numRows * TILE;
+        const bodyBottom = bodyTop - bodyH;
 
-        // body: wal.png, NUM_ROWS-1 vertical tiles
+        // body: wal.png, square tiles
         const bodyTex = walTex.clone();
-        bodyTex.repeat.set(uRepeat(p), NUM_ROWS - 1);
+        bodyTex.repeat.set(uRepeat(p), bodyH / TILE);
         bodyTex.needsUpdate = true;
         const body = new THREE.Mesh(
             new THREE.CylinderGeometry(p.radius, p.radius, bodyH, 64, 1, true),
             new THREE.MeshStandardMaterial({ map: bodyTex, roughness: 0.85 })
         );
-        body.position.set(p.x, -4 + bodyH / 2, p.z);
+        body.position.set(p.x, bodyBottom + bodyH / 2, p.z);
         body.castShadow = true;
         body.receiveShadow = true;
         scene.add(body);
 
-        // top band: wal_top.png, 1 vertical tile — sits just below the grass cap
+        // top band: wal_top.png, one square tile tall
         const topBandTex = walTopTex.clone();
         topBandTex.repeat.set(uRepeat(p), 1);
         topBandTex.needsUpdate = true;
         const topBand = new THREE.Mesh(
-            new THREE.CylinderGeometry(p.radius, p.radius, rowH, 64, 1, true),
+            new THREE.CylinderGeometry(p.radius, p.radius, TOP_H, 64, 1, true),
             new THREE.MeshStandardMaterial({ map: topBandTex, roughness: 0.85 })
         );
-        topBand.position.set(p.x, p.height - rowH / 2, p.z);
+        topBand.position.set(p.x, p.height - TOP_H / 2, p.z);
         topBand.castShadow = true;
         topBand.receiveShadow = true;
         scene.add(topBand);

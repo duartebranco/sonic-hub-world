@@ -108,7 +108,7 @@ export class Player {
         this._deathKFs = kfs;
     }
 
-    update(dt, camYaw, mobs) {
+    update(dt, camYaw, mobs, camera) {
         if (!this.model) return;
 
         // freeze everything after hit anim ends on death
@@ -138,8 +138,19 @@ export class Player {
         let closestDist = 15; // Max targeting range
 
         if (this._inAir && jumpSpin && mobs) {
+            let frustum = null;
+            if (camera) {
+                frustum = new THREE.Frustum();
+                frustum.setFromProjectionMatrix(
+                    new THREE.Matrix4().multiplyMatrices(
+                        camera.projectionMatrix,
+                        camera.matrixWorldInverse
+                    )
+                );
+            }
             for (const mob of mobs) {
                 if (mob.dead) continue;
+                if (frustum && !frustum.containsPoint(mob.mesh.position)) continue;
                 const dist = this.pos.distanceTo(mob.mesh.position);
                 if (dist < closestDist) {
                     closestDist = dist;

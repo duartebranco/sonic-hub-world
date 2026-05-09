@@ -102,7 +102,7 @@ sun.shadow.camera.top = 50;
 sun.shadow.camera.bottom = -50;
 sun.shadow.bias = -0.0003;
 scene.add(sun, sun.target);
-scene.add(new THREE.AmbientLight(0xb3e5fc, 1.1));
+scene.add(new THREE.AmbientLight(0xb3e5fc, 0.9));
 const skyFill = new THREE.DirectionalLight(0x80d8ff, 0.5);
 skyFill.position.set(-10, 12, -8);
 scene.add(skyFill);

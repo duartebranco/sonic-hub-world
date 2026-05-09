@@ -118,6 +118,10 @@ export function buildTerrain(scene) {
                 vec3 macro = texture2D(grassLight, vMacroUv).rgb;
                 grass = mix(grass, grass * macro * 1.4, 0.18);
 
+                // boost green saturation
+                float luma = dot(grass, vec3(0.299, 0.587, 0.114));
+                grass = mix(vec3(luma), grass, 1.8) * vec3(0.82, 1.08, 0.72);
+
                 diffuseColor.rgb = grass;
             }`
         );

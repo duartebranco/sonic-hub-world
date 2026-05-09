@@ -84,6 +84,7 @@ const skyTexture = textureLoader.load("../textures/sky.png");
 skyTexture.mapping = THREE.EquirectangularReflectionMapping;
 skyTexture.colorSpace = THREE.SRGBColorSpace;
 scene.background = skyTexture;
+scene.fog = new THREE.Fog(0x79c3e3, 55, 200);
 
 // ─── Camera ──────────────────────────────────────────────
 const camera = new THREE.PerspectiveCamera(58, 1, 0.05, 400);

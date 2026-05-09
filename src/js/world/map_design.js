@@ -1,5 +1,11 @@
 import * as THREE from "three";
 
+let waterUniforms = null;
+
+export function updateWater(time) {
+    if (waterUniforms) waterUniforms.uTime.value = time;
+}
+
 export const MAP_CONFIG = {
     worldRadius: 133,
     hubRadius: 9,
@@ -416,13 +422,52 @@ export function buildMapObjects(scene) {
         scene.add(cap);
     }
 
+    const uniforms = { uTime: { value: 0 }, uWaterTex: { value: null } };
+    waterUniforms = uniforms;
+
+    new THREE.TextureLoader().load("../textures/water.png", (tex) => {
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.colorSpace = THREE.SRGBColorSpace;
+        uniforms.uWaterTex.value = tex;
+    });
+
     const waterMat = new THREE.MeshStandardMaterial({
-        color: 0x1ca3ec,
         transparent: true,
-        opacity: 0.75,
+        opacity: 0.82,
         roughness: 0.1,
         metalness: 0.2,
     });
+
+    waterMat.onBeforeCompile = (shader) => {
+        shader.uniforms.uTime = uniforms.uTime;
+        shader.uniforms.uWaterTex = uniforms.uWaterTex;
+
+        shader.vertexShader = shader.vertexShader.replace(
+            "void main() {",
+            `varying vec2 vWaterXZ;
+            void main() {
+                vWaterXZ = position.xz;`
+        );
+
+        shader.fragmentShader = shader.fragmentShader.replace(
+            "uniform vec3 diffuse;",
+            `uniform vec3 diffuse;
+            uniform sampler2D uWaterTex;
+            uniform float uTime;
+            varying vec2 vWaterXZ;`
+        );
+
+        shader.fragmentShader = shader.fragmentShader.replace(
+            "#include <color_fragment>",
+            `#include <color_fragment>
+            vec2 base = vWaterXZ / 8.0;
+            vec2 uv1 = base + vec2(uTime * 0.08, uTime * 0.04);
+            vec2 uv2 = base * 0.65 + vec2(-uTime * 0.06, uTime * 0.05) + 0.5;
+            vec3 s1 = texture2D(uWaterTex, uv1).rgb;
+            vec3 s2 = texture2D(uWaterTex, uv2).rgb;
+            diffuseColor.rgb = mix(s1, s2, 0.5) * vec3(0.36, 0.75, 0.94);`
+        );
+    };
 
     for (const w of MAP_CONFIG.waterPlanes) {
         const geo = new THREE.PlaneGeometry(w.width, w.length);

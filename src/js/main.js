@@ -7,7 +7,7 @@ import { SpinDash } from "./player/spin.js";
 import { ThirdPersonCamera } from "./camera.js";
 import { MAX_SPEED } from "./player/physics.js";
 import { AudioManager } from "./audio/manager.js";
-import { MAP_CONFIG } from "./world/map_design.js";
+import { MAP_CONFIG, updateWater } from "./world/map_design.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -313,6 +313,8 @@ function animate() {
 
     sun.position.set(player.pos.x + 20, 35, player.pos.z + 15);
     sun.target.position.set(player.pos.x, player.pos.y, player.pos.z);
+
+    updateWater(now);
 
     rings.forEach((r) => {
         if (r.collected) return;

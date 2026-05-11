@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Scene Graph</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #111;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    overflow: auto;
+  }
+
+  svg { display: block; }
+
+  .link {
+    fill: none;
+    stroke: #444;
+    stroke-width: 1.5px;
+  }
+
+  .node rect {
+    fill: #1e1e1e;
+    stroke: #555;
+    stroke-width: 1px;
+    rx: 6px;
+  }
+
+  .node text {
+    fill: #ddd;
+    font-size: 11px;
+    text-anchor: middle;
+    dominant-baseline: middle;
+    pointer-events: none;
+    white-space: pre;
+  }
+
+  .node.root rect { fill: #1a2a1a; stroke: #4caf50; stroke-width: 2px; }
+  .node.group rect { fill: #1a1a2a; stroke: #5c6bc0; }
+  .node.leaf rect { fill: #1e1e1e; stroke: #444; }
+</style>
+</head>
+<body>
+<svg id="svg"></svg>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script>
+const NODE_W = 160;
+const NODE_H = 56;
+const H_GAP = 360;   // horizontal gap between levels
+const V_GAP = 5;   // vertical gap between siblings
+
+const treeData = {
+  name: "Scene", type: "root", children: [
+    { name: "World", type: "group", children: [
+      { name: "Terrain", type: "group", children: [
+        { name: "Mesh\nPlaneGeometry\nGrassMaterial", img: "../textures/grass_light.png", type: "leaf" },
+        { name: "Path / Map Objects\nplateaus · ramps\nwater · bridges", type: "leaf" },
+      ]},
+      { name: "Cliffs", type: "group", img: "../textures/wal.png", children: [
+        { name: "Group[]\nBoxGeometry tiles\nper MAP_CONFIG.walls", type: "leaf" },
+        { name: "InstancedMesh ×2\nprocedural border", type: "leaf" },
+      ]},
+      { name: "Trees", type: "group", children: [
+        { img: "imgs/tree.png" },
+      ]},
+      { name: "Flowers", type: "group", children: [
+        { img: "imgs/flower.png" },
+      ]},
+      { name: "Rings", type: "group", children: [
+        { name: "Mesh[]\nTorusGeometry\ngold material", img: "imgs/ring.png", type: "leaf" },
+        { name: "GoalRing\nTorusGeometry large", img: "imgs/big_ring.png", type: "leaf" },
+      ]},
+      { name: "Mobs", type: "group", children: [
+        { name: "MotoBug Group[]", type: "group", children: [
+          { name: "Wheel Group\nCylinder + 2× Box", type: "leaf" },
+          { name: "Body\nSphereGeometry", type: "leaf" },
+          { name: "Face Group\nSphere + eyes + ears", type: "leaf" },
+        ]},
+      ]},
+      { name: "Effects", type: "group", children: [
+        { name: "SparkleSystem\nPoints[]", type: "leaf" },
+        { name: "ScatterRingSystem\nMesh[]", type: "leaf" },
+        { name: "AmbientParticles\nPoints 8000", type: "leaf" },
+      ]},
+    ]},
+    { name: "Player", type: "group", children: [
+      { name: "sonic.glb\nGLTF + bones", type: "leaf" },
+      { name: "Reticle\nRingGeometry", type: "leaf" },
+      { name: "DustSystem\nMesh[] pool 30", type: "leaf" },
+      { name: "SpinDash", type: "group", children: [
+        { name: "Ball Group\nSphereGeometry\n+ wireframe", type: "leaf" },
+        { name: "SpinParticles\nPoints 48", type: "leaf" },
+      ]},
+    ]},
+  ]
+};
+
+// compute node height based on content
+function nodeHeight(d) {
+  if (d.data.img && !d.data.name) return NODE_H + 52; // image-only: fixed tall card
+  if (d.data.img) return NODE_H + 52; // image + text
+  const lines = d.data.name.split("\n").length;
+  return lines > 1 ? NODE_H + (lines - 1) * 13 : NODE_H;
+}
+
+const root = d3.hierarchy(treeData);
+
+const treeLayout = d3.tree()
+  .nodeSize([NODE_H + V_GAP, NODE_W + H_GAP])
+  .separation((a, b) => {
+    const aH = nodeHeight(a);
+    const bH = nodeHeight(b);
+    const needed = (aH + bH) / 2 + V_GAP;
+    return Math.max(1, needed / (NODE_H + V_GAP));
+  });
+
+treeLayout(root);
+
+// flip x/y for horizontal layout
+const nodes = root.descendants();
+const links = root.links();
+
+const minY = d3.min(nodes, d => d.x);
+const maxY = d3.max(nodes, d => d.x);
+const minX = d3.min(nodes, d => d.y);
+const maxX = d3.max(nodes, d => d.y);
+
+const PAD = 40;
+const svgW = (maxX - minX) + NODE_W + PAD * 2;
+const svgH = (maxY - minY) + NODE_H * 2 + PAD * 2;
+
+const svg = d3.select("#svg")
+  .attr("width", svgW)
+  .attr("height", svgH);
+
+const g = svg.append("g")
+  .attr("transform", `translate(${PAD - minX + NODE_W / 2}, ${PAD - minY + NODE_H})`);
+
+// links — using elbow connector
+g.selectAll(".link")
+  .data(links)
+  .join("path")
+  .attr("class", "link")
+  .attr("d", d => {
+    const sx = d.source.y;
+    const sy = d.source.x;
+    const tx = d.target.y;
+    const ty = d.target.x;
+    const mid = (sx + tx) / 2;
+    return `M${sx},${sy} C${mid},${sy} ${mid},${ty} ${tx},${ty}`;
+  });
+
+// nodes
+const node = g.selectAll(".node")
+  .data(nodes)
+  .join("g")
+  .attr("class", d => `node ${d.data.type}`)
+  .attr("transform", d => `translate(${d.y},${d.x})`);
+
+node.each(function(d) {
+  const el = d3.select(this);
+  const h = nodeHeight(d);
+  const imgOnly = d.data.img && !d.data.name;
+
+  el.append("rect")
+    .attr("x", -NODE_W / 2)
+    .attr("y", -h / 2)
+    .attr("width", NODE_W)
+    .attr("height", h)
+    .attr("rx", 6);
+
+  if (d.data.img) {
+    const imgH = imgOnly ? h : 48;
+    const pad = imgOnly ? 0 : 4;
+    el.append("image")
+      .attr("href", d.data.img)
+      .attr("x", -NODE_W / 2 + pad)
+      .attr("y", -h / 2 + pad)
+      .attr("width", NODE_W - pad * 2)
+      .attr("height", imgH - pad)
+      .attr("preserveAspectRatio", "xMidYMid slice")
+      .attr("clip-path", imgOnly ? "inset(0 round 6px)" : "inset(0 round 4px)");
+  }
+
+  if (!imgOnly) {
+    const lines = (d.data.name || "").split("\n");
+    const imgH = d.data.img ? 48 : 0;
+    const textH = h - imgH;
+    const lineH = 14;
+    const totalTextH = lines.length * lineH;
+    const textStartY = d.data.img
+      ? (-h / 2 + imgH + (textH - totalTextH) / 2 + lineH / 2)
+      : (-totalTextH / 2 + lineH / 2);
+
+    lines.forEach((line, i) => {
+      el.append("text")
+        .attr("y", textStartY + i * lineH)
+        .attr("font-weight", i === 0 ? "600" : "normal")
+        .attr("fill", i === 0 ? "#fff" : "#aaa")
+        .text(line);
+    });
+  }
+});
+</script>
+</body>
+</html>

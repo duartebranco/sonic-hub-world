@@ -7,7 +7,7 @@ import { SpinDash } from "./player/spin.js";
 import { ThirdPersonCamera } from "./camera.js";
 import { MAX_SPEED } from "./player/physics.js";
 import { AudioManager } from "./audio/manager.js";
-import { MAP_CONFIG } from "./world/map_design.js";
+import { MAP_CONFIG, updateWater } from "./world/map_design.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -79,8 +79,21 @@ container.appendChild(renderer.domElement);
 
 // ─── Scene ───────────────────────────────────────────────
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x4fc3f7);
-scene.fog = new THREE.FogExp2(0x87ceeb, 0.018);
+const textureLoader = new THREE.TextureLoader();
+textureLoader.load(
+    "../textures/sky.png",
+    (tex) => {
+        tex.mapping = THREE.EquirectangularReflectionMapping;
+        tex.colorSpace = THREE.SRGBColorSpace;
+        scene.background = tex;
+    },
+    undefined,
+    (err) => {
+        console.error("sky texture failed to load:", err);
+        scene.background = new THREE.Color(0x79c3e3);
+    }
+);
+scene.fog = new THREE.Fog(0x79c3e3, 55, 200);
 
 // ─── Camera ──────────────────────────────────────────────
 const camera = new THREE.PerspectiveCamera(58, 1, 0.05, 400);
@@ -99,7 +112,7 @@ sun.shadow.camera.top = 50;
 sun.shadow.camera.bottom = -50;
 sun.shadow.bias = -0.0003;
 scene.add(sun, sun.target);
-scene.add(new THREE.AmbientLight(0xb3e5fc, 1.1));
+scene.add(new THREE.AmbientLight(0xb3e5fc, 0.9));
 const skyFill = new THREE.DirectionalLight(0x80d8ff, 0.5);
 skyFill.position.set(-10, 12, -8);
 scene.add(skyFill);
@@ -107,7 +120,6 @@ scene.add(skyFill);
 // ─── World ───────────────────────────────────────────────
 const {
     flowerSpinners,
-    cloudDrifters,
     rings,
     goalRing,
     sparkleSystem,
@@ -311,6 +323,8 @@ function animate() {
     sun.position.set(player.pos.x + 20, 35, player.pos.z + 15);
     sun.target.position.set(player.pos.x, player.pos.y, player.pos.z);
 
+    updateWater(now);
+
     rings.forEach((r) => {
         if (r.collected) return;
 
@@ -351,11 +365,6 @@ function animate() {
         updateRingHUD();
         if (raceActive && ringCount >= RING_TARGET) finishChallenge();
     }
-
-    cloudDrifters.forEach((c) => {
-        c.mesh.position.x += c.speed * dt * 0.3;
-        if (c.mesh.position.x > 110) c.mesh.position.x = -110;
-    });
 
     flowerSpinners.forEach((f) => {
         f.head.rotation.y += dt * 1.2;

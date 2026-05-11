@@ -1,4 +1,11 @@
 import * as THREE from "three";
+import { makeGrassMaterial } from "./grass_material.js";
+
+let waterUniforms = null;
+
+export function updateWater(time) {
+    if (waterUniforms) waterUniforms.uTime.value = time;
+}
 
 export const MAP_CONFIG = {
     worldRadius: 133,
@@ -204,15 +211,11 @@ export function groundY(x, z) {
         y = Math.max(y, 0);
     }
 
-    // compute plateau influence first — used to guard lower-priority features
+    // hard step at plateau radius — cylinder walls in buildMapObjects handle the visual
     let plateauY = 0;
     for (const p of MAP_CONFIG.plateaus) {
         const dist = Math.sqrt((x - p.x) ** 2 + (z - p.z) ** 2);
-        const transition = Math.max(0, Math.min(1, (p.radius - dist) / 2.0 + 0.5));
-        if (transition > 0) {
-            const smooth = transition * transition * (3 - 2 * transition);
-            plateauY = Math.max(plateauY, smooth * p.height);
-        }
+        if (dist < p.radius) plateauY = Math.max(plateauY, p.height);
     }
     y = Math.max(y, plateauY);
 
@@ -250,20 +253,152 @@ export function groundY(x, z) {
     // world radius wall wins over everything — applied last
     if (distOrigin > MAP_CONFIG.worldRadius) {
         const t = Math.max(0, Math.min(1, (distOrigin - MAP_CONFIG.worldRadius) / 10.0));
-        if (t > 0) y = Math.max(y, t * t * (3 - 2 * t) * 40.0);
+        if (t > 0) y = Math.max(y, t * t * (3 - 2 * t) * 15.0);
+    }
+
+    return y;
+}
+
+// terrain mesh uses this — no plateau heights, so the mesh stays flat inside cylinders
+export function baseTerrainY(x, z) {
+    let y = 0;
+    const distOrigin = Math.sqrt(x * x + z * z);
+
+    for (const r of MAP_CONFIG.ramps) {
+        const hw = r.width / 2.0;
+        const hl = r.length / 2.0;
+        if (x > r.x - hw && x < r.x + hw && z > r.z - hl && z < r.z + hl) {
+            let t = 0;
+            if (r.facing === "north") t = (r.z + hl - z) / r.length;
+            else if (r.facing === "south") t = (z - (r.z - hl)) / r.length;
+            else if (r.facing === "east") t = (x - (r.x - hw)) / r.width;
+            else if (r.facing === "west") t = (r.x + hw - x) / r.width;
+            if (t > 0) y = Math.max(y, t * t * r.height);
+        }
+    }
+
+    for (const lake of MAP_CONFIG.lakes) {
+        const dist = Math.sqrt((x - lake.x) ** 2 + (z - lake.z) ** 2);
+        if (dist < lake.radius) {
+            y -= Math.cos(((dist / lake.radius) * Math.PI) / 2) * lake.depth;
+        }
+    }
+
+    for (const t of MAP_CONFIG.trenches) {
+        const hw = t.width / 2.0;
+        const hl = t.length / 2.0;
+        if (x > t.x - hw && x < t.x + hw && z > t.z - hl && z < t.z + hl) {
+            y = Math.min(y, -t.depth);
+        }
+    }
+
+    if (distOrigin > MAP_CONFIG.worldRadius) {
+        const t = Math.max(0, Math.min(1, (distOrigin - MAP_CONFIG.worldRadius) / 10.0));
+        if (t > 0) y = Math.max(y, t * t * (3 - 2 * t) * 15.0);
     }
 
     return y;
 }
 
 export function buildMapObjects(scene) {
+    const loader = new THREE.TextureLoader();
+    const walTex = loader.load("../textures/wal.png");
+    walTex.wrapS = walTex.wrapT = THREE.RepeatWrapping;
+    const walTopTex = loader.load("../textures/wal_top.png");
+    walTopTex.wrapS = walTopTex.wrapT = THREE.RepeatWrapping;
+    const grassTopMat = makeGrassMaterial();
+
+    const TILE = 10; // world units per tile edge — same for every cylinder
+    const TOP_H = 4; // height of the wal_top band
+    const uRepeat = (p) => (2 * Math.PI * p.radius) / TILE;
+
+    for (const p of MAP_CONFIG.plateaus) {
+        const bodyTop = p.height - TOP_H;
+        const numRows = Math.ceil((bodyTop + 15) / TILE);
+        const bodyH = numRows * TILE;
+        const bodyBottom = bodyTop - bodyH;
+
+        // body: wal.png, square tiles
+        const bodyTex = walTex.clone();
+        bodyTex.repeat.set(uRepeat(p), bodyH / TILE);
+        bodyTex.needsUpdate = true;
+        const body = new THREE.Mesh(
+            new THREE.CylinderGeometry(p.radius, p.radius, bodyH, 64, 1, true),
+            new THREE.MeshStandardMaterial({ map: bodyTex, roughness: 0.85 })
+        );
+        body.position.set(p.x, bodyBottom + bodyH / 2, p.z);
+        body.castShadow = true;
+        body.receiveShadow = true;
+        scene.add(body);
+
+        // top band: wal_top.png, one square tile tall
+        const topBandTex = walTopTex.clone();
+        topBandTex.repeat.set(uRepeat(p), 1);
+        topBandTex.needsUpdate = true;
+        const topBand = new THREE.Mesh(
+            new THREE.CylinderGeometry(p.radius, p.radius, TOP_H, 64, 1, true),
+            new THREE.MeshStandardMaterial({ map: topBandTex, roughness: 0.85 })
+        );
+        topBand.position.set(p.x, p.height - TOP_H / 2, p.z);
+        topBand.castShadow = true;
+        topBand.receiveShadow = true;
+        scene.add(topBand);
+
+        // grass disc cap the player lands on
+        const capGeo = new THREE.CircleGeometry(p.radius, 64);
+        capGeo.rotateX(-Math.PI / 2);
+        const cap = new THREE.Mesh(capGeo, grassTopMat);
+        cap.position.set(p.x, p.height + 0.01, p.z);
+        cap.receiveShadow = true;
+        scene.add(cap);
+    }
+
+    const uniforms = { uTime: { value: 0 }, uWaterTex: { value: null } };
+    waterUniforms = uniforms;
+
+    new THREE.TextureLoader().load("../textures/water.png", (tex) => {
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.colorSpace = THREE.SRGBColorSpace;
+        uniforms.uWaterTex.value = tex;
+    });
+
     const waterMat = new THREE.MeshStandardMaterial({
-        color: 0x1ca3ec,
         transparent: true,
-        opacity: 0.75,
+        opacity: 0.82,
         roughness: 0.1,
         metalness: 0.2,
     });
+
+    waterMat.onBeforeCompile = (shader) => {
+        shader.uniforms.uTime = uniforms.uTime;
+        shader.uniforms.uWaterTex = uniforms.uWaterTex;
+
+        shader.vertexShader = shader.vertexShader.replace(
+            "void main() {",
+            `varying vec2 vWaterXZ;
+            void main() {
+                vWaterXZ = position.xz;`
+        );
+
+        shader.fragmentShader = shader.fragmentShader.replace(
+            "uniform vec3 diffuse;",
+            `uniform vec3 diffuse;
+            uniform sampler2D uWaterTex;
+            uniform float uTime;
+            varying vec2 vWaterXZ;`
+        );
+
+        shader.fragmentShader = shader.fragmentShader.replace(
+            "#include <color_fragment>",
+            `#include <color_fragment>
+            vec2 base = vWaterXZ / 8.0;
+            vec2 uv1 = base + vec2(uTime * 0.08, uTime * 0.04);
+            vec2 uv2 = base * 0.65 + vec2(-uTime * 0.06, uTime * 0.05) + 0.5;
+            vec3 s1 = texture2D(uWaterTex, uv1).rgb;
+            vec3 s2 = texture2D(uWaterTex, uv2).rgb;
+            diffuseColor.rgb = mix(s1, s2, 0.5) * vec3(0.36, 0.75, 0.94);`
+        );
+    };
 
     for (const w of MAP_CONFIG.waterPlanes) {
         const geo = new THREE.PlaneGeometry(w.width, w.length);
@@ -273,7 +408,10 @@ export function buildMapObjects(scene) {
         scene.add(mesh);
     }
 
-    const woodMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9 });
+    const woodMat = new THREE.MeshStandardMaterial({
+        color: 0x8b5a2b,
+        roughness: 0.9,
+    });
 
     for (const b of MAP_CONFIG.bridges) {
         const group = new THREE.Group();

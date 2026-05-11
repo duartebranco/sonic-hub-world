@@ -3,18 +3,22 @@ import { groundY } from "./terrain.js";
 import { MAP_CONFIG } from "./map_design.js";
 
 const TRUNK_MAT = new THREE.MeshStandardMaterial({
+    flatShading: true,
     color: 0x8d6e63,
     roughness: 0.9,
 });
 const COCO_MAT = new THREE.MeshStandardMaterial({
+    flatShading: true,
     color: 0x6d4c41,
     roughness: 0.9,
 });
 const CANOPY_MAT = new THREE.MeshStandardMaterial({
+    flatShading: true,
     color: 0x43a047,
     roughness: 0.82,
 });
 const CANOPY_MAT2 = new THREE.MeshStandardMaterial({
+    flatShading: true,
     color: 0x66bb6a,
     roughness: 0.82,
 });

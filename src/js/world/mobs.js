@@ -16,6 +16,7 @@ export class MotoBug {
         const wheelGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.4, 16);
         wheelGeo.rotateX(Math.PI / 2);
         const wheelMat = new THREE.MeshStandardMaterial({
+            flatShading: true,
             color: 0x222222,
             roughness: 0.9,
         });
@@ -24,7 +25,7 @@ export class MotoBug {
         this.wheel.add(wheelMesh);
 
         const spokeGeo = new THREE.BoxGeometry(0.5, 0.1, 0.45);
-        const spokeMat = new THREE.MeshStandardMaterial({ color: 0xdddddd });
+        const spokeMat = new THREE.MeshStandardMaterial({ flatShading: true, color: 0xdddddd });
         const spoke = new THREE.Mesh(spokeGeo, spokeMat);
         this.wheel.add(spoke);
 
@@ -38,6 +39,7 @@ export class MotoBug {
         // 2. Body (Red Sphere)
         const bodyGeo = new THREE.SphereGeometry(0.55, 32, 16);
         const bodyMat = new THREE.MeshStandardMaterial({
+            flatShading: true,
             color: 0xcc0000,
             roughness: 0.5,
         });
@@ -50,6 +52,7 @@ export class MotoBug {
         const faceGroup = new THREE.Group();
         const faceGeo = new THREE.SphereGeometry(0.38, 32, 16);
         const faceMat = new THREE.MeshStandardMaterial({
+            flatShading: true,
             color: 0x999999,
             roughness: 0.4,
             metalness: 0.2,
@@ -60,7 +63,7 @@ export class MotoBug {
 
         // 4. Eyes (Small intersecting spheres)
         const eyeGeo = new THREE.SphereGeometry(0.07, 16, 16);
-        const eyeMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
+        const eyeMat = new THREE.MeshStandardMaterial({ flatShading: true, color: 0x000000 });
 
         const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
         eyeR.position.set(0.31, 0.12, 0.15); // Push forward (x), up (y), and out (z)

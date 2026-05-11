@@ -4,6 +4,7 @@ import { MAP_CONFIG } from "./map_design.js";
 
 const RING_GEO = new THREE.TorusGeometry(0.3, 0.065, 14, 32);
 const RING_MAT = new THREE.MeshStandardMaterial({
+    flatShading: true,
     color: 0xffd54f,
     emissive: 0xff8f00,
     emissiveIntensity: 0.5,
@@ -22,6 +23,7 @@ export function buildRings(scene) {
 }
 
 const GOAL_MAT = new THREE.MeshStandardMaterial({
+    flatShading: true,
     color: 0xffd54f,
     emissive: 0xff8f00,
     emissiveIntensity: 0.5,
@@ -47,6 +49,7 @@ export function resetRings(scene, rings) {
 }
 
 const SCATTER_MAT = new THREE.MeshStandardMaterial({
+    flatShading: true,
     color: 0xffd54f,
     emissive: 0xff8f00,
     emissiveIntensity: 0.6,

@@ -2,8 +2,9 @@ import * as THREE from "three";
 import { groundY } from "./terrain.js";
 import { MAP_CONFIG } from "./map_design.js";
 
-const STEM_MAT = new THREE.MeshStandardMaterial({ color: 0x66bb6a });
+const STEM_MAT = new THREE.MeshStandardMaterial({ flatShading: true, color: 0x66bb6a });
 const CENTRE_MAT = new THREE.MeshStandardMaterial({
+    flatShading: true,
     color: 0xfff176,
     roughness: 0.55,
     emissive: 0xffd600,
@@ -29,10 +30,7 @@ function makeFlower(scene, x, z) {
     head.position.y = 1.0;
 
     const col = PETAL_COLORS[Math.floor(Math.random() * PETAL_COLORS.length)];
-    const pMat = new THREE.MeshStandardMaterial({
-        color: col,
-        roughness: 0.65,
-    });
+    const pMat = new THREE.MeshStandardMaterial({ flatShading: true, color: col, roughness: 0.65 });
 
     for (let i = 0; i < 6; i++) {
         const a = (i / 6) * Math.PI * 2;

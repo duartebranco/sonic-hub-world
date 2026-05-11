@@ -2,8 +2,22 @@ import * as THREE from "three";
 import { groundY } from "./terrain.js";
 import { MAP_CONFIG } from "./map_design.js";
 
-const MAT_A = new THREE.MeshStandardMaterial({ color: 0xb5835a, roughness: 0.85 });
-const MAT_B = new THREE.MeshStandardMaterial({ color: 0x8b5e3c, roughness: 0.85 });
+const textureLoader = new THREE.TextureLoader();
+const walTex = textureLoader.load("../textures/wal.png");
+walTex.colorSpace = THREE.SRGBColorSpace;
+walTex.magFilter = THREE.NearestFilter;
+const walTopTex = textureLoader.load("../textures/wal_top.png");
+walTopTex.colorSpace = THREE.SRGBColorSpace;
+walTopTex.magFilter = THREE.NearestFilter;
+
+const MAT_WAL = new THREE.MeshStandardMaterial({
+    map: walTex,
+    roughness: 0.85,
+});
+const MAT_WAL_TOP = new THREE.MeshStandardMaterial({
+    map: walTopTex,
+    roughness: 0.85,
+});
 
 // Used for manually-placed MAP_CONFIG.walls (individual meshes, small counts)
 function makeCliffWall(scene, cx, cz, width, height, rotY, tileSize = 1.0) {
@@ -14,7 +28,7 @@ function makeCliffWall(scene, cx, cz, width, height, rotY, tileSize = 1.0) {
 
     for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
-            const mat = (r + c) % 2 === 0 ? MAT_A : MAT_B;
+            const mat = r === rows - 1 ? MAT_WAL_TOP : MAT_WAL;
             const m = new THREE.Mesh(geo, mat);
             m.position.set((c - cols / 2 + 0.5) * tileSize, r * tileSize + tileSize / 2, 0);
             m.castShadow = true;
@@ -32,18 +46,17 @@ function makeCliffWall(scene, cx, cz, width, height, rotY, tileSize = 1.0) {
 // Procedural walls around plateaus and the world border, rendered via InstancedMesh.
 // rotY = -π/2 - angle makes local-X span tangentially so tiles tile correctly around circles.
 function buildProceduralWalls(scene) {
-    const BTILE = 2.2; // larger tiles for the distant world border
+    const BTILE = 6.6; // much larger tiles for the distant world border
 
     const dummy = new THREE.Object3D();
 
-    // Collect tile matrices per material before creating InstancedMesh
-    const bA = [],
-        bB = []; // border tiles
+    const matricesWal = [];
+    const matricesWalTop = [];
 
     // ── World border ──────────────────────────────────────────────────────────
     {
         const R = MAP_CONFIG.worldRadius;
-        const WALL_H = 10; // rows (10 × 2.2 = 22 units)
+        const WALL_H = 4; // rows (4 × 6.6 = 26.4 units)
         const N = Math.max(12, Math.ceil((2 * Math.PI * R) / BTILE));
         const dAngle = (2 * Math.PI) / N;
 
@@ -57,8 +70,12 @@ function buildProceduralWalls(scene) {
                 dummy.position.set(wx, r * BTILE, wz);
                 dummy.rotation.set(0, rotY, 0);
                 dummy.updateMatrix();
-                if ((si + r) % 2 === 0) bA.push(dummy.matrix.clone());
-                else bB.push(dummy.matrix.clone());
+
+                if (r === WALL_H - 1) {
+                    matricesWalTop.push(dummy.matrix.clone());
+                } else {
+                    matricesWal.push(dummy.matrix.clone());
+                }
             }
         }
     }
@@ -76,8 +93,8 @@ function buildProceduralWalls(scene) {
         scene.add(inst);
     }
 
-    spawn(borderGeo, MAT_A, bA);
-    spawn(borderGeo, MAT_B, bB);
+    spawn(borderGeo, MAT_WAL, matricesWal);
+    spawn(borderGeo, MAT_WAL_TOP, matricesWalTop);
 }
 
 export function buildCliffs(scene) {

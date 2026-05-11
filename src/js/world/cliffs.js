@@ -19,30 +19,6 @@ const MAT_WAL_TOP = new THREE.MeshStandardMaterial({
     roughness: 0.85,
 });
 
-// Used for manually-placed MAP_CONFIG.walls (individual meshes, small counts)
-function makeCliffWall(scene, cx, cz, width, height, rotY, tileSize = 1.0) {
-    const group = new THREE.Group();
-    const cols = Math.ceil(width / tileSize);
-    const rows = Math.ceil(height / tileSize);
-    const geo = new THREE.BoxGeometry(tileSize, tileSize, tileSize * 0.55);
-
-    for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-            const mat = r === rows - 1 ? MAT_WAL_TOP : MAT_WAL;
-            const m = new THREE.Mesh(geo, mat);
-            m.position.set((c - cols / 2 + 0.5) * tileSize, r * tileSize + tileSize / 2, 0);
-            m.castShadow = true;
-            m.receiveShadow = true;
-            group.add(m);
-        }
-    }
-
-    const ty = groundY(cx, cz);
-    group.position.set(cx, ty - tileSize * 0.5, cz);
-    group.rotation.y = rotY;
-    scene.add(group);
-}
-
 // Procedural walls around plateaus and the world border, rendered via InstancedMesh.
 // rotY = -π/2 - angle makes local-X span tangentially so tiles tile correctly around circles.
 function buildProceduralWalls(scene) {
@@ -98,16 +74,5 @@ function buildProceduralWalls(scene) {
 }
 
 export function buildCliffs(scene) {
-    for (const w of MAP_CONFIG.walls) {
-        makeCliffWall(
-            scene,
-            w.x,
-            w.z,
-            w.width,
-            w.height,
-            w.rotY * (Math.PI / 180),
-            w.tileSize ?? 1.0
-        );
-    }
     buildProceduralWalls(scene);
 }

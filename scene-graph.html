@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Scene Graph</title>
+        <style>
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                background: #ffffff;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                overflow: auto;
+            }
+
+            svg {
+                display: block;
+            }
+
+            .link {
+                fill: none;
+                stroke: #999;
+                stroke-width: 1.5px;
+            }
+
+            .node rect {
+                fill: #f5f5f5;
+                stroke: #ccc;
+                stroke-width: 1px;
+            }
+
+            .node text {
+                fill: #000;
+                font-size: 15px;
+                text-anchor: middle;
+                dominant-baseline: middle;
+                pointer-events: none;
+                white-space: pre;
+            }
+
+            .node.root rect {
+                fill: #e8f5e9;
+                stroke: #4caf50;
+                stroke-width: 2px;
+            }
+            .node.group rect {
+                fill: #e8eaf6;
+                stroke: #9fa8da;
+            }
+            .node.leaf rect {
+                fill: #f5f5f5;
+                stroke: #ccc;
+            }
+        </style>
+    </head>
+    <body>
+        <svg id="svg"></svg>
+
+        <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+        <script>
+            const NODE_W = 160;
+            const NODE_H = 56;
+            const H_GAP = 35; // horizontal gap between siblings
+            const V_GAP = 50; // vertical gap between levels
+
+            const treeData = {
+                name: "Scene",
+                type: "root",
+                children: [
+                    {
+                        name: "World",
+                        type: "group",
+                        children: [
+                            {
+                                name: "Terrain",
+                                type: "group",
+                                children: [
+                                    {
+                                        name: "Grass\nMesh PlaneGeometry\n and GrassMaterial",
+                                        img: "textures/grass_shadow.png",
+                                        type: "leaf",
+                                    },
+                                ],
+                            },
+                            {
+                                name: "Path",
+                                type: "group",
+                                children: [
+                                    {
+                                        name: "Plateaus, Ramps\nMesh[] CylinderGeometry\n and CircleGeometry",
+                                        img: "docs/imgs/plateaus.png",
+                                        type: "leaf",
+                                    },
+                                    {
+                                        name: "Water Plane\nMesh[] PlaneGeometry",
+                                        img: "textures/water.png",
+                                        type: "leaf",
+                                    },
+                                    {
+                                        name: "Bridge\nGroup[] BoxGeometry",
+                                        img: "docs/imgs/bridge.png",
+                                        type: "leaf",
+                                    },
+                                ],
+                            },
+                            {
+                                name: "Cliffs",
+                                type: "group",
+                                children: [
+                                    {
+                                        name: "Wall\nInstancedMesh",
+                                        img: "docs/imgs/cliff.png",
+                                        type: "leaf",
+                                    },
+                                ],
+                            },
+                            {
+                                name: "Trees",
+                                img: "docs/imgs/tree.png",
+                                type: "group",
+                                children: [
+                                    {
+                                        name: "Group[]\nCylinderGeometry\nand SphereGeometry",
+                                        type: "leaf",
+                                    },
+                                ],
+                            },
+                            {
+                                name: "Flowers",
+                                img: "docs/imgs/flower.png",
+                                type: "group",
+                                children: [
+                                    {
+                                        name: "Group[]\nCylinderGeometry\nand SphereGeometry",
+                                        type: "leaf",
+                                    },
+                                ],
+                            },
+                            {
+                                name: "Rings",
+                                type: "group",
+                                children: [
+                                    {
+                                        name: "Rings\nMesh[] TorusGeometry",
+                                        img: "docs/imgs/ring.png",
+                                        type: "leaf",
+                                    },
+                                    {
+                                        name: "GoalRing\nTorusGeometry large",
+                                        img: "docs/imgs/big_ring.png",
+                                        type: "leaf",
+                                    },
+                                ],
+                            },
+                            {
+                                name: "Mobs",
+                                type: "group",
+                                children: [
+                                    {
+                                        name: "MotoBug Group[]",
+                                        img: "docs/imgs/motobug.png",
+                                        type: "group",
+                                    },
+                                ],
+                            },
+                            {
+                                name: "Effects",
+                                type: "group",
+                                children: [
+                                    { name: "SparkleSystem\nPoints[]", type: "leaf" },
+                                    { name: "ScatterRingSystem\nMesh[]", type: "leaf" },
+                                    { name: "AmbientParticles\nPoints[]", type: "leaf" },
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        name: "Player",
+                        type: "group",
+                        children: [
+                            {
+                                name: "sonic.glb\nGLTF + bones",
+                                img: "docs/imgs/sonic.png",
+                                type: "leaf",
+                            },
+                            {
+                                name: "Reticle\nRingGeometry",
+                                img: "docs/imgs/home_attack.png",
+                                type: "leaf",
+                            },
+                            {
+                                name: "DustSystem\nMesh[]",
+                                img: "docs/imgs/ground_dust.png",
+                                type: "leaf",
+                            },
+                            {
+                                name: "SpinDash",
+                                img: "docs/imgs/spin.png",
+                                type: "group",
+                                children: [
+                                    { name: "Ball\nSphereGeometry", type: "leaf" },
+                                    { name: "SpinParticles\nPoints[]", type: "leaf" },
+                                ],
+                            },
+                        ],
+                    },
+                    { name: "Background\nsky.png", img: "textures/sky.png", type: "leaf" },
+                ],
+            };
+
+            // compute node height based on content
+            function nodeHeight(d) {
+                if (d.data.img && !d.data.name) return NODE_H + 52; // image-only: fixed tall card
+                if (d.data.img) return NODE_H + 52; // image + text
+                const lines = d.data.name.split("\n").length;
+                return lines > 1 ? NODE_H + (lines - 1) * 13 : NODE_H;
+            }
+
+            const root = d3.hierarchy(treeData);
+
+            const treeLayout = d3
+                .tree()
+                .nodeSize([NODE_W + H_GAP, NODE_H + V_GAP])
+                .separation((a, b) => {
+                    const aH = nodeHeight(a);
+                    const bH = nodeHeight(b);
+                    const needed = (Math.max(aH, NODE_H) + Math.max(bH, NODE_H)) / 2 + H_GAP;
+                    return Math.max(1, needed / (NODE_W + H_GAP));
+                });
+
+            treeLayout(root);
+
+            // vertical layout: d.x = horizontal position, d.y = vertical depth
+            const nodes = root.descendants();
+            const links = root.links();
+
+            const minX = d3.min(nodes, (d) => d.x);
+            const maxX = d3.max(nodes, (d) => d.x);
+            const minY = d3.min(nodes, (d) => d.y);
+            const maxY = d3.max(nodes, (d) => d.y);
+
+            const PAD = 40;
+            const svgW = maxX - minX + NODE_W + PAD * 2;
+            const svgH = maxY - minY + NODE_H * 2 + PAD * 2;
+
+            const svg = d3.select("#svg").attr("width", svgW).attr("height", svgH);
+
+            const g = svg
+                .append("g")
+                .attr("transform", `translate(${PAD - minX + NODE_W / 2}, ${PAD})`);
+
+            // links — cubic bezier top-to-bottom
+            g.selectAll(".link")
+                .data(links)
+                .join("path")
+                .attr("class", "link")
+                .attr("d", (d) => {
+                    const sx = d.source.x;
+                    const sy = d.source.y;
+                    const tx = d.target.x;
+                    const ty = d.target.y;
+                    const mid = (sy + ty) / 2;
+                    return `M${sx},${sy} C${sx},${mid} ${tx},${mid} ${tx},${ty}`;
+                });
+
+            // nodes
+            const node = g
+                .selectAll(".node")
+                .data(nodes)
+                .join("g")
+                .attr("class", (d) => `node ${d.data.type}`)
+                .attr("transform", (d) => `translate(${d.x},${d.y})`);
+
+            node.each(function (d) {
+                const el = d3.select(this);
+                const h = nodeHeight(d);
+                const imgOnly = d.data.img && !d.data.name;
+
+                el.append("rect")
+                    .attr("x", -NODE_W / 2)
+                    .attr("y", -h / 2)
+                    .attr("width", NODE_W)
+                    .attr("height", h)
+                    .attr("rx", 6);
+
+                if (d.data.img) {
+                    const imgH = imgOnly ? h : 48;
+                    const pad = imgOnly ? 0 : 4;
+                    el.append("image")
+                        .attr("href", d.data.img)
+                        .attr("x", -NODE_W / 2 + pad)
+                        .attr("y", -h / 2 + pad)
+                        .attr("width", NODE_W - pad * 2)
+                        .attr("height", imgH - pad)
+                        .attr("preserveAspectRatio", "xMidYMid slice")
+                        .attr("clip-path", imgOnly ? "inset(0 round 6px)" : "inset(0 round 4px)");
+                }
+
+                if (!imgOnly) {
+                    const lines = (d.data.name || "").split("\n");
+                    const imgH = d.data.img ? 48 : 0;
+                    const textH = h - imgH;
+                    const lineH = 14;
+                    const totalTextH = lines.length * lineH;
+                    const textStartY = d.data.img
+                        ? -h / 2 + imgH + (textH - totalTextH) / 2 + lineH / 2
+                        : -totalTextH / 2 + lineH / 2;
+
+                    lines.forEach((line, i) => {
+                        el.append("text")
+                            .attr("y", textStartY + i * lineH)
+                            .attr("font-weight", i === 0 ? "600" : "normal")
+                            .attr("fill", i === 0 ? "#000" : "#444")
+                            .text(line);
+                    });
+                }
+            });
+        </script>
+    </body>
+</html>

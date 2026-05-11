@@ -22,20 +22,19 @@
 
             .link {
                 fill: none;
-                stroke: #444;
+                stroke: #999;
                 stroke-width: 1.5px;
             }
 
             .node rect {
-                fill: #1e1e1e;
-                stroke: #555;
+                fill: #f5f5f5;
+                stroke: #ccc;
                 stroke-width: 1px;
-                rx: 6px;
             }
 
             .node text {
-                fill: #ddd;
-                font-size: 11px;
+                fill: #000;
+                font-size: 15px;
                 text-anchor: middle;
                 dominant-baseline: middle;
                 pointer-events: none;
@@ -43,17 +42,17 @@
             }
 
             .node.root rect {
-                fill: #1a2a1a;
+                fill: #e8f5e9;
                 stroke: #4caf50;
                 stroke-width: 2px;
             }
             .node.group rect {
-                fill: #5c6bc0;
-                stroke: #5c6bc0;
+                fill: #e8eaf6;
+                stroke: #9fa8da;
             }
             .node.leaf rect {
-                fill: #1e1e1e;
-                stroke: #444;
+                fill: #f5f5f5;
+                stroke: #ccc;
             }
         </style>
     </head>
@@ -64,8 +63,8 @@
         <script>
             const NODE_W = 160;
             const NODE_H = 56;
-            const H_GAP = 360; // horizontal gap between levels
-            const V_GAP = 5; // vertical gap between siblings
+            const H_GAP = 35; // horizontal gap between siblings
+            const V_GAP = 50; // vertical gap between levels
 
             const treeData = {
                 name: "Scene",
@@ -224,24 +223,24 @@
 
             const treeLayout = d3
                 .tree()
-                .nodeSize([NODE_H + V_GAP, NODE_W + H_GAP])
+                .nodeSize([NODE_W + H_GAP, NODE_H + V_GAP])
                 .separation((a, b) => {
                     const aH = nodeHeight(a);
                     const bH = nodeHeight(b);
-                    const needed = (aH + bH) / 2 + V_GAP;
-                    return Math.max(1, needed / (NODE_H + V_GAP));
+                    const needed = (Math.max(aH, NODE_H) + Math.max(bH, NODE_H)) / 2 + H_GAP;
+                    return Math.max(1, needed / (NODE_W + H_GAP));
                 });
 
             treeLayout(root);
 
-            // flip x/y for horizontal layout
+            // vertical layout: d.x = horizontal position, d.y = vertical depth
             const nodes = root.descendants();
             const links = root.links();
 
-            const minY = d3.min(nodes, (d) => d.x);
-            const maxY = d3.max(nodes, (d) => d.x);
-            const minX = d3.min(nodes, (d) => d.y);
-            const maxX = d3.max(nodes, (d) => d.y);
+            const minX = d3.min(nodes, (d) => d.x);
+            const maxX = d3.max(nodes, (d) => d.x);
+            const minY = d3.min(nodes, (d) => d.y);
+            const maxY = d3.max(nodes, (d) => d.y);
 
             const PAD = 40;
             const svgW = maxX - minX + NODE_W + PAD * 2;
@@ -251,20 +250,20 @@
 
             const g = svg
                 .append("g")
-                .attr("transform", `translate(${PAD - minX + NODE_W / 2}, ${PAD - minY + NODE_H})`);
+                .attr("transform", `translate(${PAD - minX + NODE_W / 2}, ${PAD})`);
 
-            // links — using elbow connector
+            // links — cubic bezier top-to-bottom
             g.selectAll(".link")
                 .data(links)
                 .join("path")
                 .attr("class", "link")
                 .attr("d", (d) => {
-                    const sx = d.source.y;
-                    const sy = d.source.x;
-                    const tx = d.target.y;
-                    const ty = d.target.x;
-                    const mid = (sx + tx) / 2;
-                    return `M${sx},${sy} C${mid},${sy} ${mid},${ty} ${tx},${ty}`;
+                    const sx = d.source.x;
+                    const sy = d.source.y;
+                    const tx = d.target.x;
+                    const ty = d.target.y;
+                    const mid = (sy + ty) / 2;
+                    return `M${sx},${sy} C${sx},${mid} ${tx},${mid} ${tx},${ty}`;
                 });
 
             // nodes
@@ -273,7 +272,7 @@
                 .data(nodes)
                 .join("g")
                 .attr("class", (d) => `node ${d.data.type}`)
-                .attr("transform", (d) => `translate(${d.y},${d.x})`);
+                .attr("transform", (d) => `translate(${d.x},${d.y})`);
 
             node.each(function (d) {
                 const el = d3.select(this);
@@ -314,7 +313,7 @@
                         el.append("text")
                             .attr("y", textStartY + i * lineH)
                             .attr("font-weight", i === 0 ? "600" : "normal")
-                            .attr("fill", i === 0 ? "#fff" : "#aaa")
+                            .attr("fill", i === 0 ? "#000" : "#444")
                             .text(line);
                     });
                 }

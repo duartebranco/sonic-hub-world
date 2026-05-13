@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { groundY } from "./terrain.js";
 import { MAP_CONFIG } from "./map_design.js";
 
 const textureLoader = new THREE.TextureLoader();
@@ -29,7 +28,7 @@ function buildProceduralWalls(scene) {
     const matricesWal = [];
     const matricesWalTop = [];
 
-    // ── World border ──────────────────────────────────────────────────────────
+    // ── World border ────────────────────────────────────────────────────────[...]
     {
         const R = MAP_CONFIG.worldRadius;
         const WALL_H = 4; // rows (4 × 6.6 = 26.4 units)

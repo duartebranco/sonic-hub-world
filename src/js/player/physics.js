@@ -34,6 +34,7 @@ function effectiveGroundY(x, z) {
 
 function resolveColliders(pos, vel) {
     for (const c of CYLINDER_COLLIDERS) {
+        if (pos.y + PLAYER_RADIUS < c.baseY || pos.y - PLAYER_RADIUS > c.topY) continue;
         const dx = pos.x - c.x;
         const dz = pos.z - c.z;
         const distSq = dx * dx + dz * dz;

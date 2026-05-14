@@ -8,6 +8,7 @@ import { ThirdPersonCamera } from "./camera.js";
 import { MAX_SPEED } from "./player/physics.js";
 import { AudioManager } from "./audio/manager.js";
 import { MAP_CONFIG, updateWater } from "./world/map_design.js";
+import { setupDebug } from "./debug.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -127,6 +128,8 @@ const {
     ambientParticles,
     mobs,
 } = buildWorld(scene);
+
+setupDebug(scene);
 
 // ─── Player + camera controller ──────────────────────────
 const spin = new SpinDash(scene, $("spin-charge-bar"), $("spin-charge-fill"));

@@ -4,11 +4,7 @@
 
 import { groundY } from "../world/index.js";
 import { TOP_SPEED as SPIN_TOP_SPEED } from "./spin.js";
-import {
-    CYLINDER_COLLIDERS,
-    BRIDGE_SURFACES,
-    WORLD_RADIUS,
-} from "../world/colliders.js";
+import { CYLINDER_COLLIDERS, BRIDGE_SURFACES, WORLD_RADIUS } from "../world/colliders.js";
 
 const PLAYER_RADIUS = 0.45;
 

@@ -17,4 +17,3 @@ export const CYLINDER_COLLIDERS = MAP_CONFIG.trees.map((t) => {
         topY: base + 6.1 * sc,
     };
 });
-

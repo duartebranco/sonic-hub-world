@@ -113,7 +113,10 @@ export class ThirdPersonCamera {
                 t = Math.min(t, enterCircle(ox - c.x, oz - c.z, dx, dz, a2d, c.radius + CAM_PAD));
             }
             for (const b of BOX_COLLIDERS) {
-                t = Math.min(t, enterBox(ox - b.x, oz - b.z, dx, dz, b.hw + CAM_PAD, b.hl + CAM_PAD));
+                t = Math.min(
+                    t,
+                    enterBox(ox - b.x, oz - b.z, dx, dz, b.hw + CAM_PAD, b.hl + CAM_PAD)
+                );
             }
             t = Math.min(t, exitCircle(ox, oz, dx, dz, a2d, BORDER_INNER_R));
         }

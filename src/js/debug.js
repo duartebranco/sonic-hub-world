@@ -1,10 +1,9 @@
 import * as THREE from "three";
-import { MAP_CONFIG, groundY } from "./world/map_design.js";
+import { MAP_CONFIG } from "./world/map_design.js";
 import { CYLINDER_COLLIDERS, WORLD_RADIUS } from "./world/colliders.js";
 
-// colliders are all purely XZ (no height check), so we represent them as tall columns
-const COL_HEIGHT = 40;
-const COL_HALF = COL_HEIGHT / 2;
+// bridge rails are XZ-only (no height check), shown as tall columns
+const RAIL_COL_HEIGHT = 40;
 
 let debugGroup = null;
 let active = false;
@@ -35,14 +34,13 @@ export function setupDebug(scene) {
         debugGroup.add(mesh);
     }
 
-    // tree cylinder colliders — red infinite columns
-    // collider is XZ-only so we show a tall column positioned at actual ground height
+    // tree cylinder colliders — red, height-bounded to match actual tree geometry
     const treeMat = mat(0xff2222);
     for (const c of CYLINDER_COLLIDERS) {
-        const base = groundY(c.x, c.z);
-        const geo = new THREE.CylinderGeometry(c.radius, c.radius, COL_HEIGHT, 12, 1);
+        const h = c.topY - c.baseY;
+        const geo = new THREE.CylinderGeometry(c.radius, c.radius, h, 12, 1);
         const mesh = new THREE.Mesh(geo, treeMat);
-        mesh.position.set(c.x, base + COL_HALF, c.z);
+        mesh.position.set(c.x, c.baseY + h / 2, c.z);
         debugGroup.add(mesh);
     }
 
@@ -74,7 +72,7 @@ export function setupDebug(scene) {
                   ];
 
         for (const r of rails) {
-            const geo = new THREE.BoxGeometry(r.hw * 2, COL_HEIGHT, r.hl * 2);
+            const geo = new THREE.BoxGeometry(r.hw * 2, RAIL_COL_HEIGHT, r.hl * 2);
             const mesh = new THREE.Mesh(geo, railMat);
             mesh.position.set(r.x, b.y, r.z);
             debugGroup.add(mesh);

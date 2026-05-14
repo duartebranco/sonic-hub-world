@@ -15,7 +15,7 @@ export const MAP_CONFIG = {
         { x: 0.75, z: 94.88, radius: 15, height: 4.5 },
         { x: -0.66, z: 125.32, radius: 18, height: 9 },
         { x: -75.24, z: -93.79, radius: 17.5, height: 8 },
-        { x: 25.7, z: 113.97, radius: 22.5, height: 14.5 },
+        { x: 25.7, z: 113.97, radius: 22.5, height: 13 },
         { x: -32.28, z: -48.71, radius: 15.5, height: 5 },
         { x: 104.55, z: -68.16, radius: 12, height: 5 },
         { x: 112.67, z: -57.51, radius: 12, height: 5 },

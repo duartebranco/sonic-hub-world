@@ -4,13 +4,7 @@
 
 import { groundY } from "../world/index.js";
 import { TOP_SPEED as SPIN_TOP_SPEED } from "./spin.js";
-import {
-    CYLINDER_COLLIDERS,
-    BOX_COLLIDERS,
-    BRIDGE_SURFACES,
-    WORLD_RADIUS,
-} from "../world/colliders.js";
-import { BORDER_BOX_HALF_DEPTH } from "../world/cliffs.js";
+import { CYLINDER_COLLIDERS, BRIDGE_SURFACES, WORLD_RADIUS } from "../world/colliders.js";
 
 const PLAYER_RADIUS = 0.45;
 
@@ -29,12 +23,16 @@ function bridgeSurfaceY(x, z) {
     return -Infinity;
 }
 
-function effectiveGroundY(x, z) {
-    return Math.max(groundY(x, z), bridgeSurfaceY(x, z));
+function effectiveGroundY(x, z, playerY = Infinity, jumpVel = 0) {
+    const bridge = bridgeSurfaceY(x, z);
+    // only consider bridge as ground when player is at/above its surface and not moving upward
+    if (bridge === -Infinity || playerY < bridge - 0.05 || jumpVel > 0) return groundY(x, z);
+    return Math.max(groundY(x, z), bridge);
 }
 
 function resolveColliders(pos, vel) {
     for (const c of CYLINDER_COLLIDERS) {
+        if (pos.y + PLAYER_RADIUS < c.baseY || pos.y - PLAYER_RADIUS > c.topY) continue;
         const dx = pos.x - c.x;
         const dz = pos.z - c.z;
         const distSq = dx * dx + dz * dz;
@@ -53,23 +51,7 @@ function resolveColliders(pos, vel) {
         }
     }
 
-    for (const b of BOX_COLLIDERS) {
-        const dx = Math.abs(pos.x - b.x);
-        const dz = Math.abs(pos.z - b.z);
-        const px = b.hw + PLAYER_RADIUS - dx;
-        const pz = b.hl + PLAYER_RADIUS - dz;
-        if (px > 0 && pz > 0) {
-            if (px < pz) {
-                pos.x += pos.x > b.x ? px : -px;
-                vel.x = 0;
-            } else {
-                pos.z += pos.z > b.z ? pz : -pz;
-                vel.z = 0;
-            }
-        }
-    }
-
-    // world border — stop at the inner face of the border boxes, not inside them
+    // world border — push player inward from the circular wall
     const distOrigin = Math.sqrt(pos.x * pos.x + pos.z * pos.z);
     const borderLimit = WORLD_RADIUS - BORDER_BOX_HALF_DEPTH - PLAYER_RADIUS;
     if (distOrigin > borderLimit) {
@@ -212,7 +194,7 @@ export function updatePhysics(player, dt, hasInput, inputDir, doJump, jumpHeld) 
 
     const nextX = pos.x + vel.x * dt;
     const nextZ = pos.z + vel.z * dt;
-    const nextGround = effectiveGroundY(nextX, nextZ);
+    const nextGround = effectiveGroundY(nextX, nextZ, pos.y);
     const heightDiff = nextGround - pos.y;
 
     if ((player.speed * dt > 0.001 && heightDiff / (player.speed * dt) > 1.2) || heightDiff > 0.5) {
@@ -225,7 +207,7 @@ export function updatePhysics(player, dt, hasInput, inputDir, doJump, jumpHeld) 
 
     resolveColliders(pos, vel);
 
-    const actualGround = effectiveGroundY(pos.x, pos.z);
+    const actualGround = effectiveGroundY(pos.x, pos.z, pos.y);
 
     if (!player._inAir) {
         if (actualGround < pos.y - 0.15) {

@@ -26,7 +26,7 @@ export class Player {
 
         this.justJumped = false;
         this.justLanded = false;
-1
+        1;
         this.model = null;
         this.amazedModel = null;
         this._bones = {};

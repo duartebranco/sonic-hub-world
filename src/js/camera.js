@@ -112,7 +112,7 @@ export class ThirdPersonCamera {
             for (const c of CYLINDER_COLLIDERS) {
                 t = Math.min(t, enterCircle(ox - c.x, oz - c.z, dx, dz, a2d, c.radius + CAM_PAD));
             }
-t = Math.min(t, exitCircle(ox, oz, dx, dz, a2d, BORDER_INNER_R));
+            t = Math.min(t, exitCircle(ox, oz, dx, dz, a2d, BORDER_INNER_R));
         }
 
         // Stop where the ray dips below ground (catches hills, plateau walls,

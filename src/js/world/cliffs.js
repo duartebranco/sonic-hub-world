@@ -18,6 +18,10 @@ const MAT_WAL_TOP = new THREE.MeshStandardMaterial({
     roughness: 0.85,
 });
 
+// half-depth of each border box in the radial direction — physics uses this to stop the player
+// at the inner face of the wall rather than somewhere inside the box geometry
+export const BORDER_BOX_HALF_DEPTH = (6.6 * 0.55) / 2; // = 1.815
+
 // Procedural walls around plateaus and the world border, rendered via InstancedMesh.
 // rotY = -π/2 - angle makes local-X span tangentially so tiles tile correctly around circles.
 function buildProceduralWalls(scene) {

@@ -27,7 +27,8 @@ function bridgeSurfaceY(x, z) {
 function effectiveGroundY(x, z, playerY = Infinity, jumpVel = 0) {
     const bridge = bridgeSurfaceY(x, z);
     // ignore bridge when player is more than PLAYER_RADIUS below it (walking under), or rising (prevents clipping up through bridge)
-    if (bridge === -Infinity || playerY < bridge - PLAYER_RADIUS || jumpVel > 0) return groundY(x, z);
+    if (bridge === -Infinity || playerY < bridge - PLAYER_RADIUS || jumpVel > 0)
+        return groundY(x, z);
     return Math.max(groundY(x, z), bridge);
 }
 

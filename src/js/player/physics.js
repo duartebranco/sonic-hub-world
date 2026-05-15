@@ -26,8 +26,8 @@ function bridgeSurfaceY(x, z) {
 
 function effectiveGroundY(x, z, playerY = Infinity, jumpVel = 0) {
     const bridge = bridgeSurfaceY(x, z);
-    // only consider bridge as ground when player is at/above its surface and not moving upward
-    if (bridge === -Infinity || playerY < bridge - 0.05 || jumpVel > 0) return groundY(x, z);
+    // ignore bridge when player is more than PLAYER_RADIUS below it (walking under), or rising (prevents clipping up through bridge)
+    if (bridge === -Infinity || playerY < bridge - PLAYER_RADIUS || jumpVel > 0) return groundY(x, z);
     return Math.max(groundY(x, z), bridge);
 }
 
@@ -208,7 +208,7 @@ export function updatePhysics(player, dt, hasInput, inputDir, doJump, jumpHeld) 
 
     resolveColliders(pos, vel);
 
-    const actualGround = effectiveGroundY(pos.x, pos.z, pos.y);
+    const actualGround = effectiveGroundY(pos.x, pos.z, pos.y, player._inAir ? player._jumpVel : 0);
 
     if (!player._inAir) {
         if (actualGround < pos.y - 0.15) {

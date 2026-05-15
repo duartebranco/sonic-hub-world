@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { groundY } from "./world/index.js";
-import { CYLINDER_COLLIDERS, BOX_COLLIDERS, WORLD_RADIUS } from "./world/colliders.js";
+import { CYLINDER_COLLIDERS, WORLD_RADIUS } from "./world/colliders.js";
 
 const PITCH_MIN = 0.05;
 const PITCH_MAX = 1.1;
@@ -112,13 +112,7 @@ export class ThirdPersonCamera {
             for (const c of CYLINDER_COLLIDERS) {
                 t = Math.min(t, enterCircle(ox - c.x, oz - c.z, dx, dz, a2d, c.radius + CAM_PAD));
             }
-            for (const b of BOX_COLLIDERS) {
-                t = Math.min(
-                    t,
-                    enterBox(ox - b.x, oz - b.z, dx, dz, b.hw + CAM_PAD, b.hl + CAM_PAD)
-                );
-            }
-            t = Math.min(t, exitCircle(ox, oz, dx, dz, a2d, BORDER_INNER_R));
+t = Math.min(t, exitCircle(ox, oz, dx, dz, a2d, BORDER_INNER_R));
         }
 
         // Stop where the ray dips below ground (catches hills, plateau walls,
@@ -156,18 +150,4 @@ function exitCircle(ox, oz, dx, dz, a2d, r) {
     if (disc < 0) return Infinity;
     const t = (-b + Math.sqrt(disc)) / (2 * a2d);
     return t >= 0 ? t : Infinity;
-}
-
-// Distance along (dx,dz) from origin to enter an axis-aligned box of half-extents (hw,hl).
-function enterBox(ox, oz, dx, dz, hw, hl) {
-    if (ox > -hw && ox < hw && oz > -hl && oz < hl) return Infinity;
-    const invX = dx !== 0 ? 1 / dx : Infinity;
-    const invZ = dz !== 0 ? 1 / dz : Infinity;
-    const t1x = (-hw - ox) * invX;
-    const t2x = (hw - ox) * invX;
-    const t1z = (-hl - oz) * invZ;
-    const t2z = (hl - oz) * invZ;
-    const tEnter = Math.max(Math.min(t1x, t2x), Math.min(t1z, t2z));
-    const tExit = Math.min(Math.max(t1x, t2x), Math.max(t1z, t2z));
-    return tEnter <= tExit && tEnter >= 0 ? tEnter : Infinity;
 }

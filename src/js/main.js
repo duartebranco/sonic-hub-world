@@ -213,6 +213,7 @@ let timerRunning = false;
 let raceActive = false;
 let insideGoalRing = false;
 let wasInWater = false;
+let drownTimer = 0;
 let hitCooldown = 0;
 
 function updateRingHUD() {
@@ -320,7 +321,39 @@ function animate() {
     const inWater = player.pos.y < waterLevel + 0.15;
     if (inWater !== wasInWater) {
         audio.playWaterSplash();
+        if (!inWater) drownTimer = 0;
         wasInWater = inWater;
+    }
+
+    player.underwater = inWater;
+    audio.setUnderwater(inWater);
+    $("underwater-overlay").classList.toggle("active", inWater);
+
+    if (inWater && !player._inDead) {
+        drownTimer += dt;
+        const remaining = 60 - drownTimer;
+        const drownEl = $("drown-timer");
+        if (remaining <= 10) {
+            drownEl.textContent = Math.ceil(remaining);
+            drownEl.classList.add("visible");
+        }
+        if (drownTimer >= 60) {
+            drownTimer = 0;
+            drownEl.classList.remove("visible");
+            if (ringCount > 0) {
+                const scattered = ringCount;
+                ringCount = 0;
+                updateRingHUD();
+                audio.playRingScatter();
+                scatterRingSystem.spawn(player.pos.clone(), scattered);
+            } else {
+                player._inDead = true;
+            }
+            if (raceActive) failChallenge();
+        }
+    } else {
+        drownTimer = 0;
+        $("drown-timer").classList.remove("visible");
     }
 
     if (hitCooldown > 0) hitCooldown -= dt;

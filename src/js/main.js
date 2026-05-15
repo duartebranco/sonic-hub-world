@@ -335,7 +335,7 @@ function animate() {
         const remaining = 60 - drownTimer;
         const drownEl = $("drown-timer");
         if (remaining <= 10) {
-            drownEl.textContent = Math.ceil(remaining);
+            drownEl.textContent = String(Math.ceil(remaining));
             drownEl.classList.add("visible");
         }
         if (drownTimer >= 60) {

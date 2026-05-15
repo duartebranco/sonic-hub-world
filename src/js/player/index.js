@@ -44,6 +44,8 @@ export class Player {
         this._inDead = false;
         this._deadT = 0;
         this._deadAnimDone = false;
+        /** @type {boolean} */
+        this.underwater = false;
 
         this._keys = {};
         bindInput(this);

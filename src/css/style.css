@@ -513,8 +513,12 @@ body {
 }
 
 @keyframes rotate-pulse {
-    from { transform: rotate(-20deg); }
-    to   { transform: rotate(20deg); }
+    from {
+        transform: rotate(-20deg);
+    }
+    to {
+        transform: rotate(20deg);
+    }
 }
 
 .rotate-text {

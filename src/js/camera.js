@@ -74,26 +74,34 @@ export class ThirdPersonCamera {
         let camTouchId = null;
         let camLast = { x: 0, y: 0 };
 
-        el.addEventListener("touchstart", (e) => {
-            for (const t of e.changedTouches) {
-                if (camTouchId === null) {
-                    camTouchId = t.identifier;
-                    camLast = { x: t.clientX, y: t.clientY };
+        el.addEventListener(
+            "touchstart",
+            (e) => {
+                for (const t of e.changedTouches) {
+                    if (camTouchId === null) {
+                        camTouchId = t.identifier;
+                        camLast = { x: t.clientX, y: t.clientY };
+                    }
                 }
-            }
-        }, { passive: true });
+            },
+            { passive: true }
+        );
 
-        window.addEventListener("touchmove", (e) => {
-            for (const t of e.changedTouches) {
-                if (t.identifier === camTouchId) {
-                    this.yaw -= (t.clientX - camLast.x) * 0.005;
-                    this.pitch += (t.clientY - camLast.y) * 0.005;
-                    this.pitch = Math.max(PITCH_MIN, Math.min(PITCH_MAX, this.pitch));
-                    camLast = { x: t.clientX, y: t.clientY };
-                    this.idleTime = 0;
+        window.addEventListener(
+            "touchmove",
+            (e) => {
+                for (const t of e.changedTouches) {
+                    if (t.identifier === camTouchId) {
+                        this.yaw -= (t.clientX - camLast.x) * 0.005;
+                        this.pitch += (t.clientY - camLast.y) * 0.005;
+                        this.pitch = Math.max(PITCH_MIN, Math.min(PITCH_MAX, this.pitch));
+                        camLast = { x: t.clientX, y: t.clientY };
+                        this.idleTime = 0;
+                    }
                 }
-            }
-        }, { passive: true });
+            },
+            { passive: true }
+        );
 
         window.addEventListener("touchend", (e) => {
             for (const t of e.changedTouches) {

@@ -23,10 +23,10 @@ function bridgeSurfaceY(x, z) {
     return -Infinity;
 }
 
-function effectiveGroundY(x, z, playerY = Infinity) {
+function effectiveGroundY(x, z, playerY = Infinity, jumpVel = 0) {
     const bridge = bridgeSurfaceY(x, z);
-    // ignore bridge surface when player is below it — lets them move freely in the trench
-    if (bridge === -Infinity || playerY < bridge - PLAYER_RADIUS) return groundY(x, z);
+    // only consider bridge as ground when player is at/above its surface and not moving upward
+    if (bridge === -Infinity || playerY < bridge - 0.05 || jumpVel > 0) return groundY(x, z);
     return Math.max(groundY(x, z), bridge);
 }
 

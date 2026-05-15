@@ -320,7 +320,8 @@ function animate() {
 
     const inWater = player.pos.y < waterLevel + 0.15;
     if (inWater !== wasInWater) {
-        audio.playWaterSplash();
+        if (inWater) audio.playWaterEnter();
+        else audio.playWaterExit();
         if (!inWater) drownTimer = 0;
         wasInWater = inWater;
     }

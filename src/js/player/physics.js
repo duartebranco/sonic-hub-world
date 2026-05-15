@@ -10,6 +10,7 @@ import {
     BRIDGE_SURFACES,
     WORLD_RADIUS,
 } from "../world/colliders.js";
+import { BORDER_BOX_HALF_DEPTH } from "../world/cliffs.js";
 
 const PLAYER_RADIUS = 0.45;
 
@@ -68,9 +69,9 @@ function resolveColliders(pos, vel) {
         }
     }
 
-    // world border — push player inward from the circular wall
+    // world border — stop at the inner face of the border boxes, not inside them
     const distOrigin = Math.sqrt(pos.x * pos.x + pos.z * pos.z);
-    const borderLimit = WORLD_RADIUS - PLAYER_RADIUS;
+    const borderLimit = WORLD_RADIUS - BORDER_BOX_HALF_DEPTH - PLAYER_RADIUS;
     if (distOrigin > borderLimit) {
         const nx = pos.x / distOrigin;
         const nz = pos.z / distOrigin;

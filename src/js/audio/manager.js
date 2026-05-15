@@ -49,10 +49,33 @@ export class AudioManager {
         this._master = this._ctx.createGain();
         this._master.gain.value = this._muted ? 0 : 1;
         this._master.connect(this._ctx.destination);
-        this._isUnlocked = true;
 
+        // music chain: each track -> musicGain -> underwaterFilter -> master
+        this._underwaterFilter = this._ctx.createBiquadFilter();
+        this._underwaterFilter.type = "lowpass";
+        this._underwaterFilter.frequency.value = 20000;
+        this._underwaterFilter.Q.value = 2;
+        this._underwaterFilter.connect(this._master);
+
+        const musicGain = this._ctx.createGain();
+        musicGain.gain.value = 0.55;
+        musicGain.connect(this._underwaterFilter);
+
+        for (const track of Object.values(this._tracks)) {
+            track.muted = false;
+            const src = this._ctx.createMediaElementSource(track);
+            src.connect(musicGain);
+        }
+
+        this._isUnlocked = true;
         this._preloadSamples();
         this._applyMusicState();
+    }
+
+    setUnderwater(enabled) {
+        if (!this._underwaterFilter || !this._ctx) return;
+        const freq = enabled ? 400 : 20000;
+        this._underwaterFilter.frequency.setTargetAtTime(freq, this._ctx.currentTime, 0.3);
     }
 
     toggleMute() {
@@ -66,10 +89,6 @@ export class AudioManager {
 
         if (this._master) {
             this._master.gain.setTargetAtTime(this._muted ? 0 : 1, this._ctx.currentTime, 0.03);
-        }
-
-        for (const track of Object.values(this._tracks)) {
-            track.muted = this._muted;
         }
 
         if (!this._muted) {

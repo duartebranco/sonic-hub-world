@@ -164,6 +164,17 @@ async function loadAssets() {
     });
 
     await Promise.all([
+        new Promise((res, rej) =>
+            loader.load(
+                "../models/sonic_amazed.glb",
+                (gltf) => {
+                    player.setAmazedModel(gltf.scene);
+                    res();
+                },
+                undefined,
+                rej
+            )
+        ),
         fetch("../animations/idle.json")
             .then((r) => r.json())
             .then((d) => player.setIdleKeyframes(d.keyframes)),

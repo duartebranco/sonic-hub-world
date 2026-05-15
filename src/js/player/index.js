@@ -26,8 +26,9 @@ export class Player {
 
         this.justJumped = false;
         this.justLanded = false;
-
+1
         this.model = null;
+        this.amazedModel = null;
         this._bones = {};
         this._initRot = {};
         this._idleKFs = [];
@@ -88,6 +89,16 @@ export class Player {
         this.scene.add(this.model);
     }
 
+    setAmazedModel(gltfScene) {
+        this.amazedModel = gltfScene;
+        this.amazedModel.traverse((n) => {
+            if (n.isMesh) n.castShadow = true;
+        });
+        this.amazedModel.scale.setScalar(0.55);
+        this.amazedModel.visible = false;
+        this.scene.add(this.amazedModel);
+    }
+
     setIdleKeyframes(kfs) {
         this._idleKFs = kfs;
     }
@@ -120,10 +131,13 @@ export class Player {
             this._vel.set(0, 0, 0);
             this._jumpVel = 0;
             updateAnimation(this, dt, false);
-            this.model.visible = true;
-            this.model.position.copy(this.pos);
-            this.model.rotation.y = this.yaw + Math.PI;
-            this.model.rotation.x = 0;
+            this.model.visible = false;
+            if (this.amazedModel) {
+                this.amazedModel.visible = true;
+                this.amazedModel.position.copy(this.pos);
+                this.amazedModel.rotation.y = this.yaw + Math.PI;
+                this.amazedModel.rotation.x = 0;
+            }
             this._dust.update(dt, this.pos, 0, false, this.yaw);
             return;
         }
@@ -200,11 +214,19 @@ export class Player {
 
         // ── Apply to model ────────────────────────────────────
         const inSpin = this._spin.charging || this._spin.active || jumpSpin;
+        const showAmazed = this._inHit && !!this.amazedModel;
 
-        this.model.visible = !inSpin;
+        this.model.visible = !inSpin && !showAmazed;
         this.model.position.copy(this.pos);
         this.model.rotation.y = this._inHit ? this.yaw + Math.PI : this.yaw;
         this.model.rotation.x = 0;
+
+        if (this.amazedModel) {
+            this.amazedModel.visible = showAmazed && !inSpin;
+            this.amazedModel.position.copy(this.pos);
+            this.amazedModel.rotation.y = this.yaw + Math.PI;
+            this.amazedModel.rotation.x = 0;
+        }
 
         // ── Animation ────────────────────────────────────────
         updateAnimation(this, dt, inSpin);

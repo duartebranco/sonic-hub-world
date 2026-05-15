@@ -31,6 +31,8 @@ export class Player {
         this.amazedModel = null;
         this._bones = {};
         this._initRot = {};
+        this._amazedBones = null;
+        this._amazedInitRot = null;
         this._idleKFs = [];
         this._walkKFs = [];
         this._runKFs = [];
@@ -93,8 +95,18 @@ export class Player {
 
     setAmazedModel(gltfScene) {
         this.amazedModel = gltfScene;
+        this._amazedBones = {};
+        this._amazedInitRot = {};
         this.amazedModel.traverse((n) => {
             if (n.isMesh) n.castShadow = true;
+            if (n.isBone) {
+                this._amazedInitRot[n.name] = {
+                    x: n.rotation.x,
+                    y: n.rotation.y,
+                    z: n.rotation.z,
+                };
+                this._amazedBones[n.name] = n;
+            }
         });
         this.amazedModel.scale.setScalar(0.55);
         this.amazedModel.visible = false;

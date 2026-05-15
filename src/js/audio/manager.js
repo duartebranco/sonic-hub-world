@@ -49,10 +49,33 @@ export class AudioManager {
         this._master = this._ctx.createGain();
         this._master.gain.value = this._muted ? 0 : 1;
         this._master.connect(this._ctx.destination);
-        this._isUnlocked = true;
 
+        // music chain: each track -> musicGain -> underwaterFilter -> master
+        this._underwaterFilter = this._ctx.createBiquadFilter();
+        this._underwaterFilter.type = "lowpass";
+        this._underwaterFilter.frequency.value = 20000;
+        this._underwaterFilter.Q.value = 2;
+        this._underwaterFilter.connect(this._master);
+
+        const musicGain = this._ctx.createGain();
+        musicGain.gain.value = 0.55;
+        musicGain.connect(this._underwaterFilter);
+
+        for (const track of Object.values(this._tracks)) {
+            track.muted = false;
+            const src = this._ctx.createMediaElementSource(track);
+            src.connect(musicGain);
+        }
+
+        this._isUnlocked = true;
         this._preloadSamples();
         this._applyMusicState();
+    }
+
+    setUnderwater(enabled) {
+        if (!this._underwaterFilter || !this._ctx) return;
+        const freq = enabled ? 400 : 20000;
+        this._underwaterFilter.frequency.setTargetAtTime(freq, this._ctx.currentTime, 0.3);
     }
 
     toggleMute() {
@@ -66,10 +89,6 @@ export class AudioManager {
 
         if (this._master) {
             this._master.gain.setTargetAtTime(this._muted ? 0 : 1, this._ctx.currentTime, 0.03);
-        }
-
-        for (const track of Object.values(this._tracks)) {
-            track.muted = this._muted;
         }
 
         if (!this._muted) {
@@ -148,9 +167,20 @@ export class AudioManager {
         this._playTone(240, 90, 0.12, "sawtooth", 0.07);
     }
 
+    playWaterEnter() {
+        this._playNoise(0.28, 0.32, 1400);
+        this._playNoise(0.18, 0.18, 300);
+        this._playTone(200, 60, 0.22, "triangle", 0.08);
+        this._playTone(520, 180, 0.14, "sine", 0.05, 0.04);
+    }
+
+    playWaterExit() {
+        this._playNoise(0.18, 0.18, 900);
+        this._playTone(320, 480, 0.14, "triangle", 0.05);
+    }
+
     playWaterSplash() {
-        this._playNoise(0.15, 0.14, 1100);
-        this._playTone(260, 160, 0.14, "triangle", 0.04);
+        this.playWaterEnter();
     }
 
     playMobDestroy() {

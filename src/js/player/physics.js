@@ -173,7 +173,7 @@ export function updatePhysics(player, dt, hasInput, inputDir, doJump, jumpHeld) 
         vel.z += slopeZ * SLOPE_ACCEL * dt;
     }
 
-    const speedCap = spin.active ? SPIN_TOP_SPEED : MAX_SPEED;
+    const speedCap = player.underwater ? MAX_SPEED * 0.3 : spin.active ? SPIN_TOP_SPEED : MAX_SPEED;
     const cappedSpeed = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
     if (cappedSpeed > speedCap) {
         const s = speedCap / cappedSpeed;
@@ -232,12 +232,22 @@ export function updatePhysics(player, dt, hasInput, inputDir, doJump, jumpHeld) 
             }
         }
     } else {
-        if (player._jumpHeld && !jumpHeld && player._jumpVel > 0) {
+        if (player._jumpHeld && !jumpHeld && player._jumpVel > 0 && !player.underwater) {
             player._jumpVel *= JUMP_CUT;
             player._jumpHeld = false;
         }
 
-        player._jumpVel += GRAVITY * dt;
+        if (player.underwater) {
+            if (doJump && !player._jumpHeld) {
+                player._jumpVel = 7;
+                player._jumpHeld = true;
+                player.justJumped = true;
+            }
+            if (!jumpHeld) player._jumpHeld = false;
+        }
+
+        const effectiveGravity = player.underwater ? GRAVITY * 0.25 : GRAVITY;
+        player._jumpVel += effectiveGravity * dt;
         player._groundY += player._jumpVel * dt;
         pos.y = player._groundY;
 

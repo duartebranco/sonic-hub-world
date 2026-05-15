@@ -8,8 +8,13 @@ import { ThirdPersonCamera } from "./camera.js";
 import { MAX_SPEED } from "./player/physics.js";
 import { AudioManager } from "./audio/manager.js";
 import { MAP_CONFIG, updateWater } from "./world/map_design.js";
+import { isMobile, initOrientationGuard } from "./mobile.js";
+import { bindTouchInput } from "./player/touch-input.js";
 
 const $ = (id) => document.getElementById(id);
+
+initOrientationGuard();
+if (isMobile) $("ts-press").textContent = "Tap to Start";
 
 // ─── Title screen / start gate ───────────────────────────
 let assetsReady = false;
@@ -132,6 +137,7 @@ const {
 const spin = new SpinDash(scene, $("spin-charge-bar"), $("spin-charge-fill"));
 const player = new Player(scene, spin);
 const tpCam = new ThirdPersonCamera(camera, renderer.domElement);
+if (isMobile) bindTouchInput(player);
 const speedLinesEl = $("speed-lines");
 const audio = new AudioManager($("audio-toggle"));
 const waterLevel = Math.min(...MAP_CONFIG.waterPlanes.map((w) => w.y));

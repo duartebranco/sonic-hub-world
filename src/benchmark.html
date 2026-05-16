@@ -4,24 +4,39 @@
         <meta charset="UTF-8" />
         <title>Sonic Hub World — FPS Benchmark</title>
         <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { background: #000; color: #fff; font-family: monospace; overflow: hidden; }
-            #canvas-container { position: fixed; inset: 0; }
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                background: #000;
+                color: #fff;
+                font-family: monospace;
+                overflow: hidden;
+            }
+            #canvas-container {
+                position: fixed;
+                inset: 0;
+            }
             #overlay {
-                position: fixed; inset: 0;
-                display: flex; flex-direction: column;
-                align-items: center; justify-content: center;
+                position: fixed;
+                inset: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
                 gap: 0.5rem;
                 pointer-events: none;
             }
             #status {
-                background: rgba(0,0,0,0.6);
+                background: rgba(0, 0, 0, 0.6);
                 padding: 0.4rem 0.8rem;
                 border-radius: 4px;
                 font-size: 0.9rem;
             }
             #anim-phase {
-                background: rgba(0,0,0,0.45);
+                background: rgba(0, 0, 0, 0.45);
                 padding: 0.25rem 0.6rem;
                 border-radius: 4px;
                 font-size: 0.75rem;
@@ -29,21 +44,36 @@
             }
             #results {
                 display: none;
-                background: rgba(0,0,0,0.88);
+                background: rgba(0, 0, 0, 0.88);
                 padding: 1.5rem 2rem;
                 border-radius: 6px;
                 font-size: 0.95rem;
                 line-height: 2;
                 pointer-events: auto;
             }
-            #results h2 { margin-bottom: 0.5rem; color: #ffe000; font-size: 1.1rem; }
-            .good { color: #4cff88; }
-            .ok   { color: #ffe000; }
-            .bad  { color: #ff4c4c; }
+            #results h2 {
+                margin-bottom: 0.5rem;
+                color: #ffe000;
+                font-size: 1.1rem;
+            }
+            .good {
+                color: #4cff88;
+            }
+            .ok {
+                color: #ffe000;
+            }
+            .bad {
+                color: #ff4c4c;
+            }
             #results button {
-                margin-top: 1rem; padding: 0.4rem 1rem;
-                background: #ffe000; color: #000; border: none;
-                border-radius: 4px; cursor: pointer; font-family: monospace;
+                margin-top: 1rem;
+                padding: 0.4rem 1rem;
+                background: #ffe000;
+                color: #000;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-family: monospace;
             }
         </style>
     </head>
@@ -69,167 +99,208 @@
         </script>
 
         <script type="module">
-import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { buildWorld, groundY } from "./js/world/index.js";
-import { Player } from "./js/player/index.js";
-import { SpinDash } from "./js/player/spin.js";
-import { MAP_CONFIG, updateWater } from "./js/world/map_design.js";
+            import * as THREE from "three";
+            import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+            import { buildWorld, groundY } from "./js/world/index.js";
+            import { Player } from "./js/player/index.js";
+            import { SpinDash } from "./js/player/spin.js";
+            import { MAP_CONFIG, updateWater } from "./js/world/map_design.js";
 
-const WARMUP_SECS = 3;
-const BENCH_SECS  = 10;
+            const WARMUP_SECS = 3;
+            const BENCH_SECS = 10;
 
-// scripted animation cycle played during the benchmark
-const ANIM_SCRIPT = [
-    { dur: 2.0, name: "idle",        keys: {} },
-    { dur: 2.5, name: "walking",     keys: { KeyW: true } },
-    { dur: 3.0, name: "running",     keys: { KeyW: true } },
-    { dur: 1.5, name: "spin charge", keys: { ShiftLeft: true } },
-    { dur: 2.0, name: "spin dash",   keys: {} },
-    { dur: 1.5, name: "jump",        keys: { KeyW: true }, jump: true },
-];
-const SCRIPT_TOTAL = ANIM_SCRIPT.reduce((s, p) => s + p.dur, 0);
+            // scripted animation cycle played during the benchmark
+            const ANIM_SCRIPT = [
+                { dur: 2.0, name: "idle", keys: {} },
+                { dur: 2.5, name: "walking", keys: { KeyW: true } },
+                { dur: 3.0, name: "running", keys: { KeyW: true } },
+                { dur: 1.5, name: "spin charge", keys: { ShiftLeft: true } },
+                { dur: 2.0, name: "spin dash", keys: {} },
+                { dur: 1.5, name: "jump", keys: { KeyW: true }, jump: true },
+            ];
+            const SCRIPT_TOTAL = ANIM_SCRIPT.reduce((s, p) => s + p.dur, 0);
 
-const statusEl    = document.getElementById("status");
-const animPhaseEl = document.getElementById("anim-phase");
-const resultsEl   = document.getElementById("results");
-const resultsBody = document.getElementById("results-body");
+            const statusEl = document.getElementById("status");
+            const animPhaseEl = document.getElementById("anim-phase");
+            const resultsEl = document.getElementById("results");
+            const resultsBody = document.getElementById("results-body");
 
-// renderer
-const container = document.getElementById("canvas-container");
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.05;
-container.appendChild(renderer.domElement);
+            // renderer
+            const container = document.getElementById("canvas-container");
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.05;
+            container.appendChild(renderer.domElement);
 
-function onResize() {
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    camera.aspect = container.clientWidth / container.clientHeight;
-    camera.updateProjectionMatrix();
-}
-window.addEventListener("resize", onResize);
+            function onResize() {
+                renderer.setSize(container.clientWidth, container.clientHeight);
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+            }
+            window.addEventListener("resize", onResize);
 
-// scene
-const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x79c3e3, 55, 200);
-new THREE.TextureLoader().load(
-    "../textures/sky.png",
-    (tex) => {
-        tex.mapping = THREE.EquirectangularReflectionMapping;
-        tex.colorSpace = THREE.SRGBColorSpace;
-        scene.background = tex;
-    },
-    undefined,
-    () => { scene.background = new THREE.Color(0x79c3e3); }
-);
+            // scene
+            const scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x79c3e3, 55, 200);
+            new THREE.TextureLoader().load(
+                "../textures/sky.png",
+                (tex) => {
+                    tex.mapping = THREE.EquirectangularReflectionMapping;
+                    tex.colorSpace = THREE.SRGBColorSpace;
+                    scene.background = tex;
+                },
+                undefined,
+                () => {
+                    scene.background = new THREE.Color(0x79c3e3);
+                }
+            );
 
-const camera = new THREE.PerspectiveCamera(58, 1, 0.05, 400);
-onResize();
+            const camera = new THREE.PerspectiveCamera(58, 1, 0.05, 400);
+            onResize();
 
-// lights
-const sun = new THREE.DirectionalLight(0xfff9e6, 3.0);
-sun.position.set(20, 35, 15);
-sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
-sun.shadow.camera.near = 0.5;
-sun.shadow.camera.far = 140;
-sun.shadow.camera.left = -50; sun.shadow.camera.right = 50;
-sun.shadow.camera.top  =  50; sun.shadow.camera.bottom = -50;
-sun.shadow.bias = -0.0003;
-scene.add(sun, sun.target);
-scene.add(new THREE.AmbientLight(0xb3e5fc, 0.9));
-const skyFill = new THREE.DirectionalLight(0x80d8ff, 0.5);
-skyFill.position.set(-10, 12, -8);
-scene.add(skyFill);
+            // lights
+            const sun = new THREE.DirectionalLight(0xfff9e6, 3.0);
+            sun.position.set(20, 35, 15);
+            sun.castShadow = true;
+            sun.shadow.mapSize.set(2048, 2048);
+            sun.shadow.camera.near = 0.5;
+            sun.shadow.camera.far = 140;
+            sun.shadow.camera.left = -50;
+            sun.shadow.camera.right = 50;
+            sun.shadow.camera.top = 50;
+            sun.shadow.camera.bottom = -50;
+            sun.shadow.bias = -0.0003;
+            scene.add(sun, sun.target);
+            scene.add(new THREE.AmbientLight(0xb3e5fc, 0.9));
+            const skyFill = new THREE.DirectionalLight(0x80d8ff, 0.5);
+            skyFill.position.set(-10, 12, -8);
+            scene.add(skyFill);
 
-// world
-const { flowerSpinners, rings, sparkleSystem, scatterRingSystem, ambientParticles, mobs } =
-    buildWorld(scene);
+            // world
+            const {
+                flowerSpinners,
+                rings,
+                sparkleSystem,
+                scatterRingSystem,
+                ambientParticles,
+                mobs,
+            } = buildWorld(scene);
 
-// player — real position on the ground
-const spinBarEl  = document.createElement("div");
-const spinFillEl = document.createElement("div");
-const spin   = new SpinDash(scene, spinBarEl, spinFillEl);
-const player = new Player(scene, spin);
+            // player — real position on the ground
+            const spinBarEl = document.createElement("div");
+            const spinFillEl = document.createElement("div");
+            const spin = new SpinDash(scene, spinBarEl, spinFillEl);
+            const player = new Player(scene, spin);
 
-const waterLevel = Math.min(...MAP_CONFIG.waterPlanes.map((w) => w.y));
+            const waterLevel = Math.min(...MAP_CONFIG.waterPlanes.map((w) => w.y));
 
-async function loadAssets() {
-    const loader = new GLTFLoader();
-    await new Promise((res, rej) =>
-        loader.load("../models/sonic.glb", (g) => { player.setModel(g.scene); res(); }, undefined, rej)
-    );
-    await Promise.all([
-        new Promise((res, rej) =>
-            loader.load("../models/sonic_amazed.glb", (g) => { player.setAmazedModel(g.scene); res(); }, undefined, rej)
-        ),
-        fetch("../animations/idle.json").then(r => r.json()).then(d => player.setIdleKeyframes(d.keyframes)),
-        fetch("../animations/walking.json").then(r => r.json()).then(d => player.setWalkKeyframes(d.keyframes)),
-        fetch("../animations/running.json").then(r => r.json()).then(d => player.setRunKeyframes(d.keyframes)),
-        fetch("../animations/jump.json").then(r => r.json()).then(d => player.setJumpKeyframes(d.keyframes)),
-        fetch("../animations/hit.json").then(r => r.json()).then(d => player.setHitKeyframes(d.keyframes)),
-        fetch("../animations/death.json").then(r => r.json()).then(d => player.setDeathKeyframes(d.keyframes)),
-    ]);
-}
+            async function loadAssets() {
+                const loader = new GLTFLoader();
+                await new Promise((res, rej) =>
+                    loader.load(
+                        "../models/sonic.glb",
+                        (g) => {
+                            player.setModel(g.scene);
+                            res();
+                        },
+                        undefined,
+                        rej
+                    )
+                );
+                await Promise.all([
+                    new Promise((res, rej) =>
+                        loader.load(
+                            "../models/sonic_amazed.glb",
+                            (g) => {
+                                player.setAmazedModel(g.scene);
+                                res();
+                            },
+                            undefined,
+                            rej
+                        )
+                    ),
+                    fetch("../animations/idle.json")
+                        .then((r) => r.json())
+                        .then((d) => player.setIdleKeyframes(d.keyframes)),
+                    fetch("../animations/walking.json")
+                        .then((r) => r.json())
+                        .then((d) => player.setWalkKeyframes(d.keyframes)),
+                    fetch("../animations/running.json")
+                        .then((r) => r.json())
+                        .then((d) => player.setRunKeyframes(d.keyframes)),
+                    fetch("../animations/jump.json")
+                        .then((r) => r.json())
+                        .then((d) => player.setJumpKeyframes(d.keyframes)),
+                    fetch("../animations/hit.json")
+                        .then((r) => r.json())
+                        .then((d) => player.setHitKeyframes(d.keyframes)),
+                    fetch("../animations/death.json")
+                        .then((r) => r.json())
+                        .then((d) => player.setDeathKeyframes(d.keyframes)),
+                ]);
+            }
 
-// scripted input state
-let scriptTime  = 0;
-let prevPhaseIdx = -1;
+            // scripted input state
+            let scriptTime = 0;
+            let prevPhaseIdx = -1;
 
-function stepScript(dt) {
-    scriptTime = (scriptTime + dt) % SCRIPT_TOTAL;
-    let acc = 0;
-    let idx = ANIM_SCRIPT.length - 1;
-    for (let i = 0; i < ANIM_SCRIPT.length; i++) {
-        acc += ANIM_SCRIPT[i].dur;
-        if (scriptTime < acc) { idx = i; break; }
-    }
-    const phase = ANIM_SCRIPT[idx];
+            function stepScript(dt) {
+                scriptTime = (scriptTime + dt) % SCRIPT_TOTAL;
+                let acc = 0;
+                let idx = ANIM_SCRIPT.length - 1;
+                for (let i = 0; i < ANIM_SCRIPT.length; i++) {
+                    acc += ANIM_SCRIPT[i].dur;
+                    if (scriptTime < acc) {
+                        idx = i;
+                        break;
+                    }
+                }
+                const phase = ANIM_SCRIPT[idx];
 
-    // mutate in place so the keyboard listener's reference stays valid
-    for (const k in player._keys) player._keys[k] = false;
-    for (const k in phase.keys) player._keys[k] = phase.keys[k];
+                // mutate in place so the keyboard listener's reference stays valid
+                for (const k in player._keys) player._keys[k] = false;
+                for (const k in phase.keys) player._keys[k] = phase.keys[k];
 
-    if (idx !== prevPhaseIdx && phase.jump) {
-        player._jumpQueued = true;
-    }
-    prevPhaseIdx = idx;
+                if (idx !== prevPhaseIdx && phase.jump) {
+                    player._jumpQueued = true;
+                }
+                prevPhaseIdx = idx;
 
-    return phase.name;
-}
+                return phase.name;
+            }
 
-// benchmark state
-const frameTimes = [];
-let benchPhase = "warmup";
-let phaseStart  = 0;
+            // benchmark state
+            const frameTimes = [];
+            let benchPhase = "warmup";
+            let phaseStart = 0;
 
-function showResults() {
-    frameTimes.sort((a, b) => b - a); // descending frame time = worst first
-    const n      = frameTimes.length;
-    const avgMs  = frameTimes.reduce((s, v) => s + v, 0) / n;
-    const maxMs  = frameTimes[0];
-    const minMs  = frameTimes[n - 1];
-    const p1end  = Math.max(1, Math.ceil(n * 0.01));
-    const p1Ms   = frameTimes.slice(0, p1end).reduce((s, v) => s + v, 0) / p1end;
+            function showResults() {
+                frameTimes.sort((a, b) => b - a); // descending frame time = worst first
+                const n = frameTimes.length;
+                const avgMs = frameTimes.reduce((s, v) => s + v, 0) / n;
+                const maxMs = frameTimes[0];
+                const minMs = frameTimes[n - 1];
+                const p1end = Math.max(1, Math.ceil(n * 0.01));
+                const p1Ms = frameTimes.slice(0, p1end).reduce((s, v) => s + v, 0) / p1end;
 
-    const avgFps = 1000 / avgMs;
-    const minFps = 1000 / maxMs;
-    const maxFps = 1000 / minMs;
-    const p1Fps  = 1000 / p1Ms;
+                const avgFps = 1000 / avgMs;
+                const minFps = 1000 / maxMs;
+                const maxFps = 1000 / minMs;
+                const p1Fps = 1000 / p1Ms;
 
-    function grade(fps) {
-        if (fps >= 55) return "good";
-        if (fps >= 30) return "ok";
-        return "bad";
-    }
+                function grade(fps) {
+                    if (fps >= 55) return "good";
+                    if (fps >= 30) return "ok";
+                    return "bad";
+                }
 
-    const w = renderer.domElement.width;
-    const h = renderer.domElement.height;
+                const w = renderer.domElement.width;
+                const h = renderer.domElement.height;
 
-    resultsBody.innerHTML = `
+                resultsBody.innerHTML = `
         <div>Frames sampled  : <b>${n}</b></div>
         <div>Avg FPS         : <b class="${grade(avgFps)}">${avgFps.toFixed(1)}</b></div>
         <div>1% Low FPS      : <b class="${grade(p1Fps)}">${p1Fps.toFixed(1)}</b></div>
@@ -239,103 +310,116 @@ function showResults() {
         <div>Resolution      : <b>${w}×${h} (dpr ${window.devicePixelRatio})</b></div>
     `;
 
-    statusEl.style.display = "none";
-    animPhaseEl.style.display = "none";
-    resultsEl.style.display = "block";
+                statusEl.style.display = "none";
+                animPhaseEl.style.display = "none";
+                resultsEl.style.display = "block";
 
-    console.table({ avgFps, p1Fps, minFps, maxFps, avgMs, frames: n, resolution: `${w}x${h}` });
-}
+                console.table({
+                    avgFps,
+                    p1Fps,
+                    minFps,
+                    maxFps,
+                    avgMs,
+                    frames: n,
+                    resolution: `${w}x${h}`,
+                });
+            }
 
-// main loop — setTimeout instead of rAF to bypass vsync cap
-let lastTs = 0;
+            // main loop — setTimeout instead of rAF to bypass vsync cap
+            let lastTs = 0;
 
-function loop() {
-    const now = performance.now();
-    if (lastTs === 0) lastTs = now;
-    const frameMs = now - lastTs;
-    lastTs = now;
-    const dt = Math.min(frameMs / 1000, 0.05);
-    const wallSecs = now / 1000;
+            function loop() {
+                const now = performance.now();
+                if (lastTs === 0) lastTs = now;
+                const frameMs = now - lastTs;
+                lastTs = now;
+                const dt = Math.min(frameMs / 1000, 0.05);
+                const wallSecs = now / 1000;
 
-    // scripted animation
-    const phaseName = stepScript(dt);
+                // scripted animation
+                const phaseName = stepScript(dt);
 
-    // player update — camera yaw rotates with orbit so input dir follows
-    const orbitAngle = -wallSecs * 0.2;
-    player.update(dt, orbitAngle, mobs, camera);
+                // player update — camera yaw rotates with orbit so input dir follows
+                const orbitAngle = -wallSecs * 0.2;
+                player.update(dt, orbitAngle, mobs, camera);
 
-    // camera orbits around player
-    camera.position.set(
-        player.pos.x + Math.sin(orbitAngle) * 7,
-        player.pos.y + 3.5,
-        player.pos.z + Math.cos(orbitAngle) * 7
-    );
-    camera.lookAt(player.pos.x, player.pos.y + 1, player.pos.z);
+                // camera orbits around player
+                camera.position.set(
+                    player.pos.x + Math.sin(orbitAngle) * 7,
+                    player.pos.y + 3.5,
+                    player.pos.z + Math.cos(orbitAngle) * 7
+                );
+                camera.lookAt(player.pos.x, player.pos.y + 1, player.pos.z);
 
-    sun.position.set(player.pos.x + 20, 35, player.pos.z + 15);
-    sun.target.position.set(player.pos.x, player.pos.y, player.pos.z);
+                sun.position.set(player.pos.x + 20, 35, player.pos.z + 15);
+                sun.target.position.set(player.pos.x, player.pos.y, player.pos.z);
 
-    updateWater(wallSecs);
+                updateWater(wallSecs);
 
-    rings.forEach((r) => {
-        if (r.collected) return;
-        r.mesh.rotation.z += dt * 2.8;
-        r.mesh.position.y =
-            groundY(r.mesh.position.x, r.mesh.position.z) +
-            1.0 + Math.sin(wallSecs * 2.5 + r.phase) * 0.13;
-    });
+                rings.forEach((r) => {
+                    if (r.collected) return;
+                    r.mesh.rotation.z += dt * 2.8;
+                    r.mesh.position.y =
+                        groundY(r.mesh.position.x, r.mesh.position.z) +
+                        1.0 +
+                        Math.sin(wallSecs * 2.5 + r.phase) * 0.13;
+                });
 
-    flowerSpinners.forEach((f) => { f.head.rotation.y += dt * 1.2; });
-    mobs.forEach((m) => { if (!m.dead) m.update(dt, player.pos); });
+                flowerSpinners.forEach((f) => {
+                    f.head.rotation.y += dt * 1.2;
+                });
+                mobs.forEach((m) => {
+                    if (!m.dead) m.update(dt, player.pos);
+                });
 
-    sparkleSystem.update(dt);
-    scatterRingSystem.update(dt, null);
+                sparkleSystem.update(dt);
+                scatterRingSystem.update(dt, null);
 
-    const ap = ambientParticles.geo.attributes.position;
-    for (let i = 0; i < ap.count; i++) {
-        let y = ap.getY(i) + dt * 0.35;
-        if (y > 14) y = 0.3;
-        ap.setY(i, y);
-    }
-    ap.needsUpdate = true;
-    ambientParticles.pts.material.opacity = 0.38 + Math.sin(wallSecs * 1.8) * 0.18;
+                const ap = ambientParticles.geo.attributes.position;
+                for (let i = 0; i < ap.count; i++) {
+                    let y = ap.getY(i) + dt * 0.35;
+                    if (y > 14) y = 0.3;
+                    ap.setY(i, y);
+                }
+                ap.needsUpdate = true;
+                ambientParticles.pts.material.opacity = 0.38 + Math.sin(wallSecs * 1.8) * 0.18;
 
-    renderer.render(scene, camera);
+                renderer.render(scene, camera);
 
-    // phase tracking
-    if (benchPhase === "warmup") {
-        const elapsed = now / 1000 - phaseStart;
-        statusEl.textContent = `Warming up… ${(WARMUP_SECS - elapsed).toFixed(1)}s`;
-        animPhaseEl.textContent = phaseName;
-        if (elapsed >= WARMUP_SECS) {
-            benchPhase = "bench";
-            phaseStart = now / 1000;
-        }
-    } else if (benchPhase === "bench") {
-        frameTimes.push(frameMs);
-        const elapsed = now / 1000 - phaseStart;
-        const fps = frameMs > 0 ? (1000 / frameMs).toFixed(0) : "—";
-        statusEl.textContent = `Benchmarking… ${(BENCH_SECS - elapsed).toFixed(1)}s  |  ${fps} fps`;
-        animPhaseEl.textContent = phaseName;
-        if (elapsed >= BENCH_SECS) {
-            benchPhase = "done";
-            showResults();
-            return; // stop loop
-        }
-    }
+                // phase tracking
+                if (benchPhase === "warmup") {
+                    const elapsed = now / 1000 - phaseStart;
+                    statusEl.textContent = `Warming up… ${(WARMUP_SECS - elapsed).toFixed(1)}s`;
+                    animPhaseEl.textContent = phaseName;
+                    if (elapsed >= WARMUP_SECS) {
+                        benchPhase = "bench";
+                        phaseStart = now / 1000;
+                    }
+                } else if (benchPhase === "bench") {
+                    frameTimes.push(frameMs);
+                    const elapsed = now / 1000 - phaseStart;
+                    const fps = frameMs > 0 ? (1000 / frameMs).toFixed(0) : "—";
+                    statusEl.textContent = `Benchmarking… ${(BENCH_SECS - elapsed).toFixed(1)}s  |  ${fps} fps`;
+                    animPhaseEl.textContent = phaseName;
+                    if (elapsed >= BENCH_SECS) {
+                        benchPhase = "done";
+                        showResults();
+                        return; // stop loop
+                    }
+                }
 
-    setTimeout(loop, 0);
-}
+                setTimeout(loop, 0);
+            }
 
-loadAssets()
-    .then(() => {
-        phaseStart = performance.now() / 1000;
-        loop();
-    })
-    .catch((err) => {
-        statusEl.textContent = `Load error: ${err.message}`;
-        console.error(err);
-    });
+            loadAssets()
+                .then(() => {
+                    phaseStart = performance.now() / 1000;
+                    loop();
+                })
+                .catch((err) => {
+                    statusEl.textContent = `Load error: ${err.message}`;
+                    console.error(err);
+                });
         </script>
     </body>
 </html>

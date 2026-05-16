@@ -20,9 +20,17 @@ export function bindTouchInput(player) {
         knob.style.transform = `translate(calc(-50% + ${nx}px), calc(-50% + ${ny}px))`;
     }
 
+    function resetJoystick() {
+        joyId = null;
+        player._touch.mx = 0;
+        player._touch.mz = 0;
+        knob.style.transform = "translate(-50%, -50%)";
+    }
+
     zone.addEventListener(
         "touchstart",
         (e) => {
+            if (joyId !== null) return;
             e.preventDefault();
             const t = e.changedTouches[0];
             joyId = t.identifier;
@@ -50,10 +58,15 @@ export function bindTouchInput(player) {
     window.addEventListener("touchend", (e) => {
         for (const t of e.changedTouches) {
             if (t.identifier === joyId) {
-                joyId = null;
-                player._touch.mx = 0;
-                player._touch.mz = 0;
-                knob.style.transform = "translate(-50%, -50%)";
+                resetJoystick();
+            }
+        }
+    });
+
+    window.addEventListener("touchcancel", (e) => {
+        for (const t of e.changedTouches) {
+            if (t.identifier === joyId) {
+                resetJoystick();
             }
         }
     });

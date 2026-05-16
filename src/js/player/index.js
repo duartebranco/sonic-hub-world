@@ -50,6 +50,8 @@ export class Player {
         this.underwater = false;
 
         this._keys = {};
+        /** @type {{ jumpHeld: boolean } | null} */
+        this._touch = null;
         bindInput(this);
 
         // Homing attack reticle
@@ -221,7 +223,7 @@ export class Player {
 
         const doJump = this._jumpQueued && !this._spin.charging;
         this._jumpQueued = false;
-        const jumpHeld = !!this._keys["Space"];
+        const jumpHeld = !!this._keys["Space"] || (this._touch && this._touch.jumpHeld);
 
         // ── Physics ──────────────────────────────────────────
         updatePhysics(this, dt, hasInput, inputDir, doJump, jumpHeld);

@@ -12,14 +12,18 @@ export function bindInput(player) {
 
 export function getPlayerInput(player, camYaw) {
     const k = player._keys;
+    const t = player._touch;
+
     const fwd = k["KeyW"] || k["ArrowUp"];
     const back = k["KeyS"] || k["ArrowDown"];
     const left = k["KeyA"] || k["ArrowLeft"];
     const right = k["KeyD"] || k["ArrowRight"];
-    const spinKey = k["ShiftLeft"] || k["KeyX"];
+    const spinKey = k["ShiftLeft"] || k["KeyX"] || t?.spinHeld;
 
-    const mx = (right ? 1 : 0) - (left ? 1 : 0);
-    const mz = (fwd ? 1 : 0) - (back ? 1 : 0);
+    let mx = (right ? 1 : 0) - (left ? 1 : 0) + (t?.mx ?? 0);
+    let mz = (fwd ? 1 : 0) - (back ? 1 : 0) + (t?.mz ?? 0);
+    mx = Math.max(-1, Math.min(1, mx));
+    mz = Math.max(-1, Math.min(1, mz));
     const hasInput = mx !== 0 || mz !== 0;
 
     // Camera-relative flat input direction

@@ -1,7 +1,7 @@
 const RADIUS = 52; // joystick knob travel in CSS pixels
 
 export function bindTouchInput(player) {
-    player._touch = { mx: 0, mz: 0, spinHeld: false };
+    player._touch = { mx: 0, mz: 0, spinHeld: false, jumpHeld: false };
 
     const zone = document.getElementById("joy-zone");
     const knob = document.getElementById("joy-knob");
@@ -77,9 +77,16 @@ export function bindTouchInput(player) {
         (e) => {
             e.preventDefault();
             player._jumpQueued = true;
+            player._touch.jumpHeld = true;
         },
         { passive: false }
     );
+    jumpBtn.addEventListener("touchend", () => {
+        player._touch.jumpHeld = false;
+    });
+    jumpBtn.addEventListener("touchcancel", () => {
+        player._touch.jumpHeld = false;
+    });
 
     const spinBtn = document.getElementById("btn-spin");
     spinBtn.addEventListener(

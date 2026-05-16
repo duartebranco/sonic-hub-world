@@ -261,7 +261,7 @@ function loop() {
     const phaseName = stepScript(dt);
 
     // player update — camera yaw rotates with orbit so input dir follows
-    const orbitAngle = wallSecs * 0.4;
+    const orbitAngle = -wallSecs * 0.2;
     player.update(dt, orbitAngle, mobs, camera);
 
     // camera orbits around player

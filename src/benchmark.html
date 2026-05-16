@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Sonic Hub World — FPS Benchmark</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { background: #000; color: #fff; font-family: monospace; overflow: hidden; }
+            #canvas-container { position: fixed; inset: 0; }
+            #overlay {
+                position: fixed; inset: 0;
+                display: flex; flex-direction: column;
+                align-items: center; justify-content: center;
+                gap: 0.5rem;
+                pointer-events: none;
+            }
+            #status {
+                background: rgba(0,0,0,0.6);
+                padding: 0.4rem 0.8rem;
+                border-radius: 4px;
+                font-size: 0.9rem;
+            }
+            #results {
+                display: none;
+                background: rgba(0,0,0,0.85);
+                padding: 1.5rem 2rem;
+                border-radius: 6px;
+                font-size: 0.95rem;
+                line-height: 2;
+                pointer-events: auto;
+            }
+            #results h2 { margin-bottom: 0.5rem; color: #ffe000; font-size: 1.1rem; }
+            .good  { color: #4cff88; }
+            .ok    { color: #ffe000; }
+            .bad   { color: #ff4c4c; }
+            #results button {
+                margin-top: 1rem; padding: 0.4rem 1rem;
+                background: #ffe000; color: #000; border: none;
+                border-radius: 4px; cursor: pointer; font-family: monospace;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="canvas-container"></div>
+        <div id="overlay">
+            <div id="status">Loading assets…</div>
+            <div id="results">
+                <h2>Benchmark Results</h2>
+                <div id="results-body"></div>
+                <button onclick="location.reload()">Run again</button>
+            </div>
+        </div>
+
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+                }
+            }
+        </script>
+
+        <script type="module">
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { buildWorld, groundY } from "./js/world/index.js";
+import { Player } from "./js/player/index.js";
+import { SpinDash } from "./js/player/spin.js";
+import { MAP_CONFIG, updateWater } from "./js/world/map_design.js";
+
+const WARMUP_SECS = 3;
+const BENCH_SECS  = 10;
+
+// camera orbit path: visit several points around the world
+const WAYPOINTS = [
+    new THREE.Vector3(  0, 8,  0),
+    new THREE.Vector3( 30, 8, 20),
+    new THREE.Vector3( 50, 12, -10),
+    new THREE.Vector3(  0, 15, -40),
+    new THREE.Vector3(-40, 10,  10),
+    new THREE.Vector3(-20, 8,  30),
+    new THREE.Vector3(  0, 8,  0),
+];
+
+const status  = document.getElementById("status");
+const results = document.getElementById("results");
+const resultsBody = document.getElementById("results-body");
+
+// renderer
+const container = document.getElementById("canvas-container");
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+container.appendChild(renderer.domElement);
+
+function onResize() {
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+}
+window.addEventListener("resize", onResize);
+
+// scene
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x79c3e3, 55, 200);
+
+new THREE.TextureLoader().load(
+    "../textures/sky.png",
+    (tex) => {
+        tex.mapping = THREE.EquirectangularReflectionMapping;
+        tex.colorSpace = THREE.SRGBColorSpace;
+        scene.background = tex;
+    },
+    undefined,
+    () => { scene.background = new THREE.Color(0x79c3e3); }
+);
+
+// camera
+const camera = new THREE.PerspectiveCamera(58, 1, 0.05, 400);
+onResize();
+
+// lights
+const sun = new THREE.DirectionalLight(0xfff9e6, 3.0);
+sun.position.set(20, 35, 15);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.near = 0.5;
+sun.shadow.camera.far = 140;
+sun.shadow.camera.left = -50; sun.shadow.camera.right = 50;
+sun.shadow.camera.top  =  50; sun.shadow.camera.bottom = -50;
+sun.shadow.bias = -0.0003;
+scene.add(sun, sun.target);
+scene.add(new THREE.AmbientLight(0xb3e5fc, 0.9));
+const skyFill = new THREE.DirectionalLight(0x80d8ff, 0.5);
+skyFill.position.set(-10, 12, -8);
+scene.add(skyFill);
+
+// world
+const { flowerSpinners, rings, sparkleSystem, scatterRingSystem, ambientParticles, mobs } =
+    buildWorld(scene);
+
+// player (needed so world systems don't crash; parked off-screen)
+const spin   = new SpinDash(scene, document.createElement("div"), document.createElement("div"));
+const player = new Player(scene, spin);
+player.pos.set(999, -999, 999);
+
+const waterLevel = Math.min(...MAP_CONFIG.waterPlanes.map((w) => w.y));
+
+// asset loading
+async function loadAssets() {
+    const loader = new GLTFLoader();
+    await new Promise((res, rej) => loader.load("../models/sonic.glb", (g) => { player.setModel(g.scene); res(); }, undefined, rej));
+    await Promise.all([
+        new Promise((res, rej) => loader.load("../models/sonic_amazed.glb", (g) => { player.setAmazedModel(g.scene); res(); }, undefined, rej)),
+        fetch("../animations/idle.json").then(r => r.json()).then(d => player.setIdleKeyframes(d.keyframes)),
+        fetch("../animations/walking.json").then(r => r.json()).then(d => player.setWalkKeyframes(d.keyframes)),
+        fetch("../animations/running.json").then(r => r.json()).then(d => player.setRunKeyframes(d.keyframes)),
+        fetch("../animations/jump.json").then(r => r.json()).then(d => player.setJumpKeyframes(d.keyframes)),
+        fetch("../animations/hit.json").then(r => r.json()).then(d => player.setHitKeyframes(d.keyframes)),
+        fetch("../animations/death.json").then(r => r.json()).then(d => player.setDeathKeyframes(d.keyframes)),
+    ]);
+}
+
+// benchmark state
+const frameTimes = [];
+let phase = "warmup"; // warmup → bench → done
+let phaseStart = 0;
+let lastTime = 0;
+
+function showResults() {
+    frameTimes.sort((a, b) => b - a); // descending frame time = ascending fps
+    const count = frameTimes.length;
+    const avgMs = frameTimes.reduce((s, v) => s + v, 0) / count;
+    const maxMs = frameTimes[0];       // worst frame = highest ms
+    const minMs = frameTimes[count - 1]; // best frame
+
+    const p1idx  = Math.max(0, Math.floor(count * 0.01) - 1);
+    const p1lowMs = frameTimes.slice(0, p1idx + 1).reduce((s, v) => s + v, 0) / (p1idx + 1);
+
+    const avgFps   = 1000 / avgMs;
+    const minFps   = 1000 / maxMs;
+    const maxFps   = 1000 / minMs;
+    const p1lowFps = 1000 / p1lowMs;
+
+    function grade(fps) {
+        if (fps >= 55) return "good";
+        if (fps >= 30) return "ok";
+        return "bad";
+    }
+
+    const res = window.devicePixelRatio;
+    const w = renderer.domElement.width;
+    const h = renderer.domElement.height;
+
+    resultsBody.innerHTML = `
+        <div>Frames sampled : <b>${count}</b></div>
+        <div>Avg FPS        : <b class="${grade(avgFps)}">${avgFps.toFixed(1)}</b></div>
+        <div>1% Low FPS     : <b class="${grade(p1lowFps)}">${p1lowFps.toFixed(1)}</b></div>
+        <div>Min FPS        : <b class="${grade(minFps)}">${minFps.toFixed(1)}</b></div>
+        <div>Max FPS        : <b>${maxFps.toFixed(1)}</b></div>
+        <div>Avg frame time : <b>${avgMs.toFixed(2)} ms</b></div>
+        <div>Resolution     : <b>${w}×${h} (dpr ${res})</b></div>
+    `;
+
+    status.style.display = "none";
+    results.style.display = "block";
+
+    // also log to console for easy copy-paste
+    console.table({ avgFps, p1lowFps, minFps, maxFps, avgMs, frames: count, resolution: `${w}x${h}` });
+}
+
+// smooth camera path along waypoints
+function cameraPositionAt(t) {
+    // t in [0,1) loops through waypoints
+    const total = WAYPOINTS.length - 1;
+    const scaled = t * total;
+    const i = Math.floor(scaled) % total;
+    const f = scaled - Math.floor(scaled);
+    return new THREE.Vector3().lerpVectors(WAYPOINTS[i], WAYPOINTS[i + 1], f);
+}
+
+const clock = new THREE.Clock();
+
+function animate(timestamp) {
+    requestAnimationFrame(animate);
+
+    const dt = Math.min(clock.getDelta(), 0.05);
+    const now = performance.now() / 1000;
+
+    if (lastTime > 0) {
+        const frameMs = timestamp - lastTime;
+
+        if (phase === "warmup") {
+            const elapsed = now - phaseStart;
+            status.textContent = `Warming up… ${(WARMUP_SECS - elapsed).toFixed(1)}s`;
+            if (elapsed >= WARMUP_SECS) {
+                phase = "bench";
+                phaseStart = now;
+            }
+        } else if (phase === "bench") {
+            frameTimes.push(frameMs);
+            const elapsed = now - phaseStart;
+            const fps = 1000 / frameMs;
+            status.textContent = `Benchmarking… ${(BENCH_SECS - elapsed).toFixed(1)}s  |  ${fps.toFixed(0)} fps`;
+            if (elapsed >= BENCH_SECS) {
+                phase = "done";
+                showResults();
+            }
+        }
+    } else {
+        phaseStart = now;
+    }
+    lastTime = timestamp;
+
+    if (phase === "done") return;
+
+    // orbit camera through waypoints
+    const totalDuration = WARMUP_SECS + BENCH_SECS;
+    const elapsed = now - (phaseStart - (phase === "bench" ? WARMUP_SECS : 0));
+    const t = (elapsed / totalDuration) % 1;
+    camera.position.copy(cameraPositionAt(t));
+    camera.lookAt(new THREE.Vector3(0, 4, 0));
+
+    // minimal world updates (same as main.js)
+    updateWater(now);
+
+    rings.forEach((r) => {
+        if (r.collected) return;
+        r.mesh.rotation.z += dt * 2.8;
+        r.mesh.position.y = groundY(r.mesh.position.x, r.mesh.position.z)
+            + 1.0 + Math.sin(now * 2.5 + r.phase) * 0.13;
+    });
+
+    flowerSpinners.forEach((f) => { f.head.rotation.y += dt * 1.2; });
+
+    mobs.forEach((m) => { if (!m.dead) m.update(dt, player.pos); });
+
+    sparkleSystem.update(dt);
+    scatterRingSystem.update(dt, null);
+
+    const ap = ambientParticles.geo.attributes.position;
+    for (let i = 0; i < ap.count; i++) {
+        let y = ap.getY(i) + dt * 0.35;
+        if (y > 14) y = 0.3;
+        ap.setY(i, y);
+    }
+    ap.needsUpdate = true;
+    ambientParticles.pts.material.opacity = 0.38 + Math.sin(now * 1.8) * 0.18;
+
+    renderer.render(scene, camera);
+}
+
+loadAssets()
+    .then(() => {
+        status.textContent = "Warming up…";
+        animate(0);
+    })
+    .catch((err) => {
+        status.textContent = `Load error: ${err.message}`;
+        console.error(err);
+    });
+        </script>
+    </body>
+</html>

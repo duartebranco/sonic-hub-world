@@ -108,6 +108,12 @@ export class ThirdPersonCamera {
                 if (t.identifier === camTouchId) camTouchId = null;
             }
         });
+
+        window.addEventListener("touchcancel", (e) => {
+            for (const t of e.changedTouches) {
+                if (t.identifier === camTouchId) camTouchId = null;
+            }
+        });
     }
 
     update(dt, playerPos, playerYaw) {

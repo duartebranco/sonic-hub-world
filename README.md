@@ -30,7 +30,7 @@ Free-roam exploration across a procedurally-terrained island with plateaus, ramp
 
 If you want, you can serve from the project root with any static HTTP server:
 
-```
+```bash
 npx serve .
 # or if you want to specify a port
 python -m http.server 3000

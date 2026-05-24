@@ -2,13 +2,9 @@
 
 A 3D Sonic the Hedgehog hub world built with Three.js - inspired by the overworld from _Sonic Jam_ for the Sega Saturn.
 
-Built for [Introduction to Computer Graphics](https://www.ua.pt/en/uc/7930), University of Aveiro, 2025/2026.
+You can play the game [here](https://duartebranco.github.io/sonic-hub-world/).
 
 <img src="docs/imgs/game.png">
-
-## Play
-
-[Play the game](https://duartebranco.github.io/sonic-hub-world/)
 
 ## Gameplay
 

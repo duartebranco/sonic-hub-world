@@ -20,7 +20,7 @@ Free-roam exploration across a procedurally-terrained island with plateaus, ramp
 | Audio | M to toggle mute |
 | Challenge | Enter the giant ring to start the race |
 
-### Tools
+## Tools
 
 - `src/animator.html` - Editor for the custom keyframe animation format
 - `src/benchmark.html` - Benchmarking tool for performance testing
